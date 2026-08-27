@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Platinum Gold
-description: Docs site for the Platinum Gold API. Basement palette, Upheaval for shouts, Source Sans 3 for reading.
+description: Docs site for the Platinum Gold API. Basement palette, Upheaval for the brand shout, Source Sans 3 for headings and reading.
 colors:
   surface: "oklch(0.19 0.022 68)"
   surface-raised: "oklch(0.24 0.024 68)"
@@ -20,6 +20,12 @@ colors:
   quality-3: "oklch(0.8 0.14 80)"
   quality-4: "oklch(0.72 0.16 55)"
 typography:
+  title:
+    fontFamily: Source Sans 3
+    fontSize: 48px
+    fontWeight: 600
+    lineHeight: 1.1
+    letterSpacing: -0.02em
   display:
     fontFamily: Upheaval
     fontSize: 48px
@@ -27,11 +33,11 @@ typography:
     lineHeight: 1.05
     letterSpacing: 0.02em
   headline-lg:
-    fontFamily: Upheaval
+    fontFamily: Source Sans 3
     fontSize: 32px
-    fontWeight: 400
+    fontWeight: 600
     lineHeight: 1.1
-    letterSpacing: 0.02em
+    letterSpacing: -0.02em
   headline-md:
     fontFamily: Source Sans 3
     fontSize: 24px
@@ -42,12 +48,12 @@ typography:
     fontFamily: Source Sans 3
     fontSize: 18px
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.7
   body-md:
     fontFamily: Source Sans 3
     fontSize: 16px
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.65
   body-sm:
     fontFamily: Source Sans 3
     fontSize: 14px
@@ -113,7 +119,7 @@ components:
 
 Platinum Gold is documentation for frontend developers integrating a read-only Binding of Isaac item API. It is not a player catalog.
 
-The game shows up in three places: Upheaval on titles, a dirt-and-tears palette, and the quality 0 to 4 marks. Everything else is a contemporary docs site. No sprite collages, no heart HUD, no dirt textures.
+The game is the signature, not the interface: Upheaval owns the `/` brand shout, while Source Sans 3 handles docs headings and reading. The dirt-and-tears palette and quality 0 to 4 marks carry the rest of the world. On `/` only, `public/tboi-wall.webp` is the first-viewport field. Everything else is a contemporary docs site. No heart HUD, no dirt textures, no extra collage.
 
 ## Colors
 
@@ -131,7 +137,7 @@ The game shows up in three places: Upheaval on titles, a dirt-and-tears palette,
 
 ## Themes
 
-Default appearance is dark. Light values below are documentation until the spec can encode modes.
+Default appearance is dark. The document ships `color-scheme: dark`. Light values below are documentation until the spec can encode modes.
 
 | Token | Dark (default) | Light |
 | --- | --- | --- |
@@ -156,9 +162,11 @@ Default appearance is dark. Light values below are documentation until the spec 
 
 Two webfonts. Bind `public/fonts/upheavtt.ttf` to family `Upheaval` and serve it as woff2. Load Source Sans 3 at 400 and 600 only. Code uses `ui-monospace`. Do not load a third webfont.
 
-Upheaval is display only. Never set it below 32px. Never use it for body, UI chrome, buttons, or inputs. Disable fake bold and italic on it (`font-synthesis: none`). Headings stay roman.
+Upheaval is display only and belongs to the `/` brand shout. Never set it below 32px. Never use it for body, docs headings, UI chrome, buttons, or inputs. Disable fake bold and italic on it (`font-synthesis: none`). The shout stays roman.
 
-Source Sans 3 is every repetitive surface: body, navigation, buttons, labels, tables. Italic is allowed only inside body paragraphs.
+On `/` only, the hero shout is fluid: `clamp(2rem, 8vw, 5.5rem)` at display line-height `1.05`. Docs route titles use `title` (48px) and `headline-lg` (32px), both Source Sans 3 semibold.
+
+Source Sans 3 is every repetitive surface plus functional headings: body, navigation, buttons, labels, tables, docs titles, and section headings. Italic is allowed only inside body paragraphs.
 
 `label-md` is uppercase via CSS, never by typing caps into copy. Apply `tabular-nums` to `gameId`, quality, `rechargeTime`, `limit`, and `offset`. Cap prose at about 65 characters. `text-wrap: balance` on titles, `pretty` on short descriptions.
 
@@ -166,7 +174,7 @@ Source Sans 3 is every repetitive surface: body, navigation, buttons, labels, ta
 
 4px base. Page margin is `{spacing.margin}`, gutters are `{spacing.gutter}`. Prose sits in a single column near 65ch. Endpoint tables and the playground may use the full content width.
 
-Group related controls with `{spacing.md}` inside and `{spacing.lg}` between groups. Do not add a marketing hero on docs routes.
+Group related controls with `{spacing.md}` inside and `{spacing.lg}` between groups. Do not add a marketing hero on docs routes. `/` is the exception: a full-viewport mural, then the first-call strip.
 
 ## Elevation & Depth
 
@@ -192,6 +200,6 @@ Code blocks use `code-block`. Inline code uses `{typography.code}` on `{colors.s
 - Don't load a third webfont.
 - Don't use blood red except for errors and destructive actions.
 - Don't use quality colors as small text.
-- Don't add pixel backgrounds, splatter, or HUD chrome.
+- Don't add pixel backgrounds, splatter, or HUD chrome. `/` may use `tboi-wall.webp` as the first-viewport field; that asset does not travel.
 - Don't mix pill radii with the 2px/4px scale.
 - Do meet WCAG AA on every text pair against its actual background.

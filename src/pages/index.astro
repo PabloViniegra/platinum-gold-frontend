@@ -1,18 +1,229 @@
 ---
-import "../styles/global.css";
+import Root from "../layouts/Root.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="color-scheme" content="light dark" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Root
+	title="Platinum Gold"
+	description="Make the first Binding of Isaac item API call without leaking the key."
+	preloadDisplayFont={true}
+>
+	<a
+		href="#first-call"
+		class="bg-primary text-on-primary font-sans font-semibold absolute start-2 top-2 z-50 min-h-11 rounded-sm px-3 py-3 -translate-y-[calc(100%+0.5rem)] focus:translate-y-0"
+		>Skip to first call</a
+	>
+	<main>
+		<div data-hero-pin>
+			<section
+				data-hero
+				class="scheme-dark relative min-h-dvh overflow-hidden text-on-surface"
+			>
+				<div data-hero-wall class="absolute inset-0">
+					<img
+						src="/tboi-wall-lg.webp"
+						srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
+						sizes="100vw"
+						alt=""
+						width="1920"
+						height="1080"
+						fetchpriority="high"
+						decoding="async"
+						class="absolute inset-0 size-full object-cover object-center"
+					/>
+					<div data-hero-shade aria-hidden="true"></div>
+				</div>
+				<div
+					class="from-surface via-surface/55 pointer-events-none absolute inset-0 bg-linear-to-t to-transparent"
+				>
+				</div>
+				<div
+					data-hero-overlay
+					class="relative flex min-h-dvh flex-col justify-end px-margin pt-xl pb-[max(var(--spacing-xxl),env(safe-area-inset-bottom,0px))]"
+				>
+					<div>
+						<h1>Platinum Gold</h1>
+						<p class="text-body-lg mt-md max-w-[65ch] tracking-[0.01em] text-pretty">
+							Make the first Binding of Isaac item API call without leaking the key.
+						</p>
+						<a
+							href="/getting-started"
+							class="bg-primary text-on-primary hover:bg-primary-hover hover:text-on-primary mt-lg inline-flex items-center rounded-sm border border-on-primary px-xl py-md font-sans text-body-lg font-semibold leading-none tracking-[-0.02em]"
+							>Start the first call</a
+						>
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<section id="first-call" class="px-margin py-xxl" tabindex="-1">
+			<h2>The first call</h2>
+			<ol
+				class="mt-lg max-w-[65ch] list-decimal space-y-lg ps-lg text-pretty tabular-nums"
+			>
+				<li>
+					Send <code>X-API-Key</code> on every <code>/v1</code> request. Missing or
+					invalid returns 401. A key without <code>api:access</code> returns 403.
+				</li>
+				<li>
+					Hit <code>GET /v1/items</code> for a list, or
+					{" "}<code>GET /v1/items/{`{gameId}`}</code> for one item.
+				</li>
+				<li>
+					Keep the production key off the public bundle. Proxy it. Never
+					<code>VITE_API_KEY</code> in the browser.
+				</li>
+			</ol>
+		</section>
+	</main>
+</Root>
+
+<style>
+	@property --hero-p {
+		syntax: "<number>";
+		inherits: true;
+		initial-value: 0;
+	}
+
+	@property --spot-x {
+		syntax: "<percentage>";
+		inherits: true;
+		initial-value: 52%;
+	}
+
+	@property --spot-y {
+		syntax: "<percentage>";
+		inherits: true;
+		initial-value: 32%;
+	}
+
+	@property --spot-w {
+		syntax: "<length>";
+		inherits: true;
+		initial-value: 14vmin;
+	}
+
+	@property --spot-h {
+		syntax: "<length>";
+		inherits: true;
+		initial-value: 22vmin;
+	}
+
+	[data-hero] {
+		--spot-x: 52%;
+		--spot-y: 32%;
+		--spot-w: 14vmin;
+		--spot-h: 22vmin;
+		--hero-p: 0;
+		transition:
+			--spot-x 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+			--spot-y 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+			--spot-w 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+			--spot-h 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	[data-hero]:has(a:hover),
+	[data-hero]:has(a:focus-visible) {
+		--spot-w: 22vmin;
+		--spot-h: 32vmin;
+	}
+
+	[data-hero] h1 {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 8vw, 5.5rem);
+		line-height: 1.05;
+		letter-spacing: var(--text-display--letter-spacing);
+		font-weight: 400;
+		font-synthesis: none;
+		font-size-adjust: cap-height from-font;
+	}
+
+	[data-hero-shade] {
+		pointer-events: none;
+		position: absolute;
+		inset: 0;
+		background: color-mix(in oklch, var(--color-surface) 88%, transparent);
+		-webkit-mask-image: radial-gradient(
+			ellipse var(--spot-w) var(--spot-h) at var(--spot-x) var(--spot-y),
+			transparent 0%,
+			transparent 28%,
+			black 62%
+		);
+		mask-image: radial-gradient(
+			ellipse var(--spot-w) var(--spot-h) at var(--spot-x) var(--spot-y),
+			transparent 0%,
+			transparent 28%,
+			black 62%
+		);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		[data-hero] {
+			transition: none;
+		}
+
+		[data-hero-shade] {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		@keyframes pg-tear-form {
+			from {
+				--spot-w: 0px;
+				--spot-h: 0px;
+			}
+		}
+
+		[data-hero-pin] {
+			block-size: 175vh;
+		}
+
+		[data-hero] {
+			position: sticky;
+			inset-block-start: 0;
+			animation: pg-tear-form 0.65s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+		}
+
+		[data-hero] a {
+			transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		[data-hero-wall] {
+			transform: scale(calc(1 + 0.08 * var(--hero-p)))
+				translateY(calc(var(--hero-p) * -6%));
+			opacity: calc(1 - 0.72 * var(--hero-p));
+		}
+
+		[data-hero-overlay] {
+			opacity: max(0, calc(1 - var(--hero-p) * 1.7));
+			transform: translateY(calc(var(--hero-p) * -1.25rem));
+		}
+	}
+</style>
+
+<script>
+	const stage = document.querySelector("[data-hero]");
+	const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+	let stop = (): void => {};
+
+	async function sync(): Promise<void> {
+		stop();
+		stop = (): void => {};
+		if (!(stage instanceof HTMLElement)) {
+			return;
+		}
+		if (motion.matches) {
+			return;
+		}
+		const scene = await import("../scripts/hero-wall.ts");
+		stop = scene.mountHeroWall(stage);
+	}
+
+	motion.addEventListener("change", () => {
+		void sync();
+	});
+	void sync();
+</script>

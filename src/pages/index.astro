@@ -17,7 +17,7 @@ import Root from "../layouts/Root.astro";
 		<div data-hero-pin>
 			<section
 				data-hero
-				class="scheme-dark relative min-h-[calc(100dvh-3rem)] overflow-hidden text-on-surface"
+				class="scheme-dark relative min-h-[calc(100dvh-var(--pg-header-height))] overflow-hidden text-on-surface"
 			>
 				<div data-hero-wall class="absolute inset-0">
 					<img
@@ -39,18 +39,25 @@ import Root from "../layouts/Root.astro";
 				</div>
 				<div
 					data-hero-overlay
-					class="relative flex min-h-[calc(100dvh-3rem)] flex-col justify-end px-margin pt-xl pb-[max(var(--spacing-xxl),env(safe-area-inset-bottom,0px))]"
+					class="relative flex min-h-[calc(100dvh-var(--pg-header-height))] flex-col justify-end px-margin pt-xl pb-[max(var(--spacing-xxl),env(safe-area-inset-bottom,0px))]"
 				>
 					<div data-hero-plane>
 						<h1>Platinum Gold</h1>
 						<p class="text-body-lg mt-md max-w-[65ch] tracking-[0.01em] text-pretty">
-							Make the first Binding of Isaac item API call without leaking the key.
+							Every Binding of Isaac item. One read-only catalog. Built for frontend developers who need
+							the data without dragging a secret into the browser.
 						</p>
-						<a
-							href="/getting-started"
-							class="bg-primary text-on-primary hover:bg-primary-hover hover:text-on-primary mt-lg inline-flex items-center rounded-sm px-xl py-md font-sans text-body-lg font-semibold leading-none tracking-[-0.02em]"
-							>Start the first call</a
-						>
+						<div class="hero-actions">
+							<a href="/getting-started" class="hero-primary">Enter the guide</a>
+							<a href="https://platinum-gold-backend.vercel.app/docs" class="hero-secondary">
+								Open API reference
+							</a>
+						</div>
+						<ul class="hero-facts" aria-label="API summary">
+							<li><strong>REST</strong><span>read only</span></li>
+							<li><strong>/v1</strong><span>stable contract</span></li>
+							<li><strong>JSON</strong><span>camelCase wire</span></li>
+						</ul>
 					</div>
 				</div>
 			</section>
@@ -58,31 +65,36 @@ import Root from "../layouts/Root.astro";
 
 		<section
 			id="first-call"
-			class="bg-surface scroll-mt-12 px-margin py-xxl"
+			class="first-call scroll-mt-12 px-margin py-xxl"
 			tabindex="-1"
 		>
-			<h2>The first call</h2>
-			<ol
-				class="mt-lg max-w-[65ch] list-decimal space-y-lg ps-lg text-pretty tabular-nums"
-			>
-				<li>
-					Send <code>X-API-Key</code> on every <code>/v1</code> request. Missing or
-					invalid returns 401. A key without <code>api:access</code> returns 403.
-				</li>
-				<li>
-					Hit <code>GET /v1/items</code> for a list, or
-					{" "}<code>GET /v1/items/{`{gameId}`}</code> for one item.
-				</li>
-				<li>
-					Keep the production key off the public bundle. Proxy it. Never
-					<code>VITE_API_KEY</code> in the browser.
-				</li>
-			</ol>
-			<a
-				href="/getting-started"
-				class="text-on-surface hover:text-primary mt-xl inline-flex items-center rounded-sm border border-border px-xl py-md font-sans text-body-md font-semibold leading-none tracking-[-0.02em]"
-				>Start the first call</a
-			>
+			<div class="first-call-sheet">
+				<div class="first-call-copy">
+					<h2>The first call</h2>
+					<ol class="mt-lg list-decimal space-y-lg ps-lg text-pretty tabular-nums">
+						<li>
+							Send <code>X-API-Key</code> on every <code>/v1</code> request. Missing or
+							invalid returns 401. A key without <code>api:access</code> returns 403.
+						</li>
+						<li>
+							Hit <code>GET /v1/items</code> for a list, or
+							{" "}<code>GET /v1/items/{`{gameId}`}</code> for one item.
+						</li>
+						<li>
+							Keep the production key off the public bundle. Proxy it. Never
+							<code>VITE_API_KEY</code> in the browser.
+						</li>
+					</ol>
+					<a href="/getting-started" class="first-call-link">Follow the field guide</a>
+				</div>
+				<figure class="first-call-request">
+					<figcaption>Safe server request</figcaption>
+					<pre tabindex="0" aria-label="Safe server request example"><code>GET /v1/items?type=passive HTTP/1.1
+Host: platinum-gold-backend.vercel.app
+X-API-Key: ••••••••••••
+Accept: application/json</code></pre>
+				</figure>
+			</div>
 		</section>
 	</main>
 </Root>
@@ -133,8 +145,8 @@ import Root from "../layouts/Root.astro";
 	[data-hero] {
 		--spot-x: 52%;
 		--spot-y: 32%;
-		--spot-w: 14vmin;
-		--spot-h: 22vmin;
+		--spot-w: 24vmin;
+		--spot-h: 34vmin;
 		--hero-p: 0;
 		--tilt-x: 0deg;
 		--tilt-y: 0deg;
@@ -145,15 +157,28 @@ import Root from "../layouts/Root.astro";
 			--spot-h 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
+	[data-hero]::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: repeating-linear-gradient(
+			0deg,
+			transparent 0 3px,
+			oklch(0.02 0.01 45 / 0.08) 3px 4px
+		);
+		mix-blend-mode: multiply;
+	}
+
 	[data-hero]:has(a:hover),
 	[data-hero]:has(a:focus-visible) {
-		--spot-w: 22vmin;
-		--spot-h: 32vmin;
+		--spot-w: 34vmin;
+		--spot-h: 48vmin;
 	}
 
 	[data-hero] h1 {
 		font-family: var(--font-display);
-		font-size: clamp(2rem, 8vw, 5.5rem);
+		font-size: clamp(3.5rem, 11vw, 9rem);
 		line-height: 1.05;
 		letter-spacing: var(--text-display--letter-spacing);
 		font-weight: 400;
@@ -161,11 +186,170 @@ import Root from "../layouts/Root.astro";
 		font-size-adjust: cap-height from-font;
 	}
 
+	.first-call-request figcaption {
+		font-size: var(--text-label-md);
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-md);
+		margin-block-start: var(--spacing-lg);
+	}
+
+	.hero-primary,
+	.hero-secondary,
+	.first-call-link {
+		display: inline-flex;
+		min-block-size: 3rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--color-primary);
+		border-radius: var(--radius-sm);
+		padding-inline: var(--spacing-xl);
+		font-weight: 600;
+		line-height: 1;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.hero-primary {
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		box-shadow: 0.3rem 0.35rem 0 oklch(0.07 0.02 50 / 0.7);
+	}
+
+	.hero-primary:hover {
+		background: var(--color-primary-hover);
+		color: var(--color-on-primary);
+	}
+
+	.hero-primary:active,
+	.first-call-link:active {
+		box-shadow: 0.1rem 0.12rem 0 var(--pg-paper-shadow);
+		transform: translate(0.18rem, 0.2rem);
+	}
+
+	.hero-secondary {
+		background: oklch(0.12 0.02 50 / 0.72);
+		color: var(--color-on-surface);
+	}
+
+	.hero-secondary:hover {
+		color: var(--color-primary-hover);
+	}
+
+	.hero-facts {
+		display: flex;
+		max-inline-size: 42rem;
+		flex-wrap: wrap;
+		gap: var(--spacing-md) var(--spacing-xl);
+		margin-block-start: var(--spacing-xl);
+		padding: 0;
+		list-style: none;
+	}
+
+	.hero-facts li {
+		display: grid;
+		gap: 0.1rem;
+		border-inline-start: 2px solid var(--color-tertiary);
+		padding-inline-start: var(--spacing-sm);
+	}
+
+	.hero-facts strong {
+		font-family: var(--font-mono);
+		font-size: var(--text-body-sm);
+		color: var(--color-on-surface);
+	}
+
+	.hero-facts span {
+		font-size: var(--text-body-sm);
+		color: var(--color-on-surface-muted);
+	}
+
+	.first-call {
+		position: relative;
+		background:
+			linear-gradient(oklch(0.09 0.02 50 / 0.76), oklch(0.09 0.02 50 / 0.92)),
+			url("/tboi-wall.webp") center 38% / cover;
+	}
+
+	.first-call-sheet {
+		display: grid;
+		max-inline-size: 76rem;
+		grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+		gap: clamp(var(--spacing-xl), 6vw, 5rem);
+		margin-inline: auto;
+		border: 2px solid var(--color-paper-border);
+		background:
+			repeating-linear-gradient(2deg, transparent 0 2.5rem, oklch(0.5 0.05 65 / 0.08) 2.5rem calc(2.5rem + 1px)),
+			var(--color-paper);
+		color: var(--color-ink);
+		padding: clamp(var(--spacing-lg), 5vw, 4.5rem);
+		box-shadow: 0.75rem 0.9rem 0 var(--pg-paper-shadow);
+		transform: rotate(-0.25deg);
+	}
+
+	.first-call-sheet h2 {
+		font-family: var(--font-display);
+		font-size: clamp(2.75rem, 7vw, 5rem);
+		font-weight: 400;
+		letter-spacing: 0.02em;
+	}
+
+	.first-call-request figcaption {
+		color: var(--color-ink-muted);
+	}
+
+	.first-call-copy code {
+		background: color-mix(in oklch, var(--color-paper-border) 22%, transparent);
+		color: var(--color-ink);
+	}
+
+	.first-call-link {
+		margin-block-start: var(--spacing-xl);
+		border-color: var(--color-ink);
+		background: var(--color-ink);
+		color: var(--color-paper-raised);
+		box-shadow: 0.25rem 0.3rem 0 var(--color-paper-border);
+	}
+
+	.first-call-link:hover {
+		background: var(--color-ink-link);
+		color: var(--color-paper-raised);
+	}
+
+	.first-call-link:focus-visible {
+		outline-color: var(--color-ink-link);
+		outline-width: 3px;
+	}
+
+	.first-call-request {
+		align-self: center;
+		min-inline-size: 0;
+	}
+
+	.first-call-request pre {
+		margin-block-start: var(--spacing-sm);
+		max-inline-size: 100%;
+		overflow-x: auto;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		box-shadow: 0.35rem 0.4rem 0 color-mix(in oklch, var(--color-paper-border) 72%, transparent);
+	}
+
+	.first-call-request pre code {
+		color: var(--color-on-surface);
+	}
+
 	[data-hero-shade] {
 		pointer-events: none;
 		position: absolute;
 		inset: 0;
-		background: color-mix(in oklch, var(--color-surface) 88%, transparent);
+		background: color-mix(in oklch, var(--color-surface) 72%, transparent);
 		-webkit-mask-image: radial-gradient(
 			ellipse var(--spot-w) var(--spot-h) at var(--spot-x) var(--spot-y),
 			transparent 0%,
@@ -190,6 +374,11 @@ import Root from "../layouts/Root.astro";
 		[data-hero-shade] {
 			display: none;
 		}
+
+		.hero-primary:active,
+		.first-call-link:active {
+			transform: none;
+		}
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -211,7 +400,12 @@ import Root from "../layouts/Root.astro";
 		}
 
 		[data-hero] a {
-			transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+			transition:
+				background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+				border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+				color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+				box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+				transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 		}
 
 		[data-hero-wall] {
@@ -233,6 +427,34 @@ import Root from "../layouts/Root.astro";
 			transform: perspective(60rem) rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
 			transform-origin: 50% 100%;
 			transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+	}
+
+	@media (max-width: 48rem) {
+		[data-hero] h1 {
+			font-size: clamp(2.75rem, 14vw, 5rem);
+			overflow-wrap: normal;
+			word-break: normal;
+		}
+
+		.hero-actions {
+			display: grid;
+		}
+
+		.hero-primary,
+		.hero-secondary {
+			inline-size: 100%;
+		}
+
+		.first-call-sheet {
+			grid-template-columns: minmax(0, 1fr);
+			transform: none;
+		}
+	}
+
+	@media (prefers-reduced-transparency: reduce) {
+		.hero-secondary {
+			background: var(--color-surface);
 		}
 	}
 </style>

@@ -8,11 +8,12 @@ type Props = {
 };
 
 const { title, description, preloadDisplayFont = false } = Astro.props;
-const isGettingStartedPage = Astro.url.pathname.replace(/\/+$/, "") === "/getting-started";
+const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const isGettingStartedPage = pathname === "/getting-started";
 ---
 
 <!doctype html>
-<html lang="en" class="scheme-dark">
+<html lang="en" class="scheme-dark" data-page={pathname === "/" ? "home" : "guide"}>
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -34,23 +35,18 @@ const isGettingStartedPage = Astro.url.pathname.replace(/\/+$/, "") === "/gettin
 	</head>
 	<body>
 		<slot name="skip" />
-		<header
-			class="bg-surface sticky top-0 z-40 flex min-h-12 flex-wrap items-center justify-between gap-x-lg border-b border-border px-margin"
-		>
-			<a
-				href="/"
-				class="font-sans text-body-md font-semibold tracking-[-0.02em] text-on-surface hover:text-on-surface"
-				>Platinum Gold</a
-			>
-			{!isGettingStartedPage && (
-				<nav aria-label="Primary">
-					<a
-						href="/getting-started"
-						class="inline-flex min-h-11 items-center font-sans text-body-md font-semibold"
-						>Start the first call</a
-					>
-				</nav>
-			)}
+		<header class="site-header">
+			<a href="/" class="site-brand" aria-label="Platinum Gold home">
+				<span class="site-brand-mark" aria-hidden="true"></span>
+				<span>Platinum Gold</span>
+			</a>
+			<nav class="site-nav" aria-label="Primary">
+				<a href="/getting-started" aria-current={isGettingStartedPage ? "page" : undefined}>
+					Getting started
+				</a>
+				<a href="https://platinum-gold-backend.vercel.app/docs">API reference</a>
+				<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
+			</nav>
 		</header>
 		<slot />
 	</body>

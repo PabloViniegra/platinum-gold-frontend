@@ -5,8 +5,10 @@ import Root from "../layouts/Root.astro";
 <Root
 	title="Getting started — Platinum Gold"
 	description="Authenticate, make one GET, and keep the API key off the public bundle."
+	preloadDisplayFont={true}
 >
 	<a slot="skip" class="guide-skip" href="#guide-content">Skip to guide</a>
+	<div class="guide-scene" aria-hidden="true"></div>
 	<main id="guide-content" class="guide-shell px-margin py-xxl" tabindex="-1">
 		<nav class="guide-breadcrumb text-body-sm" aria-label="Breadcrumb">
 			<a href="/">Platinum Gold</a>
@@ -45,7 +47,7 @@ import Root from "../layouts/Root.astro";
 
 		<div class="guide-layout">
 			<nav class="guide-toc" data-guide-toc aria-label="On this page">
-				<p class="guide-toc-title">On this page</p>
+				<p class="guide-toc-title">Guide map</p>
 				<p class="guide-toc-group-title">Start here</p>
 				<ul>
 					<li><a data-toc-link aria-current="location" href="#authentication">Authentication</a></li>
@@ -1041,7 +1043,324 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		font-size: var(--text-body-sm);
 	}
 
+	.guide-scene {
+		position: fixed;
+		inset: var(--pg-header-height) 0 0;
+		z-index: 0;
+		pointer-events: none;
+		background:
+			linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.95)),
+			url("/tboi-wall.webp") center 20% / cover no-repeat;
+		filter: saturate(0.65) contrast(1.1);
+	}
+
+	.guide-shell {
+		position: relative;
+		z-index: 1;
+		max-inline-size: 92rem;
+	}
+
+	.guide-breadcrumb {
+		color: var(--color-on-surface-muted);
+	}
+
+	.guide-header {
+		max-inline-size: 76rem;
+		padding-block: clamp(var(--spacing-xl), 6vw, 5rem);
+	}
+
+	.guide-header h1 {
+		max-inline-size: none;
+		font-family: var(--font-display);
+		font-size: clamp(4rem, 10vw, 8rem);
+		font-weight: 400;
+		line-height: 0.92;
+		letter-spacing: 0.02em;
+		color: var(--color-on-surface);
+		text-shadow: 0.3rem 0.35rem 0 oklch(0.05 0.015 45 / 0.75);
+	}
+
+	.guide-header p:last-child {
+		max-inline-size: 54ch;
+		color: var(--color-on-surface-muted);
+	}
+
+	.guide-start {
+		display: grid;
+		max-inline-size: 76rem;
+		grid-template-columns: minmax(12rem, 0.65fr) minmax(0, 1.6fr);
+		gap: clamp(var(--spacing-lg), 5vw, var(--spacing-xxl));
+		margin-block-end: clamp(var(--spacing-xxl), 7vw, 6rem);
+		border: 1px solid var(--color-border);
+		background: color-mix(in oklch, var(--color-surface-raised) 92%, transparent);
+		padding: clamp(var(--spacing-lg), 4vw, var(--spacing-xl));
+		box-shadow: 0.5rem 0.6rem 0 oklch(0.06 0.015 48 / 0.62);
+		backdrop-filter: blur(8px);
+	}
+
+	.guide-start h2 {
+		font-family: var(--font-display);
+		font-size: clamp(2.5rem, 5vw, 4rem);
+		font-weight: 400;
+		letter-spacing: 0.02em;
+	}
+
+	.guide-start-copy p {
+		color: var(--color-on-surface-muted);
+	}
+
+	.guide-path {
+		counter-reset: guide-room;
+		gap: var(--spacing-md);
+		margin-block-start: 0;
+	}
+
+	.guide-path li {
+		counter-increment: guide-room;
+		position: relative;
+		min-inline-size: 0;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		padding: var(--spacing-md);
+		box-shadow: 0.2rem 0.25rem 0 oklch(0.07 0.015 48 / 0.72);
+	}
+
+	.guide-path li::before {
+		content: counter(guide-room, decimal-leading-zero);
+		position: absolute;
+		inset-block-start: calc(var(--spacing-sm) * -1);
+		inset-inline-end: var(--spacing-sm);
+		background: var(--color-tertiary);
+		color: var(--color-on-primary);
+		padding-inline: var(--spacing-xs);
+		font-family: var(--font-mono);
+		font-size: var(--text-label-md);
+		font-weight: 600;
+	}
+
+	.guide-path a {
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+
+	.guide-layout {
+		grid-template-columns: minmax(13rem, 15rem) minmax(0, 58rem);
+		justify-content: center;
+		gap: clamp(var(--spacing-xl), 5vw, 5rem);
+	}
+
+	.guide-toc {
+		inset-block-start: calc(var(--pg-header-height) + var(--spacing-lg));
+		max-block-size: calc(100dvh - var(--pg-header-height) - var(--spacing-xxl));
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		border: 1px solid var(--color-border);
+		background: color-mix(in oklch, var(--color-surface-raised) 95%, transparent);
+		padding: var(--spacing-lg);
+		box-shadow: 0.35rem 0.4rem 0 oklch(0.06 0.015 48 / 0.62);
+		scrollbar-gutter: stable;
+	}
+
+	.guide-toc-title {
+		color: var(--color-on-surface);
+		font-family: var(--font-display);
+		font-size: 2rem;
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+		text-transform: none;
+	}
+
+	.guide-toc-group-title {
+		color: var(--color-primary);
+	}
+
+	.guide-toc a[aria-current="location"] {
+		background: color-mix(in oklch, var(--color-tertiary) 18%, transparent);
+		color: var(--color-primary-hover);
+		padding-inline: var(--spacing-sm);
+		text-decoration: none;
+	}
+
+	.guide-article {
+		position: relative;
+		border: 2px solid var(--color-paper-border);
+		background:
+			repeating-linear-gradient(1deg, transparent 0 3.25rem, oklch(0.48 0.055 65 / 0.06) 3.25rem calc(3.25rem + 1px)),
+			var(--color-paper);
+		color: var(--color-ink);
+		padding: clamp(var(--spacing-lg), 5vw, 4.5rem);
+		box-shadow: 0.8rem 0.95rem 0 var(--pg-paper-shadow);
+	}
+
+	.guide-article::before,
+	.guide-article::after {
+		content: "";
+		position: absolute;
+		z-index: 1;
+		inline-size: 4.5rem;
+		block-size: 1.1rem;
+		background: oklch(0.79 0.045 77 / 0.78);
+		box-shadow: 0 1px 0 oklch(0.45 0.04 60 / 0.35);
+	}
+
+	.guide-article::before {
+		inset-block-start: 1rem;
+		inset-inline-start: -1.75rem;
+		transform: rotate(-39deg);
+	}
+
+	.guide-article::after {
+		inset-block-end: 1rem;
+		inset-inline-end: -1.75rem;
+		transform: rotate(-39deg);
+	}
+
+	.guide-article h2,
+	.guide-reference-heading h2 {
+		font-family: var(--font-display);
+		font-size: clamp(2.5rem, 5vw, 4rem);
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+		color: var(--color-ink);
+	}
+
+	.guide-article h3 {
+		color: var(--color-ink);
+	}
+
+	.guide-article a {
+		color: var(--color-ink-link);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 0.18em;
+	}
+
+	.guide-article a:hover {
+		color: var(--color-ink-link-hover);
+	}
+
+	.guide-article a:focus-visible {
+		outline-color: var(--color-ink-link);
+		outline-width: 3px;
+	}
+
+	.guide-article :not(pre) > code {
+		background: color-mix(in oklch, var(--color-paper-border) 22%, transparent);
+		color: var(--color-ink);
+	}
+
+	.guide-article section + section {
+		margin-block-start: clamp(var(--spacing-xxl), 7vw, 6rem);
+		border-block-start: 2px solid color-mix(in oklch, var(--color-paper-border) 72%, transparent);
+		padding-block-start: clamp(var(--spacing-xl), 5vw, 4rem);
+	}
+
+	.guide-reference-heading {
+		margin-block: clamp(var(--spacing-xxl), 8vw, 7rem) var(--spacing-xxl);
+		border-block: 3px double var(--color-paper-border);
+		padding-block: var(--spacing-xl);
+	}
+
+	.guide-reference-heading p {
+		color: var(--color-ink-muted);
+	}
+
+	.guide-callout {
+		position: relative;
+		border: 2px solid var(--color-paper-border);
+		background: var(--color-paper-raised);
+		box-shadow: 0.25rem 0.3rem 0 color-mix(in oklch, var(--color-paper-border) 62%, transparent);
+	}
+
+	.guide-callout::before {
+		content: "";
+		position: absolute;
+		inset-block-start: -0.4rem;
+		inset-inline-start: var(--spacing-lg);
+		inline-size: 2.5rem;
+		block-size: 0.55rem;
+		background: var(--color-tertiary);
+		transform: rotate(-2deg);
+	}
+
+	.guide-checkpoint {
+		border: 2px solid var(--color-ink);
+		background: var(--color-paper-raised);
+		padding: var(--spacing-lg);
+		box-shadow: 0.25rem 0.3rem 0 var(--color-paper-border);
+	}
+
+	.guide-table caption,
+	.guide-code figcaption {
+		color: var(--color-ink-muted);
+	}
+
+	.guide-table th,
+	.guide-table td {
+		border-color: var(--color-paper-border);
+	}
+
+	.guide-table th {
+		color: var(--color-ink);
+	}
+
+	.guide-code {
+		border: 1px solid var(--color-border);
+		background: var(--color-surface-raised);
+		box-shadow: 0.4rem 0.45rem 0 color-mix(in oklch, var(--color-paper-border) 72%, transparent);
+	}
+
+	.guide-code figcaption {
+		margin: 0;
+		padding: var(--spacing-sm) var(--spacing-md);
+		color: var(--color-on-surface-muted);
+	}
+
+	.guide-code pre {
+		margin: 0;
+		border-block-start: 1px solid var(--color-border);
+		border-radius: 0;
+		background: var(--color-surface);
+	}
+
+	.guide-copy {
+		border-color: var(--color-border);
+		color: var(--color-on-surface);
+	}
+
+	.guide-copy:hover {
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+	}
+
+	.guide-footer {
+		position: relative;
+		z-index: 1;
+		max-inline-size: 92rem;
+		color: var(--color-on-surface-muted);
+	}
+
+	@media (min-width: 64rem) {
+		.guide-scene {
+			background-image:
+				linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.95)),
+				url("/tboi-wall-lg.webp");
+		}
+	}
+
 	@media (max-width: 48rem) {
+		.guide-header h1 {
+			font-size: clamp(2.75rem, 15vw, 5rem);
+			overflow-wrap: normal;
+			word-break: normal;
+		}
+
+		.guide-start {
+			grid-template-columns: minmax(0, 1fr);
+			backdrop-filter: none;
+		}
+
 		.guide-path {
 			grid-template-columns: 1fr;
 		}
@@ -1053,8 +1372,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 		.guide-toc {
 			position: static;
-			border-block-end: 1px solid var(--color-border);
-			padding-block-end: var(--spacing-lg);
+			max-block-size: none;
 		}
 
 		.guide-toc ul {
@@ -1064,6 +1382,23 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 		.guide-code-hint {
 			display: inline;
+		}
+
+		.guide-article {
+			padding-inline: var(--spacing-md);
+			box-shadow: 0.4rem 0.5rem 0 var(--pg-paper-shadow);
+		}
+
+		.guide-article h2,
+		.guide-reference-heading h2 {
+			font-size: clamp(1.5rem, 7vw, 2.25rem);
+			overflow-wrap: break-word;
+			word-break: normal;
+		}
+
+		.guide-article::before,
+		.guide-article::after {
+			display: none;
 		}
 	}
 
@@ -1075,6 +1410,14 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 		.guide-copy:active {
 			transform: none;
+		}
+	}
+
+	@media (prefers-reduced-transparency: reduce) {
+		.guide-start,
+		.guide-toc {
+			background: var(--color-surface-raised);
+			backdrop-filter: none;
 		}
 	}
 </style>

@@ -1,17 +1,22 @@
 ---
 version: alpha
 name: Platinum Gold
-description: Docs site for the Platinum Gold API. Basement palette, Upheaval for the brand shout, Source Sans 3 for headings and reading.
+description: An API field guide found in Isaac's basement. Dark room chrome, aged paper reading surfaces, Upheaval display type, and Source Sans 3 technical copy.
 colors:
-  surface: "oklch(0.19 0.022 68)"
-  surface-raised: "oklch(0.24 0.024 68)"
-  on-surface: "oklch(0.93 0.018 78)"
-  on-surface-muted: "oklch(0.78 0.02 70)"
-  border: "oklch(0.35 0.03 68)"
-  primary: "oklch(0.82 0.11 222)"
-  primary-hover: "oklch(0.88 0.11 222)"
-  on-primary: "oklch(0.16 0.03 222)"
-  tertiary: "oklch(0.78 0.12 85)"
+  surface: "oklch(0.145 0.025 52)"
+  surface-raised: "oklch(0.205 0.03 52)"
+  on-surface: "oklch(0.93 0.025 78)"
+  on-surface-muted: "oklch(0.75 0.035 72)"
+  border: "oklch(0.34 0.045 55)"
+  primary: "oklch(0.83 0.12 82)"
+  primary-hover: "oklch(0.91 0.105 88)"
+  on-primary: "oklch(0.16 0.035 50)"
+  tertiary: "oklch(0.68 0.15 30)"
+  paper: "oklch(0.86 0.055 82)"
+  paper-raised: "oklch(0.91 0.045 88)"
+  paper-border: "oklch(0.55 0.075 67)"
+  ink: "oklch(0.22 0.045 52)"
+  ink-muted: "oklch(0.4 0.045 55)"
   error: "oklch(0.65 0.17 28)"
   on-error: "oklch(0.98 0.01 28)"
   quality-0: "oklch(0.58 0.01 70)"
@@ -119,15 +124,17 @@ components:
 
 Platinum Gold is documentation for frontend developers integrating a read-only Binding of Isaac item API. It is not a player catalog.
 
-The game is the signature, not the interface: Upheaval owns the `/` brand shout, while Source Sans 3 handles docs headings and reading. The dirt-and-tears palette and quality 0 to 4 marks carry the rest of the world. On `/` only, `public/tboi-wall.webp` is the first-viewport field. Everything else is a contemporary docs site. No heart HUD, no dirt textures, no extra collage.
+The interface lives inside the game world. Dark room chrome frames an aged field guide; the mural, paper, map-like navigation, hard shadows, and hand-made display type make the documentation feel found in Isaac's basement. Source Sans 3 protects technical readability. The experience may be theatrical around the document, never inside code or dense reference data.
 
 ## Colors
 
 `surface` is the page. `surface-raised` is cards, code, and inputs. `on-surface` is body text. `on-surface-muted` is captions and helper text, never body copy.
 
-`primary` is tear blue. It is the only interactive hue: links, the one filled button on a view, and the focus ring. Do not use it on non-interactive headings or decoration. `primary-hover` is that same hue, lighter. `on-primary` is the ink on filled tear surfaces.
+`primary` is candle gold. It is the interactive hue on dark surfaces and the focus ring. `primary-hover` is the lit state. Links on paper use dark oxblood ink so they retain contrast against the warm sheet.
 
-`tertiary` is pedestal gold. Use it for quality 4 and for rare static emphasis. It is not a second action color.
+`tertiary` is dried blood. Use it for active map marks and rare static emphasis. It is not a second action color.
+
+`paper`, `paper-raised`, `paper-border`, `ink`, and `ink-muted` form the reading surface. Long technical content belongs on paper; global chrome and code remain in the room palette.
 
 `error` is dried blood. Errors and destructive actions only.
 
@@ -137,7 +144,7 @@ The game is the signature, not the interface: Upheaval owns the `/` brand shout,
 
 ## Themes
 
-Default appearance is dark. The document ships `color-scheme: dark`. Light values below are documentation until the spec can encode modes.
+Default appearance is dark. The document ships `color-scheme: dark`; paper is a local light surface inside that dark environment.
 
 | Token | Dark (default) | Light |
 | --- | --- | --- |
@@ -162,27 +169,27 @@ Default appearance is dark. The document ships `color-scheme: dark`. Light value
 
 Two webfonts. Bind `public/fonts/upheavtt.ttf` to family `Upheaval` and serve it as woff2. Load Source Sans 3 at 400 and 600 only. Code uses `ui-monospace`. Do not load a third webfont.
 
-Upheaval is display only and belongs to the `/` brand shout. Never set it below 32px. Never use it for body, docs headings, UI chrome, buttons, or inputs. Disable fake bold and italic on it (`font-synthesis: none`). The shout stays roman.
+Upheaval is display only. It owns the brand, page title, major guide chapters, and short game-like labels. Never set it below 24px or use it for body copy, tables, code, buttons, or inputs. Disable fake bold and italic on it (`font-synthesis: none`).
 
 On `/` only, the hero shout is fluid: `clamp(2rem, 8vw, 5.5rem)` at display line-height `1.05`. Docs route titles use `title` (48px) and `headline-lg` (32px), both Source Sans 3 semibold.
 
-Source Sans 3 is every repetitive surface plus functional headings: body, navigation, buttons, labels, tables, docs titles, and section headings. Italic is allowed only inside body paragraphs.
+Source Sans 3 is every repetitive and technical surface: body, navigation, buttons, labels, tables, subheadings, and code captions. Italic is allowed only inside body paragraphs.
 
 `label-md` is uppercase via CSS, never by typing caps into copy. Apply `tabular-nums` to `gameId`, quality, `rechargeTime`, `limit`, and `offset`. Cap prose at about 65 characters. `text-wrap: balance` on titles, `pretty` on short descriptions.
 
 ## Layout
 
-4px base. Page margin is `{spacing.margin}`, gutters are `{spacing.gutter}`. Prose sits in a single column near 65ch. Endpoint tables and the playground may use the full content width.
+4px base. The guide uses a map rail plus a paper sheet. Prose stays near 68ch, while endpoint tables and code may use the full sheet width.
 
-Group related controls with `{spacing.md}` inside and `{spacing.lg}` between groups. Do not add a marketing hero on docs routes. `/` is the exception: a full-viewport mural, then the first-call strip.
+Group related controls with `{spacing.md}` inside and `{spacing.lg}` between groups. `/` is a title-screen threshold; docs routes open into the field guide without a marketing hero.
 
 ## Elevation & Depth
 
-No ambient shadows. Stack `surface` under `surface-raised`, then a 1px `{colors.border}` hairline. Overlays use a dimming scrim, not a large drop shadow.
+Depth is physical rather than ambient. Paper casts a short, hard shadow onto the room. Raised dark controls use borders, not floating glass shadows. Avoid generic blurred card elevation.
 
 ## Shapes
 
-Controls use `{rounded.sm}`. Code blocks and raised panels use `{rounded.md}`. Tables and rules stay `{rounded.none}`. No pills, no 16px cards.
+Controls use `{rounded.sm}`. Code blocks and raised panels use `{rounded.md}`. Paper, tables, map rooms, and rules stay close to square. No pills and no soft SaaS cards.
 
 ## Components
 
@@ -200,6 +207,8 @@ Code blocks use `code-block`. Inline code uses `{typography.code}` on `{colors.s
 - Don't load a third webfont.
 - Don't use blood red except for errors and destructive actions.
 - Don't use quality colors as small text.
-- Don't add pixel backgrounds, splatter, or HUD chrome. `/` may use `tboi-wall.webp` as the first-viewport field; that asset does not travel.
+- Do let `tboi-wall.webp` establish the world on `/` and appear as a heavily obscured environmental layer on guide routes.
+- Do use paper grain, room seams, hard shadows, and map geometry when they clarify hierarchy.
+- Don't add a decorative HUD, fake health counters, or game controls that imply unavailable functionality.
 - Don't mix pill radii with the 2px/4px scale.
 - Do meet WCAG AA on every text pair against its actual background.

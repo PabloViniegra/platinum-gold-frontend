@@ -15,10 +15,18 @@ pnpm-debug.log*
 
 # environment variables
 .env
-.env.production
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store
 
 # jetbrains setting folder
 .idea/
+
+# AI
+opencode.json
+AGENTS.md
+.agents/
+skills-lock.json
+docs/api-frontend-guide.md

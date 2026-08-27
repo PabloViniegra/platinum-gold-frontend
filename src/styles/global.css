@@ -1,1 +1,205 @@
 @import "tailwindcss";
+@import "@fontsource/source-sans-3/latin-400.css";
+@import "@fontsource/source-sans-3/latin-400-italic.css";
+@import "@fontsource/source-sans-3/latin-600.css";
+
+@font-face {
+  font-family: Upheaval;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/upheaval.woff2") format("woff2");
+}
+
+@theme {
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --font-display: Upheaval, ui-sans-serif, sans-serif;
+  --font-mono: ui-monospace, monospace;
+
+  --text-display: 3rem;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: 0.02em;
+  --text-headline-lg: 2rem;
+  --text-headline-lg--line-height: 1.1;
+  --text-headline-lg--letter-spacing: 0.02em;
+  --text-headline-md: 1.5rem;
+  --text-headline-md--line-height: 1.2;
+  --text-headline-md--letter-spacing: -0.02em;
+  --text-headline-md--font-weight: 600;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.6;
+  --text-body-md: 1rem;
+  --text-body-md--line-height: 1.6;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.5;
+  --text-label-md: 0.75rem;
+  --text-label-md--line-height: 1.3;
+  --text-label-md--letter-spacing: 0.06em;
+  --text-label-md--font-weight: 600;
+  --text-code: 0.875rem;
+  --text-code--line-height: 1.5;
+
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-gutter: 24px;
+  --spacing-margin: 32px;
+}
+
+:root {
+  color-scheme: light dark;
+  --pg-surface: light-dark(oklch(0.91 0.028 75), oklch(0.19 0.022 68));
+  --pg-surface-raised: light-dark(oklch(0.96 0.016 75), oklch(0.24 0.024 68));
+  --pg-on-surface: light-dark(oklch(0.22 0.03 65), oklch(0.93 0.018 78));
+  --pg-on-surface-muted: light-dark(oklch(0.42 0.03 65), oklch(0.78 0.02 70));
+  --pg-border: light-dark(oklch(0.8 0.03 75), oklch(0.35 0.03 68));
+  --pg-primary: light-dark(oklch(0.45 0.12 222), oklch(0.82 0.11 222));
+  --pg-primary-hover: light-dark(oklch(0.38 0.12 222), oklch(0.88 0.11 222));
+  --pg-on-primary: light-dark(oklch(0.98 0.01 222), oklch(0.16 0.03 222));
+  --pg-tertiary: light-dark(oklch(0.52 0.12 85), oklch(0.78 0.12 85));
+  --pg-error: light-dark(oklch(0.5 0.17 28), oklch(0.65 0.17 28));
+  --pg-on-error: oklch(0.98 0.01 28);
+  --pg-quality-0: light-dark(oklch(0.45 0.01 70), oklch(0.58 0.01 70));
+  --pg-quality-1: light-dark(oklch(0.35 0.01 70), oklch(0.9 0.01 80));
+  --pg-quality-2: light-dark(oklch(0.55 0.14 95), oklch(0.84 0.14 95));
+  --pg-quality-3: light-dark(oklch(0.52 0.14 80), oklch(0.8 0.14 80));
+  --pg-quality-4: light-dark(oklch(0.5 0.16 55), oklch(0.72 0.16 55));
+}
+
+@theme inline {
+  --color-surface: var(--pg-surface);
+  --color-surface-raised: var(--pg-surface-raised);
+  --color-on-surface: var(--pg-on-surface);
+  --color-on-surface-muted: var(--pg-on-surface-muted);
+  --color-border: var(--pg-border);
+  --color-primary: var(--pg-primary);
+  --color-primary-hover: var(--pg-primary-hover);
+  --color-on-primary: var(--pg-on-primary);
+  --color-tertiary: var(--pg-tertiary);
+  --color-error: var(--pg-error);
+  --color-on-error: var(--pg-on-error);
+  --color-quality-0: var(--pg-quality-0);
+  --color-quality-1: var(--pg-quality-1);
+  --color-quality-2: var(--pg-quality-2);
+  --color-quality-3: var(--pg-quality-3);
+  --color-quality-4: var(--pg-quality-4);
+}
+
+@layer base {
+  html {
+    accent-color: var(--color-primary);
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    font-size-adjust: from-font;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-block-size: 100dvh;
+    font-size: var(--text-body-md);
+    line-height: var(--text-body-md--line-height);
+    overflow-wrap: break-word;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    line-height: var(--text-display--line-height);
+    letter-spacing: var(--text-display--letter-spacing);
+    font-weight: 400;
+    font-synthesis: none;
+    text-wrap: balance;
+    font-size-adjust: cap-height from-font;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: var(--text-headline-lg);
+    line-height: var(--text-headline-lg--line-height);
+    letter-spacing: var(--text-headline-lg--letter-spacing);
+    font-weight: 400;
+    font-synthesis: none;
+    text-wrap: balance;
+    font-size-adjust: cap-height from-font;
+  }
+
+  h3 {
+    font-size: var(--text-headline-md);
+    line-height: var(--text-headline-md--line-height);
+    letter-spacing: var(--text-headline-md--letter-spacing);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  a {
+    color: var(--color-primary);
+  }
+
+  a:hover {
+    color: var(--color-primary-hover);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  :is(input, textarea, select) {
+    background-color: var(--color-surface-raised);
+    color: var(--color-on-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    font: inherit;
+    font-size: 1rem;
+    line-height: var(--text-body-md--line-height);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-on-surface-muted);
+  }
+
+  :is(code, kbd, samp) {
+    font-family: var(--font-mono);
+    font-size: var(--text-code);
+    line-height: var(--text-code--line-height);
+  }
+
+  :not(pre) > code {
+    background-color: var(--color-surface-raised);
+    border-radius: var(--radius-sm);
+    padding-inline: 0.35em;
+    padding-block: 0.1em;
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    font-size: var(--text-code);
+    line-height: var(--text-code--line-height);
+    background-color: var(--color-surface-raised);
+    color: var(--color-on-surface);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+  }
+
+  pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+}

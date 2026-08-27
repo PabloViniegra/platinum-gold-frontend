@@ -31,3 +31,4 @@ CLAUDE.md
 .agents/
 skills-lock.json
 docs/api-frontend-guide.md
+.impeccable/

@@ -27,6 +27,7 @@ pnpm-debug.log*
 # AI
 opencode.json
 AGENTS.md
+CLAUDE.md
 .agents/
 skills-lock.json
 docs/api-frontend-guide.md

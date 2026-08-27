@@ -60,6 +60,7 @@
 
 :root {
   color-scheme: dark;
+  --pg-header-height: 3rem;
   --pg-surface: light-dark(oklch(0.91 0.028 75), oklch(0.19 0.022 68));
   --pg-surface-raised: light-dark(oklch(0.96 0.016 75), oklch(0.24 0.024 68));
   --pg-on-surface: light-dark(oklch(0.22 0.03 65), oklch(0.93 0.018 78));

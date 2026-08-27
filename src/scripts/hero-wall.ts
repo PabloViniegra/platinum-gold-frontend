@@ -1,9 +1,9 @@
-function clamp(value: number): number {
-	if (value < 0) {
-		return 0;
+function clamp(value: number, min = 0, max = 1): number {
+	if (value < min) {
+		return min;
 	}
-	if (value > 1) {
-		return 1;
+	if (value > max) {
+		return max;
 	}
 	return value;
 }
@@ -19,8 +19,13 @@ export function mountHeroWall(stage: HTMLElement): () => void {
 		stage.style.setProperty("--spot-y", `${y}%`);
 	}
 
+	function setTilt(x: number, y: number): void {
+		stage.style.setProperty("--tilt-x", `${x.toFixed(2)}deg`);
+		stage.style.setProperty("--tilt-y", `${y.toFixed(2)}deg`);
+	}
+
 	function onPointerMove(event: PointerEvent): void {
-		if (aimed) {
+		if (aimed || event.pointerType !== "mouse") {
 			return;
 		}
 		const rect = stage.getBoundingClientRect();
@@ -30,6 +35,11 @@ export function mountHeroWall(stage: HTMLElement): () => void {
 		const x = ((event.clientX - rect.left) / rect.width) * 100;
 		const y = ((event.clientY - rect.top) / rect.height) * 100;
 		setSpot(x, y);
+		setTilt(clamp((x - 50) / 50, -1, 1) * 1.5, clamp((50 - y) / 50, -1, 1) * 1.5);
+	}
+
+	function resetTilt(): void {
+		setTilt(0, 0);
 	}
 
 	function aimAtCta(): void {
@@ -76,6 +86,7 @@ export function mountHeroWall(stage: HTMLElement): () => void {
 	}
 
 	stage.addEventListener("pointermove", onPointerMove);
+	stage.addEventListener("pointerleave", resetTilt);
 	window.addEventListener("scroll", onScroll, { passive: true });
 	if (cta instanceof HTMLElement) {
 		cta.addEventListener("pointerenter", aimAtCta);
@@ -87,6 +98,7 @@ export function mountHeroWall(stage: HTMLElement): () => void {
 
 	return () => {
 		stage.removeEventListener("pointermove", onPointerMove);
+		stage.removeEventListener("pointerleave", resetTilt);
 		window.removeEventListener("scroll", onScroll);
 		if (cta instanceof HTMLElement) {
 			cta.removeEventListener("pointerenter", aimAtCta);
@@ -97,6 +109,8 @@ export function mountHeroWall(stage: HTMLElement): () => void {
 		stage.style.removeProperty("--spot-x");
 		stage.style.removeProperty("--spot-y");
 		stage.style.removeProperty("--hero-p");
+		stage.style.removeProperty("--tilt-x");
+		stage.style.removeProperty("--tilt-y");
 		if (overlay instanceof HTMLElement) {
 			overlay.removeAttribute("inert");
 		}

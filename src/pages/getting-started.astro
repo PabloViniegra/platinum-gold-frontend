@@ -6,7 +6,7 @@ import Root from "../layouts/Root.astro";
 	title="Getting started — Platinum Gold"
 	description="Authenticate, make one GET, and keep the API key off the public bundle."
 >
-	<a class="guide-skip" href="#guide-content">Skip to guide</a>
+	<a slot="skip" class="guide-skip" href="#guide-content">Skip to guide</a>
 	<main id="guide-content" class="guide-shell px-margin py-xxl" tabindex="-1">
 		<nav class="guide-breadcrumb text-body-sm" aria-label="Breadcrumb">
 			<a href="/">Platinum Gold</a>
@@ -22,30 +22,59 @@ import Root from "../layouts/Root.astro";
 			</p>
 		</header>
 
+		<section class="guide-start" aria-labelledby="guide-start-title">
+			<div class="guide-start-copy">
+				<h2 id="guide-start-title">Start with one request</h2>
+				<p>Follow these three steps before using the full API reference.</p>
+			</div>
+			<ol class="guide-path">
+				<li>
+					<a href="#authentication">Get API access</a>
+					<span>Ask your backend contact for a key with <code>api:access</code>.</span>
+				</li>
+				<li>
+					<a href="#first-request">Make one request</a>
+					<span>Keep the key in a server-side runtime and call <code>/v1/items</code>.</span>
+				</li>
+				<li>
+					<a href="#verify">Verify the result</a>
+					<span>Confirm the response and keep its <code>X-Request-ID</code>.</span>
+				</li>
+			</ol>
+		</section>
+
 		<div class="guide-layout">
-			<nav class="guide-toc" aria-label="On this page">
+			<nav class="guide-toc" data-guide-toc aria-label="On this page">
 				<p class="guide-toc-title">On this page</p>
+				<p class="guide-toc-group-title">Start here</p>
 				<ul>
-					<li><a href="#authentication">Authentication</a></li>
-					<li><a href="#first-request">Make the first request</a></li>
-					<li><a href="#response">Read the response</a></li>
-					<li><a href="#data-shape">Understand the data</a></li>
-					<li><a href="#endpoints">Know the endpoints</a></li>
-					<li><a href="#list-filters">Filter the item list</a></li>
-					<li><a href="#errors">Handle errors</a></li>
-					<li><a href="#request-ids">Trace a request</a></li>
-					<li><a href="#caching">Cache responses</a></li>
-					<li><a href="#versioning">Plan for change</a></li>
-					<li><a href="#support">Find the reference</a></li>
+					<li><a data-toc-link aria-current="location" href="#authentication">Authentication</a></li>
+					<li><a data-toc-link href="#first-request">Make the first request</a></li>
+					<li><a data-toc-link href="#verify">Verify the first call</a></li>
 				</ul>
+				<details data-guide-reference class="guide-toc-reference">
+					<summary>Full guide contents</summary>
+					<ul>
+						<li><a data-toc-link href="#response">Read the response</a></li>
+						<li><a data-toc-link href="#data-shape">Understand the data</a></li>
+						<li><a data-toc-link href="#endpoints">Know the endpoints</a></li>
+						<li><a data-toc-link href="#list-filters">Filter the item list</a></li>
+						<li><a data-toc-link href="#errors">Handle errors</a></li>
+						<li><a data-toc-link href="#request-ids">Trace a request</a></li>
+						<li><a data-toc-link href="#caching">Cache responses</a></li>
+						<li><a data-toc-link href="#versioning">Plan for change</a></li>
+						<li><a data-toc-link href="#support">Find the reference</a></li>
+					</ul>
+				</details>
 			</nav>
 
 			<article class="guide-article">
 				<section id="authentication">
 					<h2>Authentication</h2>
 					<p>
-						Every <code>/v1</code> endpoint needs a Clerk-issued API key. The health
-						checks are public; data routes are not.
+						Every <code>/v1</code> endpoint needs a Clerk-issued API key. Ask the backend
+						contact for your environment for a key with <code>api:access</code>. This guide
+						does not issue keys. The health checks are public; data routes are not.
 					</p>
 
 					<div
@@ -81,10 +110,16 @@ import Root from "../layouts/Root.astro";
 					</aside>
 
 					<figure class="guide-code">
-						<figcaption>HTTP request</figcaption>
+						<figcaption>
+							<span>HTTP request</span>
+							<span class="guide-code-hint">Scroll horizontally if needed</span>
+							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
+						</figcaption>
 						<pre tabindex="0" aria-label="HTTP request example"><code>GET /v1/items HTTP/1.1
 Host: platinum-gold-backend.vercel.app
 X-API-Key: sk_live_...
+X-Request-ID: 7c9e2f5e-1b3d-4f8a-9b6e-2c0a4f7d8e9b
 Accept: application/json</code></pre>
 					</figure>
 				</section>
@@ -103,7 +138,12 @@ Accept: application/json</code></pre>
 					</ol>
 
 					<figure class="guide-code">
-						<figcaption>Server-side TypeScript</figcaption>
+						<figcaption>
+							<span>Server-side TypeScript</span>
+							<span class="guide-code-hint">Scroll horizontally if needed</span>
+							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
+						</figcaption>
 						<pre tabindex="0" aria-label="Server-side TypeScript example"><code>const API_BASE = "https://platinum-gold-backend.vercel.app";
 const API_KEY = process.env.PLATINUM_GOLD_API_KEY;
 
@@ -114,26 +154,52 @@ type ItemPage = &#123;
   offset: number;
 &#125;;
 
+type ApiErrorDetail = &#123;
+  code?: string;
+  message?: string;
+&#125;;
+
+type ApiError = &#123;
+  error?: ApiErrorDetail;
+&#125;;
+
 export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
   if (!API_KEY) &#123;
     throw new Error("PLATINUM_GOLD_API_KEY is not configured.");
   &#125;
 
+  const requestId = crypto.randomUUID();
   const response = await fetch(
     `$&#123;API_BASE&#125;/v1/items?type=passive&amp;sort=name&amp;order=asc&amp;limit=20`,
     &#123;
       headers: &#123;
         Accept: "application/json",
         "X-API-Key": API_KEY,
+        "X-Request-ID": requestId,
       &#125;,
     &#125;,
   );
+  const responseRequestId = response.headers.get("X-Request-ID") ?? requestId;
 
   if (!response.ok) &#123;
-    throw new Error("Unable to load items.");
+    const error: ApiError = await response.json().catch(() =&gt; (&#123;&#125;));
+		console.error("Platinum Gold request failed", &#123;
+			status: response.status,
+			requestId: responseRequestId,
+			error,
+		&#125;);
+
+    if (response.status === 401) &#123;
+      throw new Error("Check the server-side API key.");
+    &#125;
+    if (response.status === 403) &#123;
+      throw new Error("Use a key with the api:access scope.");
+    &#125;
+    throw new Error("Unable to load items. Retry and include the request ID if you need support.");
   &#125;
 
-  return response.json() as Promise&lt;ItemPage&gt;;
+  const page: ItemPage = await response.json();
+  return page;
 &#125;</code></pre>
 					</figure>
 
@@ -151,7 +217,12 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 					</p>
 
 					<figure class="guide-code">
-						<figcaption>Successful response</figcaption>
+						<figcaption>
+							<span>Successful response</span>
+							<span class="guide-code-hint">Scroll horizontally if needed</span>
+							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
+						</figcaption>
 						<pre tabindex="0" aria-label="Successful response example"><code>&#123;
   "items": [
     &#123;
@@ -165,7 +236,23 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
   "offset": 0
 &#125;</code></pre>
 					</figure>
+
+					<aside id="verify" class="guide-checkpoint" aria-labelledby="verify-title">
+						<h3 id="verify-title">First call complete</h3>
+						<p>Continue when these four checks pass:</p>
+						<ul class="guide-bullets">
+							<li><strong>Status:</strong> the response is <code>200</code>.</li>
+							<li><strong>Body:</strong> it includes <code>items</code>, <code>total</code>, <code>limit</code>, and <code>offset</code>.</li>
+							<li><strong>Safety:</strong> the API key exists only in your server-side runtime.</li>
+							<li><strong>Trace:</strong> your logs retain the response's <code>X-Request-ID</code>.</li>
+						</ul>
+					</aside>
 				</section>
+
+				<div class="guide-reference-heading">
+					<h2 id="reference">Reference</h2>
+					<p>Once the first request works, use these sections for the rest of the API contract.</p>
+				</div>
 
 				<section id="data-shape">
 					<h2>Understand the data</h2>
@@ -235,7 +322,12 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 					</div>
 
 					<figure class="guide-code">
-						<figcaption>Dataset metadata</figcaption>
+						<figcaption>
+							<span>Dataset metadata</span>
+							<span class="guide-code-hint">Scroll horizontally if needed</span>
+							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
+						</figcaption>
 						<pre tabindex="0" aria-label="Dataset metadata example"><code>&#123;
   "apiVersion": "0.1.0",
   "datasetVersion": "rebirth-2025-08",
@@ -411,7 +503,12 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 					</p>
 
 					<figure class="guide-code">
-						<figcaption>Error response</figcaption>
+						<figcaption>
+							<span>Error response</span>
+							<span class="guide-code-hint">Scroll horizontally if needed</span>
+							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
+						</figcaption>
 						<pre tabindex="0" aria-label="Error response example"><code>&#123; "error": &#123; "code": "INVALID_API_KEY", "message": "Invalid API key" &#125; &#125;</code></pre>
 					</figure>
 
@@ -470,7 +567,12 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 					</p>
 
 					<figure class="guide-code">
-						<figcaption>Request correlation header</figcaption>
+						<figcaption>
+							<span>Request correlation header</span>
+							<span class="guide-code-hint">Scroll horizontally if needed</span>
+							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
+						</figcaption>
 						<pre tabindex="0" aria-label="Request correlation header example"><code>X-Request-ID: 7c9e2f5e-1b3d-4f8a-9b6e-2c0a4f7d8e9b</code></pre>
 					</figure>
 				</section>
@@ -553,6 +655,12 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 			</article>
 		</div>
 	</main>
+	<footer class="guide-footer px-margin pb-xxl" aria-label="Documentation footer">
+		<div class="guide-footer-inner">
+			<span>Platinum Gold API guide</span>
+			<a href="/">Back to Platinum Gold</a>
+		</div>
+	</footer>
 </Root>
 
 <style>
@@ -565,7 +673,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		position: absolute;
 		inset-block-start: var(--spacing-sm);
 		inset-inline-start: var(--spacing-sm);
-		z-index: 1;
+		z-index: 50;
 		transform: translateY(calc(-100% - var(--spacing-sm)));
 		border-radius: var(--radius-sm);
 		background: var(--color-primary);
@@ -575,7 +683,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.guide-skip:focus {
+	.guide-skip:focus-visible {
 		transform: translateY(0);
 	}
 
@@ -600,6 +708,42 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		margin-block-start: var(--spacing-md);
 	}
 
+	.guide-start {
+		max-inline-size: 65ch;
+		margin-block-end: var(--spacing-xxl);
+		border-block: 1px solid var(--color-border);
+		padding-block: var(--spacing-lg);
+	}
+
+	.guide-start-copy p {
+		margin-block-start: var(--spacing-sm);
+	}
+
+	.guide-path {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--spacing-lg);
+		margin-block-start: var(--spacing-lg);
+		padding: 0;
+		list-style: none;
+	}
+
+	.guide-path li {
+		display: grid;
+		align-content: start;
+		gap: var(--spacing-sm);
+	}
+
+	.guide-path a {
+		font-weight: 600;
+	}
+
+	.guide-path span {
+		color: var(--color-on-surface-muted);
+		font-size: var(--text-body-sm);
+		line-height: var(--text-body-sm--line-height);
+	}
+
 	.guide-layout {
 		display: grid;
 		grid-template-columns: minmax(10rem, 12rem) minmax(0, 65ch);
@@ -609,10 +753,11 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 	.guide-toc {
 		position: sticky;
-		inset-block-start: var(--spacing-lg);
+		inset-block-start: var(--pg-header-height);
 	}
 
 	.guide-toc-title,
+	.guide-toc-group-title,
 	.guide-code figcaption,
 	.guide-table caption {
 		font-size: var(--text-label-md);
@@ -623,9 +768,14 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	}
 
 	.guide-toc-title,
+	.guide-toc-group-title,
 	.guide-table caption,
 	.guide-code figcaption {
 		color: var(--color-on-surface-muted);
+	}
+
+	.guide-toc-group-title {
+		margin-block-start: var(--spacing-lg);
 	}
 
 	.guide-toc ul {
@@ -635,7 +785,11 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	}
 
 	.guide-toc a {
+		display: inline-flex;
+		min-block-size: 2.75rem;
+		align-items: center;
 		color: var(--color-on-surface);
+		padding-block: var(--spacing-xs);
 		text-decoration: underline;
 		text-decoration-thickness: from-font;
 		text-underline-offset: 0.18em;
@@ -645,16 +799,50 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		color: var(--color-primary-hover);
 	}
 
+	.guide-toc a[aria-current="location"] {
+		color: var(--color-primary);
+		font-weight: 600;
+		text-decoration-thickness: 2px;
+	}
+
+	.guide-toc-reference {
+		margin-block-start: var(--spacing-lg);
+		border-block-start: 1px solid var(--color-border);
+		padding-block-start: var(--spacing-sm);
+	}
+
+	.guide-toc-reference summary {
+		min-block-size: 2.75rem;
+		padding-block: var(--spacing-xs);
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.guide-toc-reference[open] summary {
+		margin-block-end: var(--spacing-xs);
+	}
+
 	.guide-article {
 		min-inline-size: 0;
 	}
 
 	.guide-article [id] {
-		scroll-margin-block-start: var(--spacing-lg);
+		scroll-margin-block-start: calc(var(--pg-header-height) + var(--spacing-lg));
 	}
 
 	.guide-article section + section {
 		margin-block-start: var(--spacing-xxl);
+	}
+
+	.guide-reference-heading {
+		margin-block: var(--spacing-xxl);
+		border-block-start: 1px solid var(--color-border);
+		padding-block-start: var(--spacing-xxl);
+	}
+
+	.guide-reference-heading p {
+		max-inline-size: 65ch;
+		margin-block-start: var(--spacing-sm);
 	}
 
 	.guide-article h2 {
@@ -680,6 +868,12 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 	.guide-callout p {
 		margin-block-start: var(--spacing-sm);
+	}
+
+	.guide-checkpoint {
+		margin-block-start: var(--spacing-lg);
+		border-block: 1px solid var(--color-border);
+		padding-block: var(--spacing-lg);
 	}
 
 	.guide-table-wrap {
@@ -728,7 +922,79 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	}
 
 	.guide-code figcaption {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-sm);
 		margin-block-end: var(--spacing-sm);
+	}
+
+	.guide-code figcaption > span:first-child {
+		margin-inline-end: auto;
+	}
+
+	.guide-code figcaption code,
+	.guide-copy,
+	.guide-code-hint {
+		text-transform: none;
+		letter-spacing: normal;
+	}
+
+	.guide-code-hint {
+		display: none;
+		font-size: var(--text-body-sm);
+		font-weight: 400;
+		line-height: var(--text-body-sm--line-height);
+	}
+
+	.guide-copy {
+		min-block-size: 2.75rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: transparent;
+		color: var(--color-on-surface);
+		padding: var(--spacing-xs) var(--spacing-md);
+		font: inherit;
+		font-size: var(--text-body-sm);
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+			color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+			transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.guide-copy:hover {
+		background-color: var(--color-surface);
+		color: var(--color-primary-hover);
+	}
+
+	.guide-copy:active {
+		transform: scale(0.96);
+	}
+
+	.guide-copy-status {
+		position: absolute;
+		inline-size: 1px;
+		block-size: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.guide-copy-status.is-visible {
+		position: static;
+		inline-size: auto;
+		block-size: auto;
+		overflow: visible;
+		clip-path: none;
+		color: var(--color-error);
+		font-size: var(--text-body-sm);
+		font-weight: 400;
+		line-height: var(--text-body-sm--line-height);
+		text-transform: none;
+		letter-spacing: normal;
+		white-space: normal;
 	}
 
 	.guide-code pre {
@@ -759,7 +1025,27 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		text-underline-offset: 0.18em;
 	}
 
+	.guide-footer {
+		max-inline-size: 80rem;
+		margin-inline: auto;
+	}
+
+	.guide-footer-inner {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: var(--spacing-md);
+		border-block-start: 1px solid var(--color-border);
+		padding-block-start: var(--spacing-lg);
+		color: var(--color-on-surface-muted);
+		font-size: var(--text-body-sm);
+	}
+
 	@media (max-width: 48rem) {
+		.guide-path {
+			grid-template-columns: 1fr;
+		}
+
 		.guide-layout {
 			grid-template-columns: 1fr;
 			gap: var(--spacing-xl);
@@ -772,16 +1058,117 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		}
 
 		.guide-toc ul {
-			display: flex;
-			flex-wrap: wrap;
-			column-gap: var(--spacing-md);
-			row-gap: var(--spacing-sm);
+			display: grid;
+			gap: var(--spacing-xs);
+		}
+
+		.guide-code-hint {
+			display: inline;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.guide-skip {
+		.guide-skip,
+		.guide-copy {
 			transition: none;
+		}
+
+		.guide-copy:active {
+			transform: none;
 		}
 	}
 </style>
+
+<script>
+	const guideToc = document.querySelector("[data-guide-toc]");
+	const guideReference = document.querySelector("[data-guide-reference]");
+	const tocLinks = guideToc?.querySelectorAll<HTMLAnchorElement>("[data-toc-link]") ?? [];
+	let activeSectionId = "";
+
+	function setActiveSection(id: string): void {
+		let activeLink: HTMLAnchorElement | undefined;
+		if (id === activeSectionId) {
+			return;
+		}
+		activeSectionId = id;
+		for (const link of tocLinks) {
+			if (link.hash === `#${id}`) {
+				link.setAttribute("aria-current", "location");
+				activeLink = link;
+			} else {
+				link.removeAttribute("aria-current");
+			}
+		}
+
+		if (activeLink && guideReference instanceof HTMLDetailsElement && guideReference.contains(activeLink)) {
+			guideReference.open = true;
+		}
+	}
+
+	const tocTargets = Array.from(tocLinks)
+		.map((link) => document.getElementById(link.hash.slice(1)))
+		.filter((target): target is HTMLElement => target instanceof HTMLElement);
+
+	function setActiveFromViewport(): void {
+		if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+			setActiveSection(tocTargets[tocTargets.length - 1]?.id ?? "");
+			return;
+		}
+
+		const visibleTarget = tocTargets
+			.filter((target) => {
+				const bounds = target.getBoundingClientRect();
+				return bounds.top <= window.innerHeight * 0.35 && bounds.bottom > window.innerHeight * 0.15;
+			})
+			.sort((first, second) => second.getBoundingClientRect().top - first.getBoundingClientRect().top)[0];
+
+		if (visibleTarget instanceof HTMLElement) {
+			setActiveSection(visibleTarget.id);
+		}
+	}
+
+	if (tocTargets.length > 0) {
+		const initialTarget = document.getElementById(window.location.hash.slice(1));
+		const sectionTarget = initialTarget instanceof HTMLElement && tocTargets.includes(initialTarget)
+			? initialTarget
+			: tocTargets[0];
+		setActiveSection(sectionTarget.id);
+		window.addEventListener("scroll", setActiveFromViewport, { passive: true });
+		setActiveFromViewport();
+	}
+
+	window.addEventListener("hashchange", () => {
+		const target = document.getElementById(window.location.hash.slice(1));
+		if (target instanceof HTMLElement && tocTargets.includes(target)) {
+			setActiveSection(target.id);
+		}
+	});
+
+	const copyButtons = document.querySelectorAll<HTMLButtonElement>("[data-copy-code]");
+	copyButtons.forEach((button) => {
+		button.addEventListener("click", async () => {
+			const figure = button.closest("figure");
+			const code = figure?.querySelector("pre code");
+			const status = figure?.querySelector("[data-copy-status]");
+			if (!(code instanceof HTMLElement) || !(status instanceof HTMLElement)) {
+				return;
+			}
+
+			try {
+				await navigator.clipboard.writeText(code.textContent ?? "");
+				button.textContent = "Copied";
+				status.textContent = "Code copied to clipboard.";
+				status.classList.remove("is-visible");
+			} catch {
+				status.textContent = "Copy unavailable. Select the code and copy it manually.";
+				status.classList.add("is-visible");
+				return;
+			}
+
+			window.setTimeout(() => {
+				button.textContent = "Copy";
+				status.textContent = "";
+			}, 1800);
+		});
+	});
+</script>

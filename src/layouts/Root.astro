@@ -8,6 +8,7 @@ type Props = {
 };
 
 const { title, description, preloadDisplayFont = false } = Astro.props;
+const isGettingStartedPage = Astro.url.pathname.replace(/\/+$/, "") === "/getting-started";
 ---
 
 <!doctype html>
@@ -32,6 +33,25 @@ const { title, description, preloadDisplayFont = false } = Astro.props;
 		<title>{title}</title>
 	</head>
 	<body>
+		<slot name="skip" />
+		<header
+			class="bg-surface sticky top-0 z-40 flex min-h-12 flex-wrap items-center justify-between gap-x-lg border-b border-border px-margin"
+		>
+			<a
+				href="/"
+				class="font-sans text-body-md font-semibold tracking-[-0.02em] text-on-surface hover:text-on-surface"
+				>Platinum Gold</a
+			>
+			{!isGettingStartedPage && (
+				<nav aria-label="Primary">
+					<a
+						href="/getting-started"
+						class="inline-flex min-h-11 items-center font-sans text-body-md font-semibold"
+						>Start the first call</a
+					>
+				</nav>
+			)}
+		</header>
 		<slot />
 	</body>
 </html>

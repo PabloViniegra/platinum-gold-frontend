@@ -8,15 +8,16 @@ import Root from "../layouts/Root.astro";
 	preloadDisplayFont={true}
 >
 	<a
+		slot="skip"
 		href="#first-call"
-		class="bg-primary text-on-primary font-sans font-semibold absolute start-2 top-2 z-50 min-h-11 rounded-sm px-3 py-3 -translate-y-[calc(100%+0.5rem)] focus:translate-y-0"
+		class="bg-primary text-on-primary font-sans font-semibold absolute start-2 top-0 z-50 min-h-11 rounded-sm px-3 py-3 -translate-y-full focus-visible:translate-y-12"
 		>Skip to first call</a
 	>
 	<main>
 		<div data-hero-pin>
 			<section
 				data-hero
-				class="scheme-dark relative min-h-dvh overflow-hidden text-on-surface"
+				class="scheme-dark relative min-h-[calc(100dvh-3rem)] overflow-hidden text-on-surface"
 			>
 				<div data-hero-wall class="absolute inset-0">
 					<img
@@ -38,16 +39,16 @@ import Root from "../layouts/Root.astro";
 				</div>
 				<div
 					data-hero-overlay
-					class="relative flex min-h-dvh flex-col justify-end px-margin pt-xl pb-[max(var(--spacing-xxl),env(safe-area-inset-bottom,0px))]"
+					class="relative flex min-h-[calc(100dvh-3rem)] flex-col justify-end px-margin pt-xl pb-[max(var(--spacing-xxl),env(safe-area-inset-bottom,0px))]"
 				>
-					<div>
+					<div data-hero-plane>
 						<h1>Platinum Gold</h1>
 						<p class="text-body-lg mt-md max-w-[65ch] tracking-[0.01em] text-pretty">
 							Make the first Binding of Isaac item API call without leaking the key.
 						</p>
 						<a
 							href="/getting-started"
-							class="bg-primary text-on-primary hover:bg-primary-hover hover:text-on-primary mt-lg inline-flex items-center rounded-sm border border-on-primary px-xl py-md font-sans text-body-lg font-semibold leading-none tracking-[-0.02em]"
+							class="bg-primary text-on-primary hover:bg-primary-hover hover:text-on-primary mt-lg inline-flex items-center rounded-sm px-xl py-md font-sans text-body-lg font-semibold leading-none tracking-[-0.02em]"
 							>Start the first call</a
 						>
 					</div>
@@ -55,7 +56,11 @@ import Root from "../layouts/Root.astro";
 			</section>
 		</div>
 
-		<section id="first-call" class="px-margin py-xxl" tabindex="-1">
+		<section
+			id="first-call"
+			class="bg-surface scroll-mt-12 px-margin py-xxl"
+			tabindex="-1"
+		>
 			<h2>The first call</h2>
 			<ol
 				class="mt-lg max-w-[65ch] list-decimal space-y-lg ps-lg text-pretty tabular-nums"
@@ -73,6 +78,11 @@ import Root from "../layouts/Root.astro";
 					<code>VITE_API_KEY</code> in the browser.
 				</li>
 			</ol>
+			<a
+				href="/getting-started"
+				class="text-on-surface hover:text-primary mt-xl inline-flex items-center rounded-sm border border-border px-xl py-md font-sans text-body-md font-semibold leading-none tracking-[-0.02em]"
+				>Start the first call</a
+			>
 		</section>
 	</main>
 </Root>
@@ -108,12 +118,26 @@ import Root from "../layouts/Root.astro";
 		initial-value: 22vmin;
 	}
 
+	@property --tilt-x {
+		syntax: "<angle>";
+		inherits: true;
+		initial-value: 0deg;
+	}
+
+	@property --tilt-y {
+		syntax: "<angle>";
+		inherits: true;
+		initial-value: 0deg;
+	}
+
 	[data-hero] {
 		--spot-x: 52%;
 		--spot-y: 32%;
 		--spot-w: 14vmin;
 		--spot-h: 22vmin;
 		--hero-p: 0;
+		--tilt-x: 0deg;
+		--tilt-y: 0deg;
 		transition:
 			--spot-x 0.45s cubic-bezier(0.22, 1, 0.36, 1),
 			--spot-y 0.45s cubic-bezier(0.22, 1, 0.36, 1),
@@ -177,12 +201,12 @@ import Root from "../layouts/Root.astro";
 		}
 
 		[data-hero-pin] {
-			block-size: 175vh;
+			block-size: 140vh;
 		}
 
 		[data-hero] {
 			position: sticky;
-			inset-block-start: 0;
+			inset-block-start: var(--pg-header-height);
 			animation: pg-tear-form 0.65s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 		}
 
@@ -193,12 +217,22 @@ import Root from "../layouts/Root.astro";
 		[data-hero-wall] {
 			transform: scale(calc(1 + 0.08 * var(--hero-p)))
 				translateY(calc(var(--hero-p) * -6%));
-			opacity: calc(1 - 0.72 * var(--hero-p));
+			opacity: calc(1 - var(--hero-p));
 		}
 
 		[data-hero-overlay] {
 			opacity: max(0, calc(1 - var(--hero-p) * 1.7));
 			transform: translateY(calc(var(--hero-p) * -1.25rem));
+		}
+
+		[data-hero-overlay][inert] {
+			pointer-events: none;
+		}
+
+		[data-hero-plane] {
+			transform: perspective(60rem) rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
+			transform-origin: 50% 100%;
+			transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 		}
 	}
 </style>

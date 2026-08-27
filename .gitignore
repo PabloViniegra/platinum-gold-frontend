@@ -32,3 +32,4 @@ CLAUDE.md
 skills-lock.json
 docs/api-frontend-guide.md
 .impeccable/
+.playwright-mcp/

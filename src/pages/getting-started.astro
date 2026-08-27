@@ -1,0 +1,787 @@
+---
+import Root from "../layouts/Root.astro";
+---
+
+<Root
+	title="Getting started — Platinum Gold"
+	description="Authenticate, make one GET, and keep the API key off the public bundle."
+>
+	<a class="guide-skip" href="#guide-content">Skip to guide</a>
+	<main id="guide-content" class="guide-shell px-margin py-xxl" tabindex="-1">
+		<nav class="guide-breadcrumb text-body-sm" aria-label="Breadcrumb">
+			<a href="/">Platinum Gold</a>
+			<span aria-hidden="true">/</span>
+			<span aria-current="page">Getting started</span>
+		</nav>
+
+		<header class="guide-header">
+			<h1>Getting started</h1>
+			<p class="text-body-lg text-pretty">
+				Authenticate once, make a first request, and keep the API key away from the
+				browser bundle.
+			</p>
+		</header>
+
+		<div class="guide-layout">
+			<nav class="guide-toc" aria-label="On this page">
+				<p class="guide-toc-title">On this page</p>
+				<ul>
+					<li><a href="#authentication">Authentication</a></li>
+					<li><a href="#first-request">Make the first request</a></li>
+					<li><a href="#response">Read the response</a></li>
+					<li><a href="#data-shape">Understand the data</a></li>
+					<li><a href="#endpoints">Know the endpoints</a></li>
+					<li><a href="#list-filters">Filter the item list</a></li>
+					<li><a href="#errors">Handle errors</a></li>
+					<li><a href="#request-ids">Trace a request</a></li>
+					<li><a href="#caching">Cache responses</a></li>
+					<li><a href="#versioning">Plan for change</a></li>
+					<li><a href="#support">Find the reference</a></li>
+				</ul>
+			</nav>
+
+			<article class="guide-article">
+				<section id="authentication">
+					<h2>Authentication</h2>
+					<p>
+						Every <code>/v1</code> endpoint needs a Clerk-issued API key. The health
+						checks are public; data routes are not.
+					</p>
+
+					<div
+						class="guide-table-wrap"
+						tabindex="0"
+						role="region"
+						aria-label="Required header for data routes"
+					>
+						<table class="guide-table">
+							<caption>Required header for data routes</caption>
+							<thead>
+								<tr>
+									<th scope="col">Header</th>
+									<th scope="col">Value</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>X-API-Key</code></td>
+									<td><code>&lt;your api key&gt;</code></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<aside class="guide-callout" aria-labelledby="key-boundary">
+						<h3 id="key-boundary">Keep the key on the server</h3>
+						<p>
+							Your browser should call your own backend route or serverless function.
+							That server-side boundary adds <code>X-API-Key</code> before calling
+							Platinum Gold. Never use <code>VITE_API_KEY</code> for this credential.
+						</p>
+					</aside>
+
+					<figure class="guide-code">
+						<figcaption>HTTP request</figcaption>
+						<pre tabindex="0" aria-label="HTTP request example"><code>GET /v1/items HTTP/1.1
+Host: platinum-gold-backend.vercel.app
+X-API-Key: sk_live_...
+Accept: application/json</code></pre>
+					</figure>
+				</section>
+
+				<section id="first-request">
+					<h2>Make the first request</h2>
+					<p>
+						Start with the list endpoint. This example runs in a server route and
+						requests passive items sorted by name.
+					</p>
+
+					<ol class="guide-steps">
+						<li>Store the key in your server runtime environment.</li>
+						<li>Call Platinum Gold from that server route.</li>
+						<li>Return only the data your browser needs.</li>
+					</ol>
+
+					<figure class="guide-code">
+						<figcaption>Server-side TypeScript</figcaption>
+						<pre tabindex="0" aria-label="Server-side TypeScript example"><code>const API_BASE = "https://platinum-gold-backend.vercel.app";
+const API_KEY = process.env.PLATINUM_GOLD_API_KEY;
+
+type ItemPage = &#123;
+  items: Array&lt;&#123; gameId: number; name: string; imageUrl: string &#125;&gt;;
+  total: number;
+  limit: number;
+  offset: number;
+&#125;;
+
+export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
+  if (!API_KEY) &#123;
+    throw new Error("PLATINUM_GOLD_API_KEY is not configured.");
+  &#125;
+
+  const response = await fetch(
+    `$&#123;API_BASE&#125;/v1/items?type=passive&amp;sort=name&amp;order=asc&amp;limit=20`,
+    &#123;
+      headers: &#123;
+        Accept: "application/json",
+        "X-API-Key": API_KEY,
+      &#125;,
+    &#125;,
+  );
+
+  if (!response.ok) &#123;
+    throw new Error("Unable to load items.");
+  &#125;
+
+  return response.json() as Promise&lt;ItemPage&gt;;
+&#125;</code></pre>
+					</figure>
+
+					<p>
+						Keep this module out of the client bundle. The browser can call your own{" "}
+						<code>/api/items</code> route, but it must never receive the API key.
+					</p>
+				</section>
+
+				<section id="response">
+					<h2>Read the response</h2>
+					<p>
+						A successful list response includes the items and its pagination context.
+						Field names are camelCase on the wire.
+					</p>
+
+					<figure class="guide-code">
+						<figcaption>Successful response</figcaption>
+						<pre tabindex="0" aria-label="Successful response example"><code>&#123;
+  "items": [
+    &#123;
+      "gameId": 1,
+      "name": "The Sad Onion",
+      "imageUrl": "https://.../sad_onion.png"
+    &#125;
+  ],
+  "total": 732,
+  "limit": 20,
+  "offset": 0
+&#125;</code></pre>
+					</figure>
+				</section>
+
+				<section id="data-shape">
+					<h2>Understand the data</h2>
+					<p>
+						An <code>ItemResponse</code> uses stable camelCase fields. Nullable fields
+						are returned as <code>null</code> when the dataset has no value.
+					</p>
+
+					<div
+						class="guide-table-wrap"
+						tabindex="0"
+						role="region"
+						aria-label="ItemResponse fields"
+					>
+						<table class="guide-table">
+							<caption>ItemResponse fields</caption>
+							<thead>
+								<tr>
+									<th scope="col">Field</th>
+									<th scope="col">Type</th>
+									<th scope="col">Notes</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>gameId</code></td>
+									<td>integer</td>
+									<td>Stable identifier across syncs</td>
+								</tr>
+								<tr>
+									<td><code>name</code></td>
+									<td>string</td>
+									<td>Display name</td>
+								</tr>
+								<tr>
+									<td><code>description</code></td>
+									<td>string</td>
+									<td>Flavor text or effect description</td>
+								</tr>
+								<tr>
+									<td><code>quality</code></td>
+									<td>integer or null</td>
+									<td><code>0</code> through <code>4</code>; null when unspecified</td>
+								</tr>
+								<tr>
+									<td><code>type</code></td>
+									<td>string or null</td>
+									<td><code>active</code>, <code>passive</code>, or <code>familiar</code></td>
+								</tr>
+								<tr>
+									<td><code>rechargeTime</code></td>
+									<td>string or null</td>
+									<td>Free text such as <code>12 charges</code></td>
+								</tr>
+								<tr>
+									<td><code>imageUrl</code></td>
+									<td>string</td>
+									<td>Absolute URL; load images lazily</td>
+								</tr>
+								<tr>
+									<td><code>introducedInVersion</code></td>
+									<td>string or null</td>
+									<td>Game version that introduced the item</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<figure class="guide-code">
+						<figcaption>Dataset metadata</figcaption>
+						<pre tabindex="0" aria-label="Dataset metadata example"><code>&#123;
+  "apiVersion": "0.1.0",
+  "datasetVersion": "rebirth-2025-08",
+  "gameVersion": "Repentance+",
+  "lastSync": "2025-08-20T10:15:00Z",
+  "items": 732
+&#125;</code></pre>
+					</figure>
+				</section>
+
+				<section id="endpoints">
+					<h2>Know the endpoints</h2>
+					<p>
+						Health checks do not need a key. Every <code>/v1</code> route does, and
+						all responses are JSON.
+					</p>
+
+					<div
+						class="guide-table-wrap"
+						tabindex="0"
+						role="region"
+						aria-label="Available API routes"
+					>
+						<table class="guide-table">
+							<caption>Available API routes</caption>
+							<thead>
+								<tr>
+									<th scope="col">Method</th>
+									<th scope="col">Path</th>
+									<th scope="col">Auth</th>
+									<th scope="col">Purpose</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>GET</code></td>
+									<td><code>/health</code></td>
+									<td>None</td>
+									<td>Liveness probe</td>
+								</tr>
+								<tr>
+									<td><code>GET</code></td>
+									<td><code>/health/ready</code></td>
+									<td>None</td>
+									<td>PostgreSQL and Redis readiness</td>
+								</tr>
+								<tr>
+									<td><code>GET</code></td>
+									<td><code>/v1/items</code></td>
+									<td><code>X-API-Key</code></td>
+									<td>Paginated, filterable item list</td>
+								</tr>
+								<tr>
+									<td><code>GET</code></td>
+									<td><code>/v1/items/&#123;gameId&#125;</code></td>
+									<td><code>X-API-Key</code></td>
+									<td>One item by stable <code>gameId</code></td>
+								</tr>
+								<tr>
+									<td><code>GET</code></td>
+									<td><code>/v1/items/random</code></td>
+									<td><code>X-API-Key</code></td>
+									<td>One random item honoring filters</td>
+								</tr>
+								<tr>
+									<td><code>GET</code></td>
+									<td><code>/v1/meta</code></td>
+									<td><code>X-API-Key</code></td>
+									<td>Dataset metadata and last sync</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<h3>Health checks</h3>
+					<p>
+						<code>/health</code> returns <code>200</code> with{" "}
+						<code>&#123; "status": "ok" &#125;</code> when the process is up. It is safe
+						to use as a liveness probe. <code>/health/ready</code> returns{" "}
+						<code>200</code> when PostgreSQL and Redis are reachable, or{" "}
+						<code>503</code> when the service is degraded.
+					</p>
+				</section>
+
+				<section id="list-filters">
+					<h2>Filter the item list</h2>
+					<p>
+						All list filters are optional. Combine them in the query string, and cache
+						each complete URL separately.
+					</p>
+
+					<div
+						class="guide-table-wrap"
+						tabindex="0"
+						role="region"
+						aria-label="Query parameters for /v1/items"
+					>
+						<table class="guide-table">
+							<caption>Query parameters for <code>/v1/items</code></caption>
+							<thead>
+								<tr>
+									<th scope="col">Parameter</th>
+									<th scope="col">Type</th>
+									<th scope="col">Default</th>
+									<th scope="col">Notes</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>search</code></td>
+									<td>string</td>
+									<td>None</td>
+									<td>Case-insensitive item name match</td>
+								</tr>
+								<tr>
+									<td><code>quality</code></td>
+									<td>integer</td>
+									<td>None</td>
+									<td><code>0</code> through <code>4</code></td>
+								</tr>
+								<tr>
+									<td><code>type</code></td>
+									<td>string</td>
+									<td>None</td>
+									<td><code>active</code>, <code>passive</code>, or <code>familiar</code></td>
+								</tr>
+								<tr>
+									<td><code>version</code></td>
+									<td>string</td>
+									<td>None</td>
+									<td>Exact <code>introducedInVersion</code> match</td>
+								</tr>
+								<tr>
+									<td><code>sort</code></td>
+									<td>enum</td>
+									<td><code>name</code></td>
+									<td><code>name</code>, <code>quality</code>, or <code>gameId</code></td>
+								</tr>
+								<tr>
+									<td><code>order</code></td>
+									<td>enum</td>
+									<td><code>asc</code></td>
+									<td><code>asc</code> or <code>desc</code></td>
+								</tr>
+								<tr>
+									<td><code>limit</code></td>
+									<td>integer</td>
+									<td><code>20</code></td>
+									<td><code>1</code> through <code>100</code></td>
+								</tr>
+								<tr>
+									<td><code>offset</code></td>
+									<td>integer</td>
+									<td><code>0</code></td>
+									<td>Zero or greater</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<p>
+						The random endpoint accepts only <code>search</code>, <code>quality</code>,{" "}
+						<code>type</code>, and <code>version</code>. It does not accept pagination or
+						sorting parameters.
+					</p>
+				</section>
+
+				<section id="errors">
+					<h2>Handle errors</h2>
+					<p>
+						Errors use one JSON shape. Show a useful recovery message in your UI and
+						keep the raw response in your server-side error tracker.
+					</p>
+
+					<figure class="guide-code">
+						<figcaption>Error response</figcaption>
+						<pre tabindex="0" aria-label="Error response example"><code>&#123; "error": &#123; "code": "INVALID_API_KEY", "message": "Invalid API key" &#125; &#125;</code></pre>
+					</figure>
+
+					<div
+						class="guide-table-wrap"
+						tabindex="0"
+						role="region"
+						aria-label="Common HTTP errors"
+					>
+						<table class="guide-table">
+							<caption>Common HTTP errors</caption>
+							<thead>
+								<tr>
+									<th scope="col">HTTP</th>
+									<th scope="col">When</th>
+									<th scope="col">Recovery</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td class="tabular-nums"><code>401</code></td>
+									<td>Header missing or key invalid</td>
+									<td>Check the server-side credential and header name</td>
+								</tr>
+								<tr>
+									<td class="tabular-nums"><code>403</code></td>
+									<td>Key lacks <code>api:access</code></td>
+									<td>Request a key with the required scope</td>
+								</tr>
+								<tr>
+									<td class="tabular-nums"><code>404</code></td>
+									<td><code>gameId</code> does not exist</td>
+									<td>Check the stable identifier</td>
+								</tr>
+								<tr>
+									<td class="tabular-nums"><code>422</code></td>
+									<td>Query value has the wrong type or range</td>
+									<td>Validate filters before sending the request</td>
+								</tr>
+								<tr>
+									<td class="tabular-nums"><code>503</code></td>
+									<td>PostgreSQL or Redis is unavailable</td>
+									<td>Retry with backoff and show service status</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+
+				<section id="request-ids">
+					<h2>Trace a request</h2>
+					<p>
+						Every response includes <code>X-Request-ID</code>. Send your own ID when
+						possible; otherwise the API generates one. Forward it to your logs and
+						support tickets.
+					</p>
+
+					<figure class="guide-code">
+						<figcaption>Request correlation header</figcaption>
+						<pre tabindex="0" aria-label="Request correlation header example"><code>X-Request-ID: 7c9e2f5e-1b3d-4f8a-9b6e-2c0a4f7d8e9b</code></pre>
+					</figure>
+				</section>
+
+				<section id="caching">
+					<h2>Cache responses</h2>
+					<p>
+						Cache at your client boundary using the full query string when the route
+						is safe to reuse. Health checks are never a cache hot path.
+					</p>
+
+					<div
+						class="guide-table-wrap"
+						tabindex="0"
+						role="region"
+						aria-label="Client caching recommendations"
+					>
+						<table class="guide-table">
+							<caption>Client caching recommendations</caption>
+							<thead>
+								<tr>
+									<th scope="col">Route</th>
+									<th scope="col">Server TTL</th>
+									<th scope="col">Client recommendation</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>/v1/items</code></td>
+									<td>15 min</td>
+									<td>Cache by the complete query string</td>
+								</tr>
+								<tr>
+									<td><code>/v1/items/&#123;gameId&#125;</code></td>
+									<td>24 h</td>
+									<td>Cache by stable <code>gameId</code></td>
+								</tr>
+								<tr>
+									<td><code>/v1/meta</code></td>
+									<td>24 h</td>
+									<td>Cache for the session; refresh on user action</td>
+								</tr>
+								<tr>
+									<td><code>/v1/items/random</code></td>
+									<td>None</td>
+									<td>Cache yourself only if you reuse the result</td>
+								</tr>
+								<tr>
+									<td><code>/health/*</code></td>
+									<td>None</td>
+									<td>Do not cache</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+
+				<section id="versioning">
+					<h2>Plan for change</h2>
+					<ul class="guide-bullets">
+						<li><code>/v1</code> remains available until a new major version is announced.</li>
+						<li>New response fields are additive; do not fail on unknown fields.</li>
+						<li>Removing or renaming a field requires a major version.</li>
+						<li>Load item images lazily and treat <code>imageUrl</code> as an absolute URL.</li>
+					</ul>
+				</section>
+
+				<section id="support">
+					<h2>Find the reference</h2>
+					<p>
+						Use the interactive reference for exploratory requests. Include the{" "}
+						<code>X-Request-ID</code> from a failed call when asking for help.
+					</p>
+					<ul class="guide-link-list">
+						<li><a href="https://platinum-gold-backend.vercel.app/docs">Open Swagger UI</a></li>
+						<li><a href="https://platinum-gold-backend.vercel.app/openapi.json">Open the OpenAPI schema</a></li>
+						<li><a href="https://github.com/PabloViniegra/platinum-gold-backend">Visit the backend repository</a></li>
+					</ul>
+				</section>
+			</article>
+		</div>
+	</main>
+</Root>
+
+<style>
+	.guide-shell {
+		max-inline-size: 80rem;
+		margin-inline: auto;
+	}
+
+	.guide-skip {
+		position: absolute;
+		inset-block-start: var(--spacing-sm);
+		inset-inline-start: var(--spacing-sm);
+		z-index: 1;
+		transform: translateY(calc(-100% - var(--spacing-sm)));
+		border-radius: var(--radius-sm);
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		padding: var(--spacing-sm) var(--spacing-md);
+		font-weight: 600;
+		transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.guide-skip:focus {
+		transform: translateY(0);
+	}
+
+	.guide-breadcrumb {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-sm);
+		color: var(--color-on-surface-muted);
+	}
+
+	.guide-breadcrumb a {
+		color: var(--color-primary);
+	}
+
+	.guide-header {
+		max-inline-size: 65ch;
+		padding-block: var(--spacing-lg) var(--spacing-xxl);
+	}
+
+	.guide-header p {
+		margin-block-start: var(--spacing-md);
+	}
+
+	.guide-layout {
+		display: grid;
+		grid-template-columns: minmax(10rem, 12rem) minmax(0, 65ch);
+		align-items: start;
+		gap: var(--spacing-xxl);
+	}
+
+	.guide-toc {
+		position: sticky;
+		inset-block-start: var(--spacing-lg);
+	}
+
+	.guide-toc-title,
+	.guide-code figcaption,
+	.guide-table caption {
+		font-size: var(--text-label-md);
+		font-weight: var(--text-label-md--font-weight);
+		letter-spacing: var(--text-label-md--letter-spacing);
+		line-height: var(--text-label-md--line-height);
+		text-transform: uppercase;
+	}
+
+	.guide-toc-title,
+	.guide-table caption,
+	.guide-code figcaption {
+		color: var(--color-on-surface-muted);
+	}
+
+	.guide-toc ul {
+		display: grid;
+		gap: var(--spacing-sm);
+		margin-block-start: var(--spacing-md);
+	}
+
+	.guide-toc a {
+		color: var(--color-on-surface);
+		text-decoration: underline;
+		text-decoration-thickness: from-font;
+		text-underline-offset: 0.18em;
+	}
+
+	.guide-toc a:hover {
+		color: var(--color-primary-hover);
+	}
+
+	.guide-article {
+		min-inline-size: 0;
+	}
+
+	.guide-article [id] {
+		scroll-margin-block-start: var(--spacing-lg);
+	}
+
+	.guide-article section + section {
+		margin-block-start: var(--spacing-xxl);
+	}
+
+	.guide-article h2 {
+		margin-block-end: var(--spacing-md);
+	}
+
+	.guide-article h3 {
+		margin-block-end: var(--spacing-sm);
+	}
+
+	.guide-article p + p,
+	.guide-article ol + p {
+		margin-block-start: var(--spacing-md);
+	}
+
+	.guide-callout {
+		margin-block-start: var(--spacing-lg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface-raised);
+		padding: var(--spacing-lg);
+	}
+
+	.guide-callout p {
+		margin-block-start: var(--spacing-sm);
+	}
+
+	.guide-table-wrap {
+		max-inline-size: 100%;
+		margin-block-start: var(--spacing-lg);
+		overflow-x: auto;
+		scrollbar-gutter: stable;
+	}
+
+	.guide-table {
+		inline-size: 100%;
+		min-inline-size: 24rem;
+		border-collapse: collapse;
+	}
+
+	.guide-table caption {
+		margin-block-end: var(--spacing-sm);
+		text-align: start;
+	}
+
+	.guide-table th,
+	.guide-table td {
+		border-block-end: 1px solid var(--color-border);
+		padding: var(--spacing-sm) var(--spacing-md);
+		text-align: start;
+		vertical-align: top;
+	}
+
+	.guide-table th {
+		font-weight: 600;
+	}
+
+	.guide-table th:first-child,
+	.guide-table td:first-child {
+		padding-inline-start: 0;
+	}
+
+	.guide-table th:last-child,
+	.guide-table td:last-child {
+		padding-inline-end: 0;
+	}
+
+	.guide-code {
+		max-inline-size: 100%;
+		margin-block-start: var(--spacing-lg);
+	}
+
+	.guide-code figcaption {
+		margin-block-end: var(--spacing-sm);
+	}
+
+	.guide-code pre {
+		max-inline-size: 100%;
+		overflow-x: auto;
+	}
+
+	.guide-steps {
+		display: grid;
+		gap: var(--spacing-sm);
+		margin-block-start: var(--spacing-lg);
+		padding-inline-start: var(--spacing-lg);
+		list-style: decimal;
+	}
+
+	.guide-bullets,
+	.guide-link-list {
+		display: grid;
+		gap: var(--spacing-sm);
+		margin-block-start: var(--spacing-md);
+		padding-inline-start: var(--spacing-lg);
+		list-style: disc;
+	}
+
+	.guide-link-list a {
+		text-decoration: underline;
+		text-decoration-thickness: from-font;
+		text-underline-offset: 0.18em;
+	}
+
+	@media (max-width: 48rem) {
+		.guide-layout {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-xl);
+		}
+
+		.guide-toc {
+			position: static;
+			border-block-end: 1px solid var(--color-border);
+			padding-block-end: var(--spacing-lg);
+		}
+
+		.guide-toc ul {
+			display: flex;
+			flex-wrap: wrap;
+			column-gap: var(--spacing-md);
+			row-gap: var(--spacing-sm);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.guide-skip {
+			transition: none;
+		}
+	}
+</style>

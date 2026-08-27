@@ -1,0 +1,3 @@
+- [x] Build the guide shell and first-call path.
+- [x] Add the API contract reference sections.
+- [x] Verify accessibility, responsive layout, lint, types, and build.

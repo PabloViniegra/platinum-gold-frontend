@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { type SubmitEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useRef, useState } from "react";
 
 import {
 	buildExplorerSearchParams,
@@ -73,48 +73,91 @@ class ItemsRequestError extends Error {
 	}
 }
 
+const ITEM_FIELDS = [
+	"gameId",
+	"name",
+	"type",
+	"quality",
+	"rechargeTime",
+	"introducedInVersion",
+	"imageUrl",
+	"description",
+] as const satisfies ReadonlyArray<keyof Item>;
+
 function wireValue(value: string | number | null): string {
 	return value === null ? "null" : String(value);
 }
 
+function bindDialogLightDismiss(dialog: HTMLDialogElement): () => void {
+	if ("closedBy" in HTMLDialogElement.prototype) {
+		return () => {};
+	}
+
+	function onBackdropClick(event: MouseEvent): void {
+		if (event.target !== dialog) {
+			return;
+		}
+		const rect = dialog.getBoundingClientRect();
+		if (
+			rect.top <= event.clientY
+			&& event.clientY <= rect.top + rect.height
+			&& rect.left <= event.clientX
+			&& event.clientX <= rect.left + rect.width
+		) {
+			return;
+		}
+		dialog.close();
+	}
+
+	dialog.addEventListener("click", onBackdropClick);
+	return () => dialog.removeEventListener("click", onBackdropClick);
+}
+
 function ItemCard(item: Item) {
 	return (
-		<li className="item-card" data-quality={item.quality ?? "unset"}>
-			<div className="item-image">
-				<img src={item.imageUrl} alt={item.name} width="96" height="96" loading="lazy" decoding="async" />
+		<>
+			<span className="item-image">
+				<img src={item.imageUrl} alt="" width={64} height={64} loading="lazy" decoding="async" />
+			</span>
+			<span className="item-card-name">{item.name}</span>
+		</>
+	);
+}
+
+function QualityPips(value: number) {
+	return (
+		<span className="item-quality-marks" aria-hidden="true">
+			{Array.from({ length: 4 }, (_, pip) => (
+				<span className={pip < value ? "is-on" : undefined} key={pip} />
+			))}
+		</span>
+	);
+}
+
+function ItemDetail(item: Item) {
+	return (
+		<>
+			<div className="item-detail-head">
+				<div className="item-image">
+					<img src={item.imageUrl} alt="" width={96} height={96} decoding="async" />
+				</div>
+				<h2 id="item-detail-title">{item.name}</h2>
+				<form method="dialog">
+					<button className="item-button-secondary" type="submit">Close</button>
+				</form>
 			</div>
-			<div className="item-card-body">
-				<p className="item-card-name">{item.name}</p>
-				<dl>
-					<div>
-						<dt>gameId</dt>
-						<dd>{item.gameId}</dd>
+			<dl id="item-detail-fields">
+				{ITEM_FIELDS.map((key) => (
+					<div data-field={key} key={key}>
+						<dt>{key}</dt>
+						<dd>
+							{wireValue(item[key])}
+							{key === "quality" && item.quality !== null && QualityPips(item.quality)}
+						</dd>
 					</div>
-					<div>
-						<dt>type</dt>
-						<dd>{wireValue(item.type)}</dd>
-					</div>
-					<div>
-						<dt>quality</dt>
-						<dd>{wireValue(item.quality)}</dd>
-					</div>
-				</dl>
-				<details className="item-card-more">
-					<summary>More fields</summary>
-					<dl>
-						<div>
-							<dt>rechargeTime</dt>
-							<dd>{wireValue(item.rechargeTime)}</dd>
-						</div>
-						<div>
-							<dt>introducedInVersion</dt>
-							<dd>{wireValue(item.introducedInVersion)}</dd>
-						</div>
-					</dl>
-					{item.description && <p className="item-card-lore">{item.description}</p>}
-				</details>
-			</div>
-		</li>
+				))}
+			</dl>
+		</>
 	);
 }
 
@@ -125,6 +168,8 @@ function ItemExplorerContent() {
 	const [page, setPage] = useState(() => explorerPage(startup));
 	const [copyStatus, setCopyStatus] = useState("");
 	const [pageInput, setPageInput] = useState(() => String(explorerPage(startup) + 1));
+	const [selected, setSelected] = useState<Item | null>(null);
+	const dialogRef = useRef<HTMLDialogElement>(null);
 	const path = requestPath(filters, page);
 	const contractLine = contractRequestLine(filters, page);
 	const isDirty = draft.search.trim() !== filters.search
@@ -172,9 +217,31 @@ function ItemExplorerContent() {
 		return () => window.clearTimeout(timer);
 	}, [copyStatus]);
 
+	useEffect(() => {
+		const dialog = dialogRef.current;
+		if (dialog === null) {
+			return;
+		}
+		return bindDialogLightDismiss(dialog);
+	}, []);
+
+	useEffect(() => {
+		const dialog = dialogRef.current;
+		if (dialog === null) {
+			return;
+		}
+		if (selected !== null && !dialog.open) {
+			dialog.showModal();
+		}
+		if (selected === null && dialog.open) {
+			dialog.close();
+		}
+	}, [selected]);
+
 	function goToPage(next: number): void {
 		setPage(next);
 		setPageInput(String(next + 1));
+		setSelected(null);
 	}
 
 	function applyFilters(next: Filters, nextPage: number): void {
@@ -183,6 +250,7 @@ function ItemExplorerContent() {
 		setPage(nextPage);
 		setPageInput(String(nextPage + 1));
 		setCopyStatus("");
+		setSelected(null);
 	}
 
 	function submitFilters(event: SubmitEvent<HTMLFormElement>): void {
@@ -349,15 +417,9 @@ function ItemExplorerContent() {
 				<div className="item-loading">
 					<ul className="item-grid" aria-hidden="true">
 						{Array.from({ length: filters.limit }, (_, index) => (
-							<li className="item-card item-card-skeleton" key={index}>
+							<li className="item-card-skeleton" key={index}>
 								<div className="item-image item-skeleton-block"></div>
-								<div className="item-card-body">
-									<div className="item-skeleton-line item-skeleton-title"></div>
-									<div className="item-skeleton-line item-skeleton-short"></div>
-									<div className="item-skeleton-line item-skeleton-medium"></div>
-									<div className="item-skeleton-line"></div>
-									<div className="item-skeleton-line item-skeleton-short"></div>
-								</div>
+								<div className="item-skeleton-line item-skeleton-title"></div>
 							</li>
 						))}
 					</ul>
@@ -387,7 +449,20 @@ function ItemExplorerContent() {
 				</div>
 			) : (
 				<ul className="item-grid" role="list" aria-busy={query.isFetching}>
-					{query.data.items.map((item) => <ItemCard {...item} key={item.gameId} />)}
+					{query.data.items.map((item) => (
+						<li key={item.gameId}>
+							<button
+								type="button"
+								className="item-card"
+								aria-haspopup="dialog"
+								aria-controls="item-detail"
+								aria-expanded={selected !== null && selected.gameId === item.gameId}
+								onClick={() => setSelected(item)}
+							>
+								<ItemCard {...item} />
+							</button>
+						</li>
+					))}
 				</ul>
 			)}
 
@@ -397,6 +472,18 @@ function ItemExplorerContent() {
 					<pre><code>{JSON.stringify(query.data, null, 2)}</code></pre>
 				</details>
 			)}
+
+			<dialog
+				ref={dialogRef}
+				id="item-detail"
+				className="item-detail"
+				closedby="any"
+				aria-labelledby={selected === null ? undefined : "item-detail-title"}
+				aria-describedby={selected === null ? undefined : "item-detail-fields"}
+				onClose={() => setSelected(null)}
+			>
+				{selected !== null && <ItemDetail {...selected} />}
+			</dialog>
 
 			{query.data && query.data.total > 0 && pageCount > 1 && (
 				<nav className="item-pagination" aria-label="Item results pages">

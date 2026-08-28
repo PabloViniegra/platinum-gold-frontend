@@ -31,7 +31,7 @@ import Root from "../layouts/Root.astro";
 			</div>
 			<ol class="guide-path">
 				<li>
-					<a href="#authentication">Get API access</a>
+					<a href="#authentication" aria-current="location">Get API access</a>
 					<span>Ask your backend contact for a key with <code>api:access</code>.</span>
 				</li>
 				<li>
@@ -718,7 +718,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	}
 
 	.guide-start-copy p {
-		margin-block-start: var(--spacing-sm);
+		margin-block-start: var(--spacing-lg);
 	}
 
 	.guide-path {
@@ -733,7 +733,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	.guide-path li {
 		display: grid;
 		align-content: start;
-		gap: var(--spacing-sm);
+		gap: var(--spacing-md);
 	}
 
 	.guide-path a {
@@ -797,8 +797,10 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		text-underline-offset: 0.18em;
 	}
 
-	.guide-toc a:hover {
-		color: var(--color-primary-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.guide-toc a:hover {
+			color: var(--color-primary-hover);
+		}
 	}
 
 	.guide-toc a[aria-current="location"] {
@@ -844,15 +846,15 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 	.guide-reference-heading p {
 		max-inline-size: 65ch;
-		margin-block-start: var(--spacing-sm);
+		margin-block-start: var(--spacing-lg);
 	}
 
 	.guide-article h2 {
-		margin-block-end: var(--spacing-md);
+		margin-block-end: var(--spacing-lg);
 	}
 
 	.guide-article h3 {
-		margin-block-end: var(--spacing-sm);
+		margin-block-end: var(--spacing-md);
 	}
 
 	.guide-article p + p,
@@ -861,7 +863,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	}
 
 	.guide-callout {
-		margin-block-start: var(--spacing-lg);
+		margin-block: var(--spacing-lg);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		background: var(--color-surface-raised);
@@ -869,18 +871,18 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	}
 
 	.guide-callout p {
-		margin-block-start: var(--spacing-sm);
+		margin-block-start: var(--spacing-md);
 	}
 
 	.guide-checkpoint {
-		margin-block-start: var(--spacing-lg);
+		margin-block: var(--spacing-lg);
 		border-block: 1px solid var(--color-border);
 		padding-block: var(--spacing-lg);
 	}
 
 	.guide-table-wrap {
 		max-inline-size: 100%;
-		margin-block-start: var(--spacing-lg);
+		margin-block: var(--spacing-lg);
 		overflow-x: auto;
 		scrollbar-gutter: stable;
 	}
@@ -889,6 +891,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		inline-size: 100%;
 		min-inline-size: 24rem;
 		border-collapse: collapse;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.guide-table caption {
@@ -920,7 +923,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 	.guide-code {
 		max-inline-size: 100%;
-		margin-block-start: var(--spacing-lg);
+		margin-block: var(--spacing-lg);
 	}
 
 	.guide-code figcaption {
@@ -962,17 +965,26 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		cursor: pointer;
 		transition:
 			background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+			border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
 			color 150ms cubic-bezier(0.16, 1, 0.3, 1),
 			transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.guide-copy:hover {
-		background-color: var(--color-surface);
-		color: var(--color-primary-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.guide-copy:hover {
+			background-color: var(--color-surface);
+			color: var(--color-primary-hover);
+		}
 	}
 
 	.guide-copy:active {
-		transform: scale(0.96);
+		transform: scale(0.97);
+	}
+
+	.guide-copy.is-copied {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-on-primary);
 	}
 
 	.guide-copy-status {
@@ -1006,7 +1018,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 	.guide-steps {
 		display: grid;
-		gap: var(--spacing-sm);
+		gap: var(--spacing-md);
 		margin-block-start: var(--spacing-lg);
 		padding-inline-start: var(--spacing-lg);
 		list-style: decimal;
@@ -1015,7 +1027,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	.guide-bullets,
 	.guide-link-list {
 		display: grid;
-		gap: var(--spacing-sm);
+		gap: var(--spacing-md);
 		margin-block-start: var(--spacing-md);
 		padding-inline-start: var(--spacing-lg);
 		list-style: disc;
@@ -1072,9 +1084,9 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	.guide-header h1 {
 		max-inline-size: none;
 		font-family: var(--font-display);
-		font-size: clamp(4rem, 10vw, 8rem);
+		font-size: clamp(4rem, 10vw, 6rem);
 		font-weight: 400;
-		line-height: 0.92;
+		line-height: 1.05;
 		letter-spacing: 0.02em;
 		color: var(--color-on-surface);
 		text-shadow: 0.3rem 0.35rem 0 oklch(0.05 0.015 45 / 0.75);
@@ -1102,11 +1114,13 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		font-family: var(--font-display);
 		font-size: clamp(2.5rem, 5vw, 4rem);
 		font-weight: 400;
+		line-height: 1.05;
 		letter-spacing: 0.02em;
 	}
 
 	.guide-start-copy p {
 		color: var(--color-on-surface-muted);
+		text-wrap: pretty;
 	}
 
 	.guide-path {
@@ -1166,19 +1180,24 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		font-family: var(--font-display);
 		font-size: 2rem;
 		font-weight: 400;
-		line-height: 1;
+		line-height: 1.05;
 		letter-spacing: 0.02em;
 		text-transform: none;
+		text-wrap: balance;
+		font-synthesis: none;
 	}
 
 	.guide-toc-group-title {
 		color: var(--color-primary);
 	}
 
+	.guide-toc a {
+		padding-inline: var(--spacing-sm);
+	}
+
 	.guide-toc a[aria-current="location"] {
 		background: color-mix(in oklch, var(--color-tertiary) 18%, transparent);
 		color: var(--color-primary-hover);
-		padding-inline: var(--spacing-sm);
 		text-decoration: none;
 	}
 
@@ -1221,7 +1240,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		font-family: var(--font-display);
 		font-size: clamp(2.5rem, 5vw, 4rem);
 		font-weight: 400;
-		line-height: 1;
+		line-height: 1.05;
 		letter-spacing: 0.02em;
 		color: var(--color-ink);
 	}
@@ -1264,6 +1283,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 	.guide-reference-heading p {
 		color: var(--color-ink-muted);
+		text-wrap: pretty;
 	}
 
 	.guide-callout {
@@ -1329,8 +1349,16 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		color: var(--color-on-surface);
 	}
 
-	.guide-copy:hover {
+	@media (hover: hover) and (pointer: fine) {
+		.guide-copy:hover {
+			background: var(--color-primary);
+			color: var(--color-on-primary);
+		}
+	}
+
+	.guide-copy.is-copied {
 		background: var(--color-primary);
+		border-color: var(--color-primary);
 		color: var(--color-on-primary);
 	}
 
@@ -1391,7 +1419,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 		.guide-article h2,
 		.guide-reference-heading h2 {
-			font-size: clamp(1.5rem, 7vw, 2.25rem);
+			font-size: clamp(2rem, 7vw, 2.25rem);
 			overflow-wrap: break-word;
 			word-break: normal;
 		}
@@ -1402,13 +1430,50 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		}
 	}
 
+	@media (hover: hover) and (pointer: fine) {
+		.guide-path li:hover {
+			border-color: var(--color-primary);
+			background: var(--color-surface-raised);
+		}
+	}
+
+	.guide-path li:has(a[aria-current="location"]) {
+		border-color: var(--color-tertiary);
+		background: var(--color-surface-raised);
+	}
+
+	.guide-path li:has(a:focus-visible) {
+		border-color: var(--color-primary);
+		background: var(--color-surface-raised);
+	}
+
+	.guide-path li:has(a:active) {
+		transform: scale(0.97);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.guide-path li {
+			transition:
+				background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+				border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+				transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.guide-toc a {
+			transition:
+				background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+				color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.guide-skip,
 		.guide-copy {
 			transition: none;
 		}
 
-		.guide-copy:active {
+		.guide-copy:active,
+		.guide-path li:has(a:active) {
 			transform: none;
 		}
 	}
@@ -1426,6 +1491,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	const guideToc = document.querySelector("[data-guide-toc]");
 	const guideReference = document.querySelector("[data-guide-reference]");
 	const tocLinks = guideToc?.querySelectorAll<HTMLAnchorElement>("[data-toc-link]") ?? [];
+	const pathLinks = document.querySelectorAll<HTMLAnchorElement>(".guide-path a");
 	let activeSectionId = "";
 
 	function setActiveSection(id: string): void {
@@ -1438,6 +1504,14 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 			if (link.hash === `#${id}`) {
 				link.setAttribute("aria-current", "location");
 				activeLink = link;
+			} else {
+				link.removeAttribute("aria-current");
+			}
+		}
+
+		for (const link of pathLinks) {
+			if (link.hash === `#${id}`) {
+				link.setAttribute("aria-current", "location");
 			} else {
 				link.removeAttribute("aria-current");
 			}
@@ -1499,6 +1573,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 
 			try {
 				await navigator.clipboard.writeText(code.textContent ?? "");
+				button.classList.add("is-copied");
 				button.textContent = "Copied";
 				status.textContent = "Code copied to clipboard.";
 				status.classList.remove("is-visible");
@@ -1509,6 +1584,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 			}
 
 			window.setTimeout(() => {
+				button.classList.remove("is-copied");
 				button.textContent = "Copy";
 				status.textContent = "";
 			}, 1800);

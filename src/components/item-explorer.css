@@ -47,14 +47,15 @@
 	cursor: pointer;
 }
 
-.item-button-copy:hover {
-	background: var(--color-primary);
-	color: var(--color-on-primary);
-}
-
 .item-button-copy:focus-visible {
 	outline: 2px solid var(--color-primary);
 	outline-offset: 2px;
+}
+
+.item-button-copy.is-copied {
+	background: var(--color-primary);
+	border-color: var(--color-primary);
+	color: var(--color-on-primary);
 }
 
 .item-request-hint,
@@ -69,8 +70,24 @@
 }
 
 .item-copy-status {
-	color: var(--color-ink-muted);
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.item-copy-status.is-visible {
+	position: static;
+	inline-size: auto;
+	block-size: auto;
+	overflow: visible;
+	clip-path: none;
+	color: var(--color-error);
 	font-size: var(--text-body-sm);
+	font-weight: 400;
+	white-space: normal;
 }
 
 .item-filters {
@@ -165,14 +182,32 @@
 	color: var(--color-ink);
 }
 
-.item-button-primary:hover {
-	background: var(--color-ink-link);
-	color: var(--color-paper-raised);
+.item-button-primary:active:not(:disabled),
+.item-button-secondary:active:not(:disabled),
+.item-button-copy:active {
+	transform: scale(0.97);
 }
 
-.item-button-secondary:hover {
-	background: var(--color-paper);
-	color: var(--color-ink-link);
+@media (hover: hover) and (pointer: fine) {
+	.item-button-copy:hover {
+		color: var(--color-primary-hover);
+	}
+
+	.item-button-copy.is-copied:hover {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-on-primary);
+	}
+
+	.item-button-primary:hover {
+		background: var(--color-ink-link);
+		color: var(--color-paper-raised);
+	}
+
+	.item-button-secondary:hover {
+		background: var(--color-paper);
+		color: var(--color-ink-link);
+	}
 }
 
 .item-button-primary:focus-visible,
@@ -423,17 +458,41 @@
 @media (prefers-reduced-motion: no-preference) {
 	.item-button-primary,
 	.item-button-secondary,
-	.item-button-copy,
-	.item-grid {
+	.item-button-copy {
 		transition:
 			background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+			border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
 			color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-			opacity 120ms cubic-bezier(0.16, 1, 0.3, 1);
+			transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.item-grid,
+	.item-state,
+	.item-filter-dirty,
+	.item-copy-status.is-visible {
+		transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.item-grid[role="list"],
+	.item-state,
+	.item-filter-dirty,
+	.item-copy-status.is-visible {
+		@starting-style {
+			opacity: 0;
+		}
 	}
 
 	.item-card-skeleton .item-skeleton-block,
 	.item-card-skeleton .item-skeleton-line {
 		animation: item-skeleton-pulse 1.4s ease-in-out infinite alternate;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.item-button-primary:active:not(:disabled),
+	.item-button-secondary:active:not(:disabled),
+	.item-button-copy:active {
+		transform: none;
 	}
 }
 

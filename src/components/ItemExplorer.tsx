@@ -237,10 +237,19 @@ function ItemExplorerContent() {
 				<p>
 					<code>{contractLine}</code>
 				</p>
-				<button className="item-button-copy" type="button" onClick={() => void copyRequest()}>
+				<button
+					className={copyStatus.startsWith("Copied") ? "item-button-copy is-copied" : "item-button-copy"}
+					type="button"
+					onClick={() => void copyRequest()}
+				>
 					Copy /v1/items
 				</button>
-				<span className="item-copy-status" aria-live="polite">{copyStatus}</span>
+				<span
+					className={copyStatus === "Copy failed" ? "item-copy-status is-visible" : "item-copy-status"}
+					aria-live="polite"
+				>
+					{copyStatus}
+				</span>
 			</div>
 			<p className="item-request-hint">Fetched via /api/items so the key stays on the server.</p>
 

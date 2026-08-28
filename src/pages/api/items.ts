@@ -3,6 +3,7 @@ import { PLATINUM_BACKEND_API_KEY } from "astro:env/server";
 
 import { parseItemPage } from "../../lib/item-page";
 import { buildItemsSearchParams, ItemsQueryError } from "../../lib/items-query";
+import { proxyErrorMessage, proxyStatusForUpstream } from "../../lib/proxy-error";
 
 export const prerender = false;
 
@@ -56,7 +57,8 @@ export const GET: APIRoute = async ({ request }) => {
 				requestId: responseRequestId,
 				body,
 			});
-			return errorResponse("Items could not be loaded. Try again shortly.", 502, responseRequestId);
+			const status = proxyStatusForUpstream(upstream.status);
+			return errorResponse(proxyErrorMessage("", status), status, responseRequestId);
 		}
 		const itemPage = parseItemPage(body);
 		if (!itemPage) {

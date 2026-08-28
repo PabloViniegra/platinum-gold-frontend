@@ -18,7 +18,7 @@ Platinum Gold Frontend is the human integration guide for the Platinum Gold API 
 
 Success: the reader leaves able to make a first authenticated request, understand 401/403 and `{ error: { code, message } }` failures, and keep the key off the client.
 
-A live try-it playground is allowed later. It is not required for this product to succeed.
+A live `GET /v1/items` example lives at `/items`. The browser calls `/api/items`; the API key stays on the server. It is a teaching example, not a player catalog.
 
 ## Positioning
 
@@ -34,9 +34,9 @@ Safe frontend integration: auth, status codes, caching, and `X-Request-ID` in la
 
 ## Capabilities and Constraints
 
-- In scope now: a human guide covering authentication, endpoints (`GET /health`, `GET /health/ready`, `GET /v1/items`, `GET /v1/items/{gameId}`, `GET /v1/items/random`, `GET /v1/meta`), query params, errors, and client caching.
+- In scope now: a human guide covering authentication, endpoints (`GET /health`, `GET /health/ready`, `GET /v1/items`, `GET /v1/items/{gameId}`, `GET /v1/items/random`, `GET /v1/meta`), query params, errors, client caching, and a live item-list example at `/items`.
 - Out of scope: player-facing catalog UI; SDK or generated client; scraping Platinum God; embedding the production key in a public bundle (including `VITE_API_KEY` in the browser).
-- Playground: later, not now. If added, traffic goes through a server-side proxy (Astro SSR adapter or serverless function). The site is Astro 7 static today (no SSR adapter yet).
+- Live example: `/items` calls `/api/items` through the Vercel adapter. `PLATINUM_BACKEND_API_KEY` is server-only. The guide still stands alone if the example is unconfigured.
 - Errors: show a friendly message, never the raw `code`. Forward `X-Request-ID` to logs and support.
 - Wire: camelCase JSON. Unknown fields are opaque. `/v1` stays until an announced `/v2`.
 - Client cache: list 15 min by full query string; item-by-id 24 h; meta 24 h; random only if reused; never cache `/health/*`.
@@ -58,4 +58,4 @@ Product name: Platinum Gold. Do not rename it or present this site as Platinum G
 1. Optimize for a first successful call, not an exhaustive encyclopedia.
 2. The production API key never ships to the browser.
 3. Teach the contract; do not become a player catalog or an SDK.
-4. The guide must stand alone. Playground comes later and cannot block the docs.
+4. The guide must stand alone. The live example cannot block the docs.

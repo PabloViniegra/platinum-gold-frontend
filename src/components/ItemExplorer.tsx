@@ -1,4 +1,4 @@
-import { keepPreviousData, QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { type SubmitEvent, useEffect, useState } from "react";
 
 import {
@@ -8,18 +8,12 @@ import {
 	explorerPage,
 	readExplorerSearch,
 	requestPath,
+	shouldKeepExplorerPlaceholder,
+	type Filters,
 } from "../lib/explorer-query";
 import type { Item, ItemPage } from "../lib/item-page";
+import { isRetryableProxyStatus, proxyErrorMessage } from "../lib/proxy-error";
 import "./item-explorer.css";
-
-type Filters = {
-	search: string;
-	quality: string;
-	type: string;
-	sort: string;
-	order: string;
-	limit: number;
-};
 
 const EMPTY_FILTERS: Filters = {
 	search: "",
@@ -55,32 +49,27 @@ function initialParams(): URLSearchParams {
 	return readExplorerSearch(new URLSearchParams(window.location.search));
 }
 
-async function fetchItems(
-	search: string,
-	quality: string,
-	type: string,
-	sort: string,
-	order: string,
-	limit: number,
-	page: number,
-	signal: AbortSignal,
-): Promise<ItemPage> {
-	const response = await fetch(
-		requestPath(search, quality, type, sort, order, limit, page),
-		{ signal },
-	);
+async function fetchItems(filters: Filters, page: number, signal: AbortSignal): Promise<ItemPage> {
+	const response = await fetch(requestPath(filters, page), { signal });
 	if (!response.ok) {
-		throw new ItemsRequestError(response.headers.get("X-Request-ID"));
+		const body = await response.text();
+		throw new ItemsRequestError(
+			proxyErrorMessage(body, response.status),
+			response.headers.get("X-Request-ID"),
+			isRetryableProxyStatus(response.status),
+		);
 	}
 	return response.json();
 }
 
 class ItemsRequestError extends Error {
 	readonly requestId: string | null;
+	readonly retryable: boolean;
 
-	constructor(requestId: string | null) {
-		super("Items could not be loaded.");
+	constructor(message: string, requestId: string | null, retryable: boolean) {
+		super(message);
 		this.requestId = requestId;
+		this.retryable = retryable;
 	}
 }
 
@@ -136,24 +125,8 @@ function ItemExplorerContent() {
 	const [page, setPage] = useState(() => explorerPage(startup));
 	const [copyStatus, setCopyStatus] = useState("");
 	const [pageInput, setPageInput] = useState(() => String(explorerPage(startup) + 1));
-	const path = requestPath(
-		filters.search,
-		filters.quality,
-		filters.type,
-		filters.sort,
-		filters.order,
-		filters.limit,
-		page,
-	);
-	const contractLine = contractRequestLine(
-		filters.search,
-		filters.quality,
-		filters.type,
-		filters.sort,
-		filters.order,
-		filters.limit,
-		page,
-	);
+	const path = requestPath(filters, page);
+	const contractLine = contractRequestLine(filters, page);
 	const isDirty = draft.search.trim() !== filters.search
 		|| draft.quality !== filters.quality
 		|| draft.type !== filters.type
@@ -162,29 +135,28 @@ function ItemExplorerContent() {
 		|| draft.limit !== filters.limit;
 	const query = useQuery({
 		queryKey: ["items", filters.search, filters.quality, filters.type, filters.sort, filters.order, filters.limit, page],
-		queryFn: (context) => fetchItems(
-			filters.search,
-			filters.quality,
-			filters.type,
-			filters.sort,
-			filters.order,
-			filters.limit,
-			page,
-			context.signal,
-		),
-		placeholderData: keepPreviousData,
+		queryFn: (context) => fetchItems(filters, page, context.signal),
+		placeholderData: (previousData, previousQuery) => {
+			if (!previousData || previousQuery === undefined) {
+				return undefined;
+			}
+			const key = previousQuery.queryKey;
+			const previous: Filters = {
+				search: String(key[1] ?? ""),
+				quality: String(key[2] ?? ""),
+				type: String(key[3] ?? ""),
+				sort: String(key[4] ?? ""),
+				order: String(key[5] ?? ""),
+				limit: Number(key[6]),
+			};
+			return shouldKeepExplorerPlaceholder(previous, Number(key[7]), filters, page)
+				? previousData
+				: undefined;
+		},
 	});
 
 	useEffect(() => {
-		const next = `?${buildExplorerSearchParams(
-			filters.search,
-			filters.quality,
-			filters.type,
-			filters.sort,
-			filters.order,
-			filters.limit,
-			page,
-		)}`;
+		const next = `?${buildExplorerSearchParams(filters, page)}`;
 		if (`${window.location.search}` !== next) {
 			window.history.replaceState(null, "", next);
 		}
@@ -235,10 +207,13 @@ function ItemExplorerContent() {
 	const firstResult = query.data && query.data.total > 0 ? query.data.offset + 1 : 0;
 	const lastResult = query.data ? Math.min(query.data.offset + query.data.items.length, query.data.total) : 0;
 	const activeQuery = path.replace("/api/items?", "");
+	const requestError = query.error instanceof ItemsRequestError ? query.error : null;
+	const errorMessage = requestError?.message ?? "The list request failed";
+	const errorRetryable = requestError?.retryable ?? true;
 	const resultSummary = query.isFetching && !query.isPending
 		? "Updating from the network"
 		: query.isError
-			? "The list request failed"
+			? errorMessage
 			: query.data && query.data.total === 0
 				? `No items for ${activeQuery}`
 				: query.data
@@ -380,14 +355,18 @@ function ItemExplorerContent() {
 				</div>
 			) : query.isError ? (
 				<div className="item-state" role="alert">
-					<p className="item-state-title">The list request failed</p>
-					<p>Retry the same query. If it keeps failing, send the request ID with the support ticket.</p>
-					{query.error instanceof ItemsRequestError && query.error.requestId && (
-						<p className="item-request-id">Request ID: <code>{query.error.requestId}</code></p>
+					<p className="item-state-title">{errorMessage}</p>
+					{errorRetryable && (
+						<p>Retry the same query. If it keeps failing, send the request ID with the support ticket.</p>
 					)}
-					<button className="item-button-primary" type="button" onClick={() => void query.refetch()}>
-						Try again
-					</button>
+					{requestError?.requestId && (
+						<p className="item-request-id">Request ID: <code>{requestError.requestId}</code></p>
+					)}
+					{errorRetryable && (
+						<button className="item-button-primary" type="button" onClick={() => void query.refetch()}>
+							Try again
+						</button>
+					)}
 				</div>
 			) : query.data.items.length === 0 ? (
 				<div className="item-state">

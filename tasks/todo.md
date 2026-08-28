@@ -1,3 +1,5 @@
-- [x] Build the guide shell and first-call path.
-- [x] Add the API contract reference sections.
-- [x] Verify accessibility, responsive layout, lint, types, and build.
+- [x] Install and configure Astro React, Vercel, TanStack Query, and Vitest.
+- [x] Test and implement the secure item query contract and proxy.
+- [x] Build the responsive item explorer with faithful loading states.
+- [x] Add `/items` and navigation integration.
+- [x] Verify tests, types, lint, build, security, and browser behavior.

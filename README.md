@@ -41,3 +41,14 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+## Vercel deployment
+
+The live `/items` example requires the server-only `PLATINUM_BACKEND_API_KEY`
+environment variable. Add it as a sensitive variable for Preview and Production;
+never prefix it with `PUBLIC_` or `VITE_`.
+
+Before making the deployment public, add a Vercel Firewall rate-limit rule for
+the `/api/items` path. Use a fixed window keyed by IP and return `429` when the
+limit is exceeded. Start in log mode, observe legitimate traffic, then enable
+blocking. See [Vercel WAF Rate Limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting).

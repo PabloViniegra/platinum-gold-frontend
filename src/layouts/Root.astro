@@ -10,10 +10,11 @@ type Props = {
 const { title, description, preloadDisplayFont = false } = Astro.props;
 const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const isGettingStartedPage = pathname === "/getting-started";
+const isItemsPage = pathname === "/items";
 ---
 
 <!doctype html>
-<html lang="en" class="scheme-dark" data-page={pathname === "/" ? "home" : "guide"}>
+<html lang="en" class="scheme-dark" data-page={pathname === "/" ? "home" : isItemsPage ? "items" : "guide"}>
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -44,8 +45,11 @@ const isGettingStartedPage = pathname === "/getting-started";
 				<a href="/getting-started" aria-current={isGettingStartedPage ? "page" : undefined}>
 					Getting started
 				</a>
+				<a href="/items" aria-current={isItemsPage ? "page" : undefined}>Live example</a>
 				<a href="https://platinum-gold-backend.vercel.app/docs">API reference</a>
-				<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
+				{!isItemsPage && (
+					<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
+				)}
 			</nav>
 		</header>
 		<slot />

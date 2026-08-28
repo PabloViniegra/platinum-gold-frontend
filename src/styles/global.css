@@ -333,6 +333,7 @@
   }
 
   .site-nav {
+    flex-wrap: nowrap;
     justify-content: flex-start;
     gap: 0 var(--spacing-md);
     overflow-x: auto;

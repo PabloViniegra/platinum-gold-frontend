@@ -3,3 +3,5 @@ allowBuilds:
   sharp: true
 minimumReleaseAgeExclude:
   - astro@7.2.8
+overrides:
+  path-to-regexp: 6.3.0

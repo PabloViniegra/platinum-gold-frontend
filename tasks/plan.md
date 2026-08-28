@@ -1,67 +1,84 @@
-# Implementation Plan: Getting Started Guide
+# Implementation Plan: Live Items Example
 
 ## Objective
 
-Turn `/getting-started` from a stub into the first-call integration guide for
-frontend developers. A reader should understand where authentication belongs,
-make one safe `GET /v1/items` request from server-side code, and know how to
-handle the API contract without putting the production key in a browser bundle.
-
-## Source Of Truth
-
-`docs/api-frontend-guide.md` is the API contract. `PRODUCT.md` defines the
-audience, security boundary, scope, and success condition. `DESIGN.md` defines
-the dark docs surface, typography, spacing, color, and component grammar.
+Add a production-ready `/items` example that demonstrates the Platinum Gold API
+with server-side credential isolation, pagination, filtering, and sorting. The
+page is for frontend integrators, follows the existing field-guide design, and
+  must not expose `PLATINUM_BACKEND_API_KEY` to the browser.
 
 ## Architecture Decisions
 
-- Keep the route static. The guide documents integration code; it does not call
-  the API or implement a playground.
-- Reuse `Root.astro` and the shared Tailwind tokens. Keep page-specific layout
-  rules scoped to the guide page.
-- Keep examples server-side by using `process.env.PLATINUM_GOLD_API_KEY` and
-  explicitly reject `VITE_API_KEY` in browser code.
-- Use native headings, lists, links, tables, and `pre`/`code` blocks. Avoid a
-  component abstraction until the page has a real reuse case.
+- Deploy with the Astro Vercel adapter. Keep content pages prerendered and mark
+  only `/api/items` as on-demand.
+- Read `PLATINUM_BACKEND_API_KEY` through `astro:env/server`. The React island calls
+  the same-origin proxy and cannot import or receive the credential.
+- Allowlist every forwarded query parameter and enforce API bounds at the proxy.
+- Use TanStack Query with the complete filter/sort/page state in the query key,
+  a 15-minute stale time, and previous-page placeholder data.
+- Keep controls in local React state and reset pagination when the submitted
+  filters or sorting change. Do not add a router or global store.
+- Match the existing dark room and aged-paper visual grammar. Skeletons reuse
+  the exact result-card grid and card anatomy to avoid layout shift.
 
 ## Commands
 
+- Tests: `pnpm test`
+- Type check: `pnpm exec astro check`
 - Lint: `pnpm lint`
-- Type check: `pnpm exec tsc --noEmit`
 - Build: `pnpm build`
 - Dev: `pnpm dev`
 
 ## Testing Strategy
 
-The repository has no configured test runner. Verify the static route with the
-existing lint, TypeScript, and build commands, then use Chromium at 320px,
-768px, 1024px, and 1440px to check wrapping, tables, focus order, code blocks,
-and the absence of console errors or horizontal overflow.
+- Unit-test query parsing and allowlisting at the proxy boundary with Vitest.
+- Build and lint the full Astro/React integration.
+- Verify loading, success, empty, error, filtering, sorting, pagination, keyboard
+  flow, console output, and responsive layouts in Chromium.
 
 ## Boundaries
 
-- Always: keep the API key out of client examples, preserve camelCase fields,
-  show friendly error recovery, and keep the page keyboard navigable.
-- Ask first: adding a dependency, adding a live API request, or adding an SSR
-  adapter.
-- Never: embed a production key, build a player catalog, generate an SDK, or
-  make the guide depend on the live API.
+- Always: keep the key server-only, validate external input, cap `limit`, return
+  friendly errors, preserve request IDs for support, and use semantic controls.
+- Ask first: changing the upstream API, weakening CORS, or exposing any new
+  credential to browser code.
+- Never: use `PUBLIC_`/`VITE_` for the API key, forward arbitrary parameters or
+  headers, render upstream error codes, or log the credential.
 
 ## Task List
 
-### Phase 1: First-call path
+### Phase 1: Secure data path
 
-- [x] Add guide shell, breadcrumb, in-page navigation, and authentication
-  section.
-- [x] Add the server-side TypeScript request example and first response shape.
+- [x] Add the React, TanStack Query, Vercel, and test integrations.
+- [x] Define and test the allowlisted item-list query contract.
+- [x] Add the on-demand `/api/items` proxy with server-only secret access.
 
-### Phase 2: Contract reference
+### Checkpoint: Data path
 
-- [x] Add endpoints, list filters, data fields, error handling, and request IDs.
-- [x] Add caching, versioning, support links, and the next action.
+- [x] Contract tests pass and the project type-checks.
+- [x] The built client contains no API key access.
+
+### Phase 2: Interactive example
+
+- [x] Build the item explorer island with filters, sorting, and pagination.
+- [x] Add faithful skeletons and useful empty and error states.
+- [x] Add the `/items` route and primary navigation entry using existing tokens.
 
 ### Checkpoint: Complete
 
-- [x] Every in-scope contract section is findable from the page navigation.
-- [x] Static build and strict type checking pass.
-- [x] Desktop and mobile browser checks pass without overflow or console errors.
+- [x] Tests, type check, lint, and production build pass.
+- [x] Keyboard and responsive browser checks pass without console errors.
+- [x] Security and code review have no blocking findings.
+
+## Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Secret reaches the client | Critical | Server-only env schema and same-origin proxy |
+| Proxy abuse | High | Fixed upstream, allowlisted values, bounded pagination |
+| Stale result flashes | Medium | Complete query keys and previous-page placeholder data |
+| Loading layout shift | Medium | Skeletons share the result-card structure and grid |
+
+## Open Questions
+
+None.

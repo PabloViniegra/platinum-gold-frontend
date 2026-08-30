@@ -20,17 +20,24 @@ import Root from "../layouts/Root.astro";
 				class="scheme-dark relative min-h-[calc(100dvh-var(--pg-header-height))] overflow-hidden text-on-surface"
 			>
 				<div data-hero-wall class="absolute inset-0">
-					<img
-						src="/tboi-wall-lg.webp"
-						srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
-						sizes="100vw"
-						alt=""
-						width="1920"
-						height="1080"
-						fetchpriority="high"
-						decoding="async"
-						class="absolute inset-0 size-full object-cover object-center"
-					/>
+					<picture>
+						<source
+							type="image/avif"
+							srcset="/tboi-wall.avif 1280w, /tboi-wall-lg.avif 1920w"
+							sizes="100vw"
+						/>
+						<img
+							src="/tboi-wall-lg.webp"
+							srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
+							sizes="100vw"
+							alt=""
+							width="1920"
+							height="1080"
+							fetchpriority="high"
+							decoding="async"
+							class="absolute inset-0 size-full object-cover object-center"
+						/>
+					</picture>
 					<div data-hero-shade aria-hidden="true"></div>
 				</div>
 				<div
@@ -277,7 +284,7 @@ Accept: application/json</code></pre>
 		position: relative;
 		background:
 			linear-gradient(oklch(0.09 0.02 50 / 0.76), oklch(0.09 0.02 50 / 0.92)),
-			url("/tboi-wall.webp") center 38% / cover;
+			url("/tboi-wall.avif") center 38% / cover;
 	}
 
 	.first-call-sheet {

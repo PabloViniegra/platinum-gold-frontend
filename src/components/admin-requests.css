@@ -1,0 +1,159 @@
+.admin-state,
+.admin-login,
+.admin-queue {
+	inline-size: min(68rem, calc(100% - 2rem));
+	margin: var(--spacing-xxl) auto;
+}
+
+.admin-login {
+	display: grid;
+	max-inline-size: 28rem;
+	gap: var(--spacing-sm);
+	border: 1px solid var(--color-border);
+	padding: var(--spacing-xl);
+	background: var(--color-surface-raised);
+}
+
+.admin-login p {
+	margin-block-end: var(--spacing-md);
+	color: var(--color-on-surface-muted);
+}
+
+.admin-login button,
+.admin-queue button,
+.admin-approval button {
+	min-block-size: 2.75rem;
+	border: 1px solid var(--color-primary);
+	border-radius: var(--radius-sm);
+	padding-inline: var(--spacing-md);
+	background: var(--color-primary);
+	color: var(--color-on-primary);
+	font: inherit;
+	font-weight: 600;
+}
+
+.admin-login button {
+	margin-block-start: var(--spacing-md);
+}
+
+.admin-error {
+	color: var(--color-error);
+	font-weight: 600;
+}
+
+.admin-request-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-sm);
+}
+
+.admin-queue .admin-deny,
+.admin-approval .admin-deny {
+	border-color: var(--color-error);
+	background: transparent;
+	color: var(--color-error);
+}
+
+.admin-queue > header,
+.admin-request-list li > header {
+	display: flex;
+	align-items: start;
+	justify-content: space-between;
+	gap: var(--spacing-md);
+}
+
+.admin-kicker {
+	color: var(--color-tertiary);
+	font-size: var(--text-label-md);
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.admin-empty {
+	margin-block-start: var(--spacing-xl);
+	border-block: 1px solid var(--color-border);
+	padding-block: var(--spacing-xl);
+	color: var(--color-on-surface-muted);
+}
+
+.admin-request-list {
+	display: grid;
+	gap: var(--spacing-lg);
+	margin-block-start: var(--spacing-xl);
+	list-style: none;
+}
+
+.admin-request-list li {
+	border: 1px solid var(--color-paper-border);
+	padding: var(--spacing-lg);
+	background: var(--color-paper);
+	color: var(--color-ink);
+	box-shadow: 0.35rem 0.4rem 0 var(--pg-paper-shadow);
+}
+
+.admin-request-list time {
+	color: var(--color-ink-muted);
+	font-size: var(--text-body-sm);
+}
+
+.admin-request-list dl {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-md);
+	margin-block: var(--spacing-lg);
+}
+
+.admin-request-list dt {
+	color: var(--color-ink-muted);
+	font-size: var(--text-label-md);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.admin-request-list dd {
+	overflow-wrap: anywhere;
+}
+
+.admin-approval {
+	inline-size: min(32rem, calc(100% - 2rem));
+	margin: auto;
+	border: 1px solid var(--color-paper-border);
+	padding: var(--spacing-xl);
+	background: var(--color-paper);
+	color: var(--color-ink);
+}
+
+.admin-approval::backdrop {
+	background: oklch(0.04 0.015 48 / 0.82);
+}
+
+.admin-approval form {
+	display: grid;
+	gap: var(--spacing-sm);
+	margin-block-start: var(--spacing-lg);
+}
+
+.admin-approval input {
+	background: var(--color-paper-raised);
+	color: var(--color-ink);
+}
+
+.admin-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--spacing-sm);
+	margin-block-start: var(--spacing-md);
+}
+
+@media (max-width: 40rem) {
+	.admin-request-list dl {
+		grid-template-columns: 1fr;
+	}
+
+	.admin-queue > header,
+	.admin-request-list li > header {
+		flex-direction: column;
+	}
+}

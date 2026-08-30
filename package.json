@@ -6,6 +6,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "admin:hash-password": "node scripts/hash-admin-password.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -17,11 +18,15 @@
     "@astrojs/react": "^6.0.4",
     "@astrojs/vercel": "^11.0.8",
     "@fontsource/source-sans-3": "^5.3.0",
+    "@libsql/client": "^0.17.4",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.102.7",
     "astro": "^7.2.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-email": "^6.9.3",
+    "react-hook-form": "^7.86.0",
+    "resend": "^6.25.0",
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
@@ -32,6 +37,7 @@
     "@oxlint/plugins": "1.80.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "1.80.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"

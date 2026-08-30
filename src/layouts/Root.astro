@@ -1,16 +1,19 @@
 ---
+import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
 import "../styles/global.css";
 
 type Props = {
 	title: string;
 	description: string;
 	preloadDisplayFont?: boolean;
+	noindex?: boolean;
 };
 
-const { title, description, preloadDisplayFont = false } = Astro.props;
+const { title, description, preloadDisplayFont = false, noindex = false } = Astro.props;
 const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const isGettingStartedPage = pathname === "/getting-started";
 const isItemsPage = pathname === "/items";
+const isAdminPage = pathname.startsWith("/admin");
 ---
 
 <!doctype html>
@@ -31,6 +34,7 @@ const isItemsPage = pathname === "/items";
 		)}
 		<meta name="color-scheme" content="dark" />
 		<meta name="description" content={description} />
+		{noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
@@ -50,6 +54,7 @@ const isItemsPage = pathname === "/items";
 				{!isItemsPage && (
 					<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
 				)}
+				{!isAdminPage && <ApiKeyRequestDialog client:load placement="nav" />}
 			</nav>
 		</header>
 		<slot />

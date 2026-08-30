@@ -1,4 +1,5 @@
 ---
+import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
 import Root from "../layouts/Root.astro";
 ---
 
@@ -49,6 +50,7 @@ import Root from "../layouts/Root.astro";
 						</p>
 						<div class="hero-actions">
 							<a href="/getting-started" class="hero-primary">Enter the guide</a>
+							<ApiKeyRequestDialog client:load placement="hero" />
 							<a href="https://platinum-gold-backend.vercel.app/docs" class="hero-secondary">
 								Open API reference
 							</a>

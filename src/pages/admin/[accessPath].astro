@@ -1,0 +1,25 @@
+---
+import { REQUESTS_ADMIN_PATH } from "astro:env/server";
+
+import { AdminRequests } from "../../components/AdminRequests";
+import Root from "../../layouts/Root.astro";
+
+export const prerender = false;
+
+if (!REQUESTS_ADMIN_PATH || Astro.params.accessPath !== REQUESTS_ADMIN_PATH) {
+	return new Response("Not found", { status: 404 });
+}
+
+Astro.response.headers.set("Cache-Control", "no-store");
+Astro.response.headers.set("Referrer-Policy", "no-referrer");
+Astro.response.headers.set("X-Frame-Options", "DENY");
+Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+---
+
+<Root
+	title="Request administration | Platinum Gold"
+	description="Protected Platinum Gold API request administration."
+	noindex={true}
+>
+	<main><AdminRequests client:load /></main>
+</Root>

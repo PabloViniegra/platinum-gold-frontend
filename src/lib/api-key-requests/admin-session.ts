@@ -1,5 +1,7 @@
 import type { Client } from "@libsql/client";
 
+import { adminEmptyResponse, adminJsonResponse } from "./admin-response";
+import { readBoundedBody } from "./http-body";
 import {
 	ADMIN_SESSION_COOKIE,
 	createAdminSession,
@@ -15,17 +17,12 @@ export type AdminLoginConfig = {
 	sessionSecret: string;
 };
 
+const MAXIMUM_LOGIN_BODY_BYTES = 2_048;
+
 type LoginPayload = {
 	username: string;
 	password: string;
 };
-
-function jsonResponse(message: string, status: number): Response {
-	return Response.json({ message }, {
-		status,
-		headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
-	});
-}
 
 function parseLogin(body: string): LoginPayload | null {
 	try {
@@ -49,7 +46,7 @@ export async function handleAdminLogin(
 	clientIdentifier: string,
 	nowMilliseconds: number,
 ): Promise<Response> {
-	if (!requestHasSameOrigin(request)) return jsonResponse("Request not allowed.", 403);
+	if (!requestHasSameOrigin(request)) return adminJsonResponse("Request not allowed.", 403);
 	const allowed = await consumeRateLimit(
 		client,
 		"admin-login",
@@ -58,23 +55,17 @@ export async function handleAdminLogin(
 		15 * 60 * 1_000,
 		nowMilliseconds,
 	);
-	if (!allowed) return jsonResponse("Too many attempts. Try again later.", 429);
-	const payload = parseLogin(await request.text());
-	if (!payload) return jsonResponse("Invalid credentials.", 401);
+	if (!allowed) return adminJsonResponse("Too many attempts. Try again later.", 429);
+	const body = await readBoundedBody(request, MAXIMUM_LOGIN_BODY_BYTES);
+	const payload = body === null ? null : parseLogin(body);
+	if (!payload) return adminJsonResponse("Invalid credentials.", 401);
 	const passwordMatches = verifyAdminPassword(payload.password, config.passwordHash);
 	if (payload.username !== config.username || !passwordMatches) {
-		return jsonResponse("Invalid credentials.", 401);
+		return adminJsonResponse("Invalid credentials.", 401);
 	}
 
 	const token = createAdminSession(config.username, config.sessionSecret, nowMilliseconds);
-	return new Response(null, {
-		status: 204,
-		headers: {
-			"Cache-Control": "no-store",
-			"Set-Cookie": sessionCookie(token, 28_800, request),
-			"X-Content-Type-Options": "nosniff",
-		},
-	});
+	return adminEmptyResponse(204, sessionCookie(token, 28_800, request));
 }
 
 function sessionCookie(token: string, maxAge: number, request: Request): string {
@@ -90,13 +81,6 @@ function sessionCookie(token: string, maxAge: number, request: Request): string 
 }
 
 export function handleAdminLogout(request: Request): Response {
-	if (!requestHasSameOrigin(request)) return jsonResponse("Request not allowed.", 403);
-	return new Response(null, {
-		status: 204,
-		headers: {
-			"Cache-Control": "no-store",
-			"Set-Cookie": sessionCookie("", 0, request),
-			"X-Content-Type-Options": "nosniff",
-		},
-	});
+	if (!requestHasSameOrigin(request)) return adminJsonResponse("Request not allowed.", 403);
+	return adminEmptyResponse(204, sessionCookie("", 0, request));
 }

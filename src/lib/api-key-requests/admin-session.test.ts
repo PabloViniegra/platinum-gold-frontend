@@ -35,6 +35,8 @@ describe("admin session service", () => {
 		const cookie = response.headers.get("Set-Cookie") ?? "";
 
 		expect(response.status).toBe(204);
+		expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+		expect(response.headers.get("X-Frame-Options")).toBe("DENY");
 		expect(cookie).toContain("HttpOnly");
 		expect(cookie).toContain("Secure");
 		expect(cookie).toContain("SameSite=Strict");
@@ -82,6 +84,8 @@ describe("admin session service", () => {
 		const cookie = response.headers.get("Set-Cookie") ?? "";
 
 		expect(response.status).toBe(204);
+		expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+		expect(response.headers.get("X-Frame-Options")).toBe("DENY");
 		expect(cookie).toContain("HttpOnly");
 		expect(cookie).not.toContain("Secure");
 	});
@@ -94,5 +98,21 @@ describe("admin session service", () => {
 
 		expect(response.status).toBe(204);
 		expect(response.headers.get("Set-Cookie")).toContain("Max-Age=0");
+	});
+
+	it("rejects oversized login bodies before parsing", async () => {
+		const response = await handleAdminLogin(
+			new Request("https://example.com/api/admin/session", {
+				method: "POST",
+				headers: { Origin: "https://example.com" },
+				body: "x".repeat(3_000),
+			}),
+			client,
+			CONFIG,
+			"ip-1",
+			NOW,
+		);
+
+		expect(response.status).toBe(401);
 	});
 });

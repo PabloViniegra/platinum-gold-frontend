@@ -1,20 +1,14 @@
 import type { Client } from "@libsql/client";
 
-import { isAdminRequestAuthorized, requestHasSameOrigin } from "./auth";
+import { adminEmptyResponse, adminJsonResponse } from "./admin-response";
+import { identifierHash, isAdminRequestAuthorized, requestHasSameOrigin } from "./auth";
 import { sendApprovalEmail, type EmailTransport, type MailboxConfig } from "./email";
-import { findPendingRequestById, markRequestApproved } from "./repository";
+import { beginRequestDecision, markRequestApproved, releaseRequestDecision, REQUEST_STATUS } from "./repository";
 
 type ApprovalPayload = {
 	apiKey: string;
 	confirmation: string;
 };
-
-function jsonResponse(message: string, status: number): Response {
-	return Response.json({ message }, {
-		status,
-		headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
-	});
-}
 
 function parseApproval(body: string): ApprovalPayload | null {
 	try {
@@ -41,31 +35,44 @@ export async function handleRequestApproval(
 	nowMilliseconds: number,
 	mailbox: MailboxConfig,
 ): Promise<Response> {
-	if (!requestHasSameOrigin(httpRequest)) return jsonResponse("Request not allowed.", 403);
+	if (!requestHasSameOrigin(httpRequest)) return adminJsonResponse("Request not allowed.", 403);
 	if (!isAdminRequestAuthorized(httpRequest, username, sessionSecret, nowMilliseconds)) {
-		return jsonResponse("Authentication required.", 401);
+		return adminJsonResponse("Authentication required.", 401);
 	}
 	const payload = parseApproval(await httpRequest.text());
 	if (!requestId || requestId.length > 100 || !payload) {
-		return jsonResponse("Check the API key and try again.", 400);
+		return adminJsonResponse("Check the API key and try again.", 400);
 	}
 
 	try {
-		const pending = await findPendingRequestById(client, requestId);
-		if (!pending) return jsonResponse("This request is no longer pending.", 409);
-		const emailId = await sendApprovalEmail(
-			transport,
-			pending.email,
-			pending.firstName,
-			payload.apiKey,
-			pending.id,
-			mailbox,
+		const owner = crypto.randomUUID();
+		const pending = await beginRequestDecision(
+			client,
+			requestId,
+			REQUEST_STATUS.APPROVING,
+			identifierHash(payload.apiKey, sessionSecret),
+			owner,
+			nowMilliseconds,
 		);
-		if (!await markRequestApproved(client, pending.id, emailId, new Date(nowMilliseconds).toISOString())) {
-			return jsonResponse("This request is no longer pending.", 409);
+		if (!pending) return adminJsonResponse("This request is no longer pending.", 409);
+		try {
+			const emailId = await sendApprovalEmail(
+				transport,
+				pending.email,
+				pending.firstName,
+				payload.apiKey,
+				pending.id,
+				mailbox,
+			);
+			if (!await markRequestApproved(client, pending.id, emailId, new Date(nowMilliseconds).toISOString())) {
+				return adminJsonResponse("This request is no longer pending.", 409);
+			}
+		} catch {
+			await releaseRequestDecision(client, requestId, REQUEST_STATUS.APPROVING, owner);
+			throw new Error("Approval delivery failed.");
 		}
-		return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+		return adminEmptyResponse(204);
 	} catch {
-		return jsonResponse("Approval could not be completed. Try again.", 503);
+		return adminJsonResponse("Approval could not be completed. Try again.", 503);
 	}
 }

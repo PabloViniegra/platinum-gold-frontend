@@ -9,6 +9,7 @@ import {
 	createPendingRequest,
 	initializeRequestsSchema,
 	listPendingRequests,
+	REQUEST_STATUS,
 } from "./repository";
 
 const NOW = 120_000;
@@ -114,6 +115,8 @@ describe("handleRequestDenial", () => {
 		);
 
 		expect(response.status).toBe(204);
+		expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+		expect(response.headers.get("X-Frame-Options")).toBe("DENY");
 		expect(second.status).toBe(409);
 		expect(transport.messages).toHaveLength(1);
 		expect(transport.messages[0]?.to).toBe("isaac@example.com");
@@ -121,7 +124,7 @@ describe("handleRequestDenial", () => {
 		expect(await listPendingRequests(client)).toEqual([]);
 	});
 
-	it("keeps the request pending when delivery fails", async () => {
+	it("keeps the denial reserved when delivery fails", async () => {
 		transport.failNext = true;
 		const response = await handleRequestDenial(
 			denialRequest("https://example.com", cookieHeader()),
@@ -135,6 +138,38 @@ describe("handleRequestDenial", () => {
 		);
 
 		expect(response.status).toBe(503);
-		expect(await listPendingRequests(client)).toHaveLength(1);
+		expect(await listPendingRequests(client)).toEqual([
+			expect.objectContaining({ id: "request-1", status: REQUEST_STATUS.DENYING }),
+		]);
+
+		transport.failNext = false;
+		const retry = await handleRequestDenial(
+			denialRequest("https://example.com", cookieHeader()),
+			client,
+			transport,
+			USERNAME,
+			SESSION_SECRET,
+			"request-1",
+			NOW + 1,
+			MAILBOX,
+		);
+		expect(retry.status).toBe(204);
+		expect(transport.messages).toHaveLength(2);
+	});
+
+	it("sends one email when two denials race", async () => {
+		const responses = await Promise.all([
+			handleRequestDenial(
+				denialRequest("https://example.com", cookieHeader()),
+				client, transport, USERNAME, SESSION_SECRET, "request-1", NOW, MAILBOX,
+			),
+			handleRequestDenial(
+				denialRequest("https://example.com", cookieHeader()),
+				client, transport, USERNAME, SESSION_SECRET, "request-1", NOW, MAILBOX,
+			),
+		]);
+
+		expect(responses.map((response) => response.status).sort()).toEqual([204, 409]);
+		expect(transport.messages).toHaveLength(1);
 	});
 });

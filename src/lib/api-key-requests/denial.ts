@@ -1,15 +1,9 @@
 import type { Client } from "@libsql/client";
 
+import { adminEmptyResponse, adminJsonResponse } from "./admin-response";
 import { isAdminRequestAuthorized, requestHasSameOrigin } from "./auth";
 import { sendDenialEmail, type EmailTransport, type MailboxConfig } from "./email";
-import { findPendingRequestById, markRequestDenied } from "./repository";
-
-function jsonResponse(message: string, status: number): Response {
-	return Response.json({ message }, {
-		status,
-		headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
-	});
-}
+import { beginRequestDecision, markRequestDenied, releaseRequestDecision, REQUEST_STATUS } from "./repository";
 
 export async function handleRequestDenial(
 	httpRequest: Request,
@@ -21,29 +15,37 @@ export async function handleRequestDenial(
 	nowMilliseconds: number,
 	mailbox: MailboxConfig,
 ): Promise<Response> {
-	if (!requestHasSameOrigin(httpRequest)) return jsonResponse("Request not allowed.", 403);
+	if (!requestHasSameOrigin(httpRequest)) return adminJsonResponse("Request not allowed.", 403);
 	if (!isAdminRequestAuthorized(httpRequest, username, sessionSecret, nowMilliseconds)) {
-		return jsonResponse("Authentication required.", 401);
+		return adminJsonResponse("Authentication required.", 401);
 	}
 	if (!requestId || requestId.length > 100) {
-		return jsonResponse("This request is no longer pending.", 409);
+		return adminJsonResponse("This request is no longer pending.", 409);
 	}
 
 	try {
-		const pending = await findPendingRequestById(client, requestId);
-		if (!pending) return jsonResponse("This request is no longer pending.", 409);
-		const emailId = await sendDenialEmail(
-			transport,
-			pending.email,
-			pending.firstName,
-			pending.id,
-			mailbox,
+		const owner = crypto.randomUUID();
+		const pending = await beginRequestDecision(
+			client, requestId, REQUEST_STATUS.DENYING, null, owner, nowMilliseconds,
 		);
-		if (!await markRequestDenied(client, pending.id, emailId, new Date(nowMilliseconds).toISOString())) {
-			return jsonResponse("This request is no longer pending.", 409);
+		if (!pending) return adminJsonResponse("This request is no longer pending.", 409);
+		try {
+			const emailId = await sendDenialEmail(
+				transport,
+				pending.email,
+				pending.firstName,
+				pending.id,
+				mailbox,
+			);
+			if (!await markRequestDenied(client, pending.id, emailId, new Date(nowMilliseconds).toISOString())) {
+				return adminJsonResponse("This request is no longer pending.", 409);
+			}
+		} catch {
+			await releaseRequestDecision(client, requestId, REQUEST_STATUS.DENYING, owner);
+			throw new Error("Denial delivery failed.");
 		}
-		return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+		return adminEmptyResponse(204);
 	} catch {
-		return jsonResponse("Denial could not be completed. Try again.", 503);
+		return adminJsonResponse("Denial could not be completed. Try again.", 503);
 	}
 }

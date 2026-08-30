@@ -1,3 +1,6 @@
+import { FALLBACK_COUNTRY_NAMES } from "./countries";
+import { OCCUPATIONS } from "./occupations";
+
 export const API_KEY_USE_CASE = {
 	PERSONAL_PROJECT: "personal_project",
 	RESEARCH: "research",
@@ -40,6 +43,7 @@ const ALLOWED_FIELDS = new Set([
 	"useCaseDetails",
 	"website",
 ]);
+const ALLOWED_OCCUPATIONS = new Set<string>(OCCUPATIONS);
 
 function boundedText(value: string, maximumLength: number): string | null {
 	if (value?.constructor !== String) return null;
@@ -80,6 +84,8 @@ export function normalizeEmail(email: string): string {
 	return email.trim().toLowerCase();
 }
 
+const ALLOWED_COUNTRIES = new Set<string>(FALLBACK_COUNTRY_NAMES);
+
 export function parseApiKeyRequest(body: string): ApiKeyRequest | null {
 	try {
 		const payload: ApiKeyRequestPayload = JSON.parse(body);
@@ -103,6 +109,8 @@ export function parseApiKeyRequest(body: string): ApiKeyRequest | null {
 			|| !email
 			|| !country
 			|| !occupation
+			|| !ALLOWED_COUNTRIES.has(country)
+			|| !ALLOWED_OCCUPATIONS.has(occupation)
 			|| !useCase
 			|| !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email)
 			|| website === null

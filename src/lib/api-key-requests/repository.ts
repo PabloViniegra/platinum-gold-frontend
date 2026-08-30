@@ -7,8 +7,23 @@ import {
 	type ApiKeyUseCase,
 } from "./contracts";
 
+export const REQUEST_STATUS = {
+	PENDING: "pending",
+	APPROVING: "approving",
+	DENYING: "denying",
+	APPROVED: "approved",
+	DENIED: "denied",
+} as const;
+
+export type RequestStatus = (typeof REQUEST_STATUS)[keyof typeof REQUEST_STATUS];
+
+export type ActionableRequestStatus = typeof REQUEST_STATUS.PENDING
+	| typeof REQUEST_STATUS.APPROVING
+	| typeof REQUEST_STATUS.DENYING;
+
 export type PendingApiKeyRequest = {
 	id: string;
+	status: ActionableRequestStatus;
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -18,14 +33,6 @@ export type PendingApiKeyRequest = {
 	useCaseDetails: string | null;
 	createdAt: string;
 };
-
-export const REQUEST_STATUS = {
-	PENDING: "pending",
-	APPROVED: "approved",
-	DENIED: "denied",
-} as const;
-
-export type RequestStatus = (typeof REQUEST_STATUS)[keyof typeof REQUEST_STATUS];
 
 export type StoredApiKeyRequest = {
 	id: string;
@@ -48,6 +55,10 @@ function parseRequestStatus(value: string): RequestStatus | null {
 	switch (value) {
 		case REQUEST_STATUS.PENDING:
 			return REQUEST_STATUS.PENDING;
+		case REQUEST_STATUS.APPROVING:
+			return REQUEST_STATUS.APPROVING;
+		case REQUEST_STATUS.DENYING:
+			return REQUEST_STATUS.DENYING;
 		case REQUEST_STATUS.APPROVED:
 			return REQUEST_STATUS.APPROVED;
 		case REQUEST_STATUS.DENIED:
@@ -67,15 +78,28 @@ const REQUESTS_TABLE_SQL = `CREATE TABLE api_key_requests (
 	occupation TEXT NOT NULL,
 	use_case TEXT NOT NULL,
 	use_case_details TEXT,
-	status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'denied')),
+	status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approving', 'denying', 'approved', 'denied')),
 	created_at TEXT NOT NULL,
 	approved_at TEXT,
 	denied_at TEXT,
 	applicant_email_id TEXT,
 	admin_email_id TEXT,
 	approval_email_id TEXT,
-	denial_email_id TEXT
+	denial_email_id TEXT,
+	decision_fingerprint TEXT,
+	decision_owner TEXT,
+	decision_claimed_at INTEGER NOT NULL DEFAULT 0
 )`;
+
+const REQUEST_TABLE_COLUMNS = [
+	"id", "first_name", "last_name", "email", "email_normalized", "country",
+	"occupation", "use_case", "use_case_details", "status", "created_at",
+	"approved_at", "denied_at", "applicant_email_id", "admin_email_id",
+	"approval_email_id", "denial_email_id", "decision_fingerprint",
+	"decision_owner", "decision_claimed_at",
+] as const;
+
+export const DECISION_LEASE_MILLISECONDS = 10 * 60 * 1_000;
 
 export async function initializeRequestsSchema(client: Client): Promise<void> {
 	await client.batch([
@@ -89,32 +113,46 @@ export async function initializeRequestsSchema(client: Client): Promise<void> {
 			request_count INTEGER NOT NULL,
 			PRIMARY KEY (action, identifier_hash, window_start)
 		)`,
+		`CREATE INDEX IF NOT EXISTS request_rate_limits_action_window
+			ON request_rate_limits (action, window_start)`,
 	], "write");
-	await migrateDeniedStatus(client);
+	await migrateRequestsTable(client, "'denied'");
+	await migrateRequestsTable(client, "'approving'");
 }
 
-async function migrateDeniedStatus(client: Client): Promise<void> {
+async function migrateRequestsTable(client: Client, requiredToken: string): Promise<void> {
+	const sql = await requestsTableSql(client);
+	if (sql === null || sql.includes(requiredToken)) return;
+	const legacyColumns = await requestsTableColumns(client);
+	const shared = REQUEST_TABLE_COLUMNS.filter((column) => legacyColumns.has(column));
+	const columnList = shared.join(", ");
+	try {
+		await client.batch([
+			REQUESTS_TABLE_SQL.replace("CREATE TABLE api_key_requests", "CREATE TABLE api_key_requests_migrated"),
+			`INSERT INTO api_key_requests_migrated (${columnList})
+			 SELECT ${columnList} FROM api_key_requests`,
+			"DROP TABLE api_key_requests",
+			"ALTER TABLE api_key_requests_migrated RENAME TO api_key_requests",
+			`CREATE INDEX IF NOT EXISTS api_key_requests_pending_created
+				ON api_key_requests (status, created_at DESC)`,
+		], "write");
+	} catch {
+		if ((await requestsTableSql(client))?.includes(requiredToken)) return;
+		throw new Error("API key request table migration failed.");
+	}
+}
+
+async function requestsTableSql(client: Client): Promise<string | null> {
 	const result = await client.execute(
 		"SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'api_key_requests'",
 	);
 	const sql = result.rows[0]?.sql;
-	if (sql?.constructor !== String || sql.includes("'denied'")) return;
-	await client.batch([
-		REQUESTS_TABLE_SQL.replace("CREATE TABLE api_key_requests", "CREATE TABLE api_key_requests_migrated"),
-		`INSERT INTO api_key_requests_migrated (
-			id, first_name, last_name, email, email_normalized, country, occupation,
-			use_case, use_case_details, status, created_at, approved_at,
-			applicant_email_id, admin_email_id, approval_email_id
-		) SELECT
-			id, first_name, last_name, email, email_normalized, country, occupation,
-			use_case, use_case_details, status, created_at, approved_at,
-			applicant_email_id, admin_email_id, approval_email_id
-		FROM api_key_requests`,
-		"DROP TABLE api_key_requests",
-		"ALTER TABLE api_key_requests_migrated RENAME TO api_key_requests",
-		`CREATE INDEX IF NOT EXISTS api_key_requests_pending_created
-			ON api_key_requests (status, created_at DESC)`,
-	], "write");
+	return sql?.constructor === String ? sql.toString() : null;
+}
+
+async function requestsTableColumns(client: Client): Promise<Set<string>> {
+	const result = await client.execute("PRAGMA table_info(api_key_requests)");
+	return new Set(result.rows.map((row) => databaseString(row.name, "column_name")));
 }
 
 export async function createPendingRequest(
@@ -211,10 +249,10 @@ export async function findStoredRequest(
 
 export async function listPendingRequests(client: Client): Promise<PendingApiKeyRequest[]> {
 	const result = await client.execute(`SELECT
-		id, first_name, last_name, email, country, occupation,
+		id, status, first_name, last_name, email, country, occupation,
 		use_case, use_case_details, created_at
 		FROM api_key_requests
-		WHERE status = 'pending'
+		WHERE status IN ('pending', 'approving', 'denying')
 		ORDER BY created_at DESC`);
 
 	return result.rows.map((row) => {
@@ -222,6 +260,7 @@ export async function listPendingRequests(client: Client): Promise<PendingApiKey
 		if (!useCase) throw new Error("Invalid use_case in API key request row.");
 		return {
 			id: databaseString(row.id, "id"),
+			status: actionableRequestStatus(databaseString(row.status, "status")),
 			firstName: databaseString(row.first_name, "first_name"),
 			lastName: databaseString(row.last_name, "last_name"),
 			email: databaseString(row.email, "email"),
@@ -234,22 +273,59 @@ export async function listPendingRequests(client: Client): Promise<PendingApiKey
 	});
 }
 
-export async function findPendingRequestById(
+export async function beginRequestDecision(
 	client: Client,
 	id: string,
+	decision: typeof REQUEST_STATUS.APPROVING | typeof REQUEST_STATUS.DENYING,
+	fingerprint: string | null,
+	owner: string,
+	nowMilliseconds: number,
 ): Promise<PendingApiKeyRequest | null> {
-	const result = await client.execute({
-		sql: `SELECT id, first_name, last_name, email, country, occupation,
-			use_case, use_case_details, created_at
-			FROM api_key_requests WHERE id = ? AND status = 'pending'`,
-		args: [id],
+	const claimed = await client.execute({
+		sql: `UPDATE api_key_requests
+			SET status = ?, decision_fingerprint = ?, decision_owner = ?, decision_claimed_at = ?
+			WHERE id = ? AND (
+				status = 'pending'
+				OR (status = ? AND decision_fingerprint IS ?
+					AND (decision_owner IS NULL OR decision_claimed_at <= ?))
+			)
+			RETURNING id, status, first_name, last_name, email, country, occupation,
+				use_case, use_case_details, created_at`,
+		args: [
+			decision,
+			fingerprint,
+			owner,
+			nowMilliseconds,
+			id,
+			decision,
+			fingerprint,
+			nowMilliseconds - DECISION_LEASE_MILLISECONDS,
+		],
 	});
-	const row = result.rows[0];
-	if (!row) return null;
+	const row = claimed.rows[0];
+	return row ? pendingRequestFromRow(row) : null;
+}
+
+export async function releaseRequestDecision(
+	client: Client,
+	id: string,
+	decision: typeof REQUEST_STATUS.APPROVING | typeof REQUEST_STATUS.DENYING,
+	owner: string,
+): Promise<void> {
+	await client.execute({
+		sql: `UPDATE api_key_requests
+			SET decision_owner = NULL, decision_claimed_at = 0
+			WHERE id = ? AND status = ? AND decision_owner = ?`,
+		args: [id, decision, owner],
+	});
+}
+
+function pendingRequestFromRow(row: Readonly<Record<string, Value>>): PendingApiKeyRequest {
 	const useCase = parseApiKeyUseCase(databaseString(row.use_case, "use_case"));
 	if (!useCase) throw new Error("Invalid use_case in API key request row.");
 	return {
 		id: databaseString(row.id, "id"),
+		status: actionableRequestStatus(databaseString(row.status, "status")),
 		firstName: databaseString(row.first_name, "first_name"),
 		lastName: databaseString(row.last_name, "last_name"),
 		email: databaseString(row.email, "email"),
@@ -261,6 +337,12 @@ export async function findPendingRequestById(
 	};
 }
 
+function actionableRequestStatus(value: string): ActionableRequestStatus {
+	if (value === REQUEST_STATUS.PENDING || value === REQUEST_STATUS.APPROVING ||
+		value === REQUEST_STATUS.DENYING) return value;
+	throw new Error("Invalid actionable status in API key request row.");
+}
+
 export async function markRequestApproved(
 	client: Client,
 	id: string,
@@ -269,8 +351,9 @@ export async function markRequestApproved(
 ): Promise<boolean> {
 	const result = await client.execute({
 		sql: `UPDATE api_key_requests
-			SET status = 'approved', approval_email_id = ?, approved_at = ?
-			WHERE id = ? AND status = 'pending'`,
+			SET status = 'approved', approval_email_id = ?, approved_at = ?,
+				decision_fingerprint = NULL, decision_owner = NULL, decision_claimed_at = 0
+			WHERE id = ? AND status = 'approving'`,
 		args: [approvalEmailId, approvedAt, id],
 	});
 	return result.rowsAffected === 1;
@@ -284,8 +367,9 @@ export async function markRequestDenied(
 ): Promise<boolean> {
 	const result = await client.execute({
 		sql: `UPDATE api_key_requests
-			SET status = 'denied', denial_email_id = ?, denied_at = ?
-			WHERE id = ? AND status = 'pending'`,
+			SET status = 'denied', denial_email_id = ?, denied_at = ?,
+				decision_fingerprint = NULL, decision_owner = NULL, decision_claimed_at = 0
+			WHERE id = ? AND status = 'denying'`,
 		args: [denialEmailId, deniedAt, id],
 	});
 	return result.rowsAffected === 1;
@@ -300,7 +384,10 @@ export async function consumeRateLimit(
 	nowMilliseconds: number,
 ): Promise<boolean> {
 	const windowStart = Math.floor(nowMilliseconds / windowMilliseconds) * windowMilliseconds;
-	const result = await client.execute({
+	const results = await client.batch([{
+		sql: "DELETE FROM request_rate_limits WHERE action = ? AND window_start < ?",
+		args: [action, windowStart],
+	}, {
 		sql: `INSERT INTO request_rate_limits (
 			action, identifier_hash, window_start, request_count
 		) VALUES (?, ?, ?, 1)
@@ -308,7 +395,8 @@ export async function consumeRateLimit(
 		DO UPDATE SET request_count = request_count + 1
 		RETURNING request_count`,
 		args: [action, identifierHash, windowStart],
-	});
+	}], "write");
+	const result = results[1];
 	const count = Number(result.rows[0]?.request_count);
 	return Number.isSafeInteger(count) && count <= limit;
 }

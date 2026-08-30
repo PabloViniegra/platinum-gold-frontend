@@ -6,6 +6,7 @@ import "./admin-requests.css";
 
 type PendingRequest = {
 	id: string;
+	status: AdminRequestStatus;
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -15,6 +16,14 @@ type PendingRequest = {
 	useCaseDetails: string | null;
 	createdAt: string;
 };
+
+const ADMIN_REQUEST_STATUS = {
+	PENDING: "pending",
+	APPROVING: "approving",
+	DENYING: "denying",
+} as const;
+
+type AdminRequestStatus = (typeof ADMIN_REQUEST_STATUS)[keyof typeof ADMIN_REQUEST_STATUS];
 
 type QueueResponse = {
 	requests: PendingRequest[];
@@ -285,8 +294,16 @@ export function AdminRequests() {
 								{request.useCaseDetails && <div><dt>Details</dt><dd>{request.useCaseDetails}</dd></div>}
 							</dl>
 							<div className="admin-request-actions">
-								<button type="button" onClick={() => openApproval(request)}>Approve and send key</button>
-								<button className="admin-deny" type="button" onClick={() => openDenial(request)}>Deny request</button>
+								{request.status !== ADMIN_REQUEST_STATUS.DENYING && (
+									<button type="button" onClick={() => openApproval(request)}>
+										{request.status === ADMIN_REQUEST_STATUS.APPROVING ? "Retry approval" : "Approve and send key"}
+									</button>
+								)}
+								{request.status !== ADMIN_REQUEST_STATUS.APPROVING && (
+									<button className="admin-deny" type="button" onClick={() => openDenial(request)}>
+										{request.status === ADMIN_REQUEST_STATUS.DENYING ? "Retry denial" : "Deny request"}
+									</button>
+								)}
 							</div>
 						</li>
 					))}

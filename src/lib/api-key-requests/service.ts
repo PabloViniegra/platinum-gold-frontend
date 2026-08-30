@@ -2,6 +2,7 @@ import type { Client } from "@libsql/client";
 
 import { identifierHash } from "./auth";
 import { parseApiKeyRequest } from "./contracts";
+import { readBoundedBody } from "./http-body";
 import {
 	sendAdminNotificationEmail,
 	sendWaitingListEmail,
@@ -20,33 +21,6 @@ import {
 const MAXIMUM_BODY_BYTES = 8_192;
 const SUCCESS_MESSAGE = "Your request has joined the waiting list.";
 const DUPLICATE_MESSAGE = "A request for this email is already being reviewed.";
-
-async function readBoundedBody(httpRequest: Request, maximumBytes: number): Promise<string | null> {
-	const declaredLength = Number(httpRequest.headers.get("Content-Length") ?? 0);
-	if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) return null;
-	const stream = httpRequest.body;
-	if (!stream) return "";
-	const reader = stream.getReader();
-	const chunks: Uint8Array[] = [];
-	let size = 0;
-	while (true) {
-		const result = await reader.read();
-		if (result.done) break;
-		size += result.value.byteLength;
-		if (size > maximumBytes) {
-			await reader.cancel();
-			return null;
-		}
-		chunks.push(result.value);
-	}
-	const bytes = new Uint8Array(size);
-	let offset = 0;
-	for (const chunk of chunks) {
-		bytes.set(chunk, offset);
-		offset += chunk.byteLength;
-	}
-	return new TextDecoder().decode(bytes);
-}
 
 function response(message: string, status: number, requestId: string): Response {
 	return Response.json(

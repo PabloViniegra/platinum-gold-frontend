@@ -4,11 +4,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ADMIN_SESSION_COOKIE, createAdminSession } from "./auth";
 import { handleRequestApproval } from "./approval";
 import { API_KEY_USE_CASE, type ApiKeyRequest } from "./contracts";
+import { handleRequestDenial } from "./denial";
 import type { EmailMessage, EmailTransport, MailboxConfig } from "./email";
 import {
 	createPendingRequest,
 	initializeRequestsSchema,
 	listPendingRequests,
+	REQUEST_STATUS,
 } from "./repository";
 
 const NOW = 120_000;
@@ -149,13 +151,15 @@ describe("handleRequestApproval", () => {
 		);
 
 		expect(response.status).toBe(204);
+		expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+		expect(response.headers.get("X-Frame-Options")).toBe("DENY");
 		expect(second.status).toBe(409);
 		expect(transport.messages).toHaveLength(1);
 		expect(transport.messages[0]?.to).toBe("isaac@example.com");
 		expect(await listPendingRequests(client)).toEqual([]);
 	});
 
-	it("keeps the request pending when delivery fails", async () => {
+	it("keeps the approval reserved when delivery fails", async () => {
 		transport.failNext = true;
 		const response = await handleRequestApproval(
 			approvalRequest("https://example.com", cookieHeader(), JSON.stringify({
@@ -172,6 +176,77 @@ describe("handleRequestApproval", () => {
 		);
 
 		expect(response.status).toBe(503);
-		expect(await listPendingRequests(client)).toHaveLength(1);
+		expect(await listPendingRequests(client)).toEqual([
+			expect.objectContaining({ id: "request-1", status: REQUEST_STATUS.APPROVING }),
+		]);
+
+		transport.failNext = false;
+		const changedKey = await handleRequestApproval(
+			approvalRequest("https://example.com", cookieHeader(), JSON.stringify({
+				apiKey: "pg_different",
+				confirmation: "pg_different",
+			})),
+			client,
+			transport,
+			USERNAME,
+			SESSION_SECRET,
+			"request-1",
+			NOW + 1,
+			MAILBOX,
+		);
+
+		expect(changedKey.status).toBe(409);
+		expect(transport.messages).toHaveLength(1);
+	});
+
+	it("sends one email when two approvals with the same key race", async () => {
+		const approvalBody = JSON.stringify({ apiKey: "pg_test_123", confirmation: "pg_test_123" });
+		const responses = await Promise.all([
+			handleRequestApproval(
+				approvalRequest("https://example.com", cookieHeader(), approvalBody),
+				client, transport, USERNAME, SESSION_SECRET, "request-1", NOW, MAILBOX,
+			),
+			handleRequestApproval(
+				approvalRequest("https://example.com", cookieHeader(), approvalBody),
+				client, transport, USERNAME, SESSION_SECRET, "request-1", NOW, MAILBOX,
+			),
+		]);
+
+		expect(responses.map((response) => response.status).sort()).toEqual([204, 409]);
+		expect(transport.messages).toHaveLength(1);
+	});
+
+	it("allows only one decision when approval and denial race", async () => {
+		const approval = handleRequestApproval(
+			approvalRequest("https://example.com", cookieHeader(), JSON.stringify({
+				apiKey: "pg_test_123",
+				confirmation: "pg_test_123",
+			})),
+			client,
+			transport,
+			USERNAME,
+			SESSION_SECRET,
+			"request-1",
+			NOW,
+			MAILBOX,
+		);
+		const denial = handleRequestDenial(
+			new Request("https://example.com/api/admin/key-requests/request-1/deny", {
+				method: "POST",
+				headers: { Origin: "https://example.com", Cookie: cookieHeader() },
+			}),
+			client,
+			transport,
+			USERNAME,
+			SESSION_SECRET,
+			"request-1",
+			NOW,
+			MAILBOX,
+		);
+
+		const responses = await Promise.all([approval, denial]);
+
+		expect(responses.map((response) => response.status).sort()).toEqual([204, 409]);
+		expect(transport.messages).toHaveLength(1);
 	});
 });

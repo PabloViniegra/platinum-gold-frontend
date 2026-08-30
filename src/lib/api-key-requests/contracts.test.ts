@@ -49,6 +49,8 @@ describe("parseApiKeyRequest", () => {
 		JSON.stringify({ ...JSON.parse(validBody()), firstName: "x".repeat(81) }),
 		JSON.stringify({ ...JSON.parse(validBody()), country: "x".repeat(101) }),
 		JSON.stringify({ ...JSON.parse(validBody()), useCase: "gaming" }),
+		JSON.stringify({ ...JSON.parse(validBody()), occupation: "Supreme overlord" }),
+		JSON.stringify({ ...JSON.parse(validBody()), country: "Nowhere" }),
 		JSON.stringify({ ...JSON.parse(validBody()), unexpected: true }),
 	])("rejects malformed, oversized, or unexpected input", (body) => {
 		expect(parseApiKeyRequest(body)).toBeNull();

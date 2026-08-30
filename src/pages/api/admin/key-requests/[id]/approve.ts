@@ -10,22 +10,16 @@ import {
 } from "astro:env/server";
 
 import { handleRequestApproval } from "../../../../../lib/api-key-requests/approval";
+import { adminJsonResponse } from "../../../../../lib/api-key-requests/admin-response";
 import { getRequestsDatabase } from "../../../../../lib/api-key-requests/database";
 import { createEmailTransport } from "../../../../../lib/api-key-requests/email";
 
 export const prerender = false;
 
-function errorResponse(message: string, status: number): Response {
-	return Response.json({ message }, {
-		status,
-		headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
-	});
-}
-
 export const POST: APIRoute = async ({ request, params }) => {
 	if (!REQUESTS_ADMIN_USERNAME || !REQUESTS_SESSION_SECRET || !REQUESTS_TURSO_DB
 		|| !REQUESTS_TURSO_TOKEN || !RESEND_API_KEY || !REQUESTS_FROM_ADDRESS || !REQUESTS_ADMIN_EMAIL) {
-		return errorResponse("Administration is not configured.", 503);
+		return adminJsonResponse("Administration is not configured.", 503);
 	}
 	try {
 		const client = await getRequestsDatabase(REQUESTS_TURSO_DB, REQUESTS_TURSO_TOKEN);
@@ -40,6 +34,6 @@ export const POST: APIRoute = async ({ request, params }) => {
 			{ fromAddress: REQUESTS_FROM_ADDRESS, adminAddress: REQUESTS_ADMIN_EMAIL },
 		);
 	} catch {
-		return errorResponse("Approval could not be completed. Try again.", 503);
+		return adminJsonResponse("Approval could not be completed. Try again.", 503);
 	}
 };

@@ -498,6 +498,8 @@ function ItemExplorerContent() {
 					<label className="item-page-jump">
 						Page
 						<input
+							id="item-page"
+							name="page"
 							type="number"
 							min={1}
 							max={pageCount}

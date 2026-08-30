@@ -22,7 +22,17 @@ const isAdminPage = pathname.startsWith("/admin");
 		<meta charset="utf-8" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
 		<link rel="icon" href="/favicon.ico" sizes="32x32" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		{!isAdminPage && (
+			<link
+				rel="preload"
+				as="image"
+				href="/tboi-wall.webp"
+				imagesrcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
+				imagesizes="100vw"
+				fetchpriority="high"
+			/>
+		)}
 		{preloadDisplayFont && (
 			<link
 				rel="preload"

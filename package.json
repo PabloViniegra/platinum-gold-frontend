@@ -8,7 +8,7 @@
   "scripts": {
     "admin:hash-password": "node scripts/hash-admin-password.mjs",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/patch-vercel-public-cache.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "oxlint",

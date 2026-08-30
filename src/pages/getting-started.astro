@@ -128,7 +128,7 @@ import Root from "../layouts/Root.astro";
 						<figcaption>
 							<span>HTTP request</span>
 							<span class="guide-code-hint">Scroll horizontally if needed</span>
-							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<button type="button" class="guide-copy" data-copy-code aria-label="Copy HTTP request">Copy</button>
 							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
 						</figcaption>
 						<pre tabindex="0" aria-label="HTTP request example"><code>GET /v1/items HTTP/1.1
@@ -156,7 +156,7 @@ Accept: application/json</code></pre>
 						<figcaption>
 							<span>Server-side TypeScript</span>
 							<span class="guide-code-hint">Scroll horizontally if needed</span>
-							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<button type="button" class="guide-copy" data-copy-code aria-label="Copy server-side TypeScript">Copy</button>
 							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
 						</figcaption>
 						<pre tabindex="0" aria-label="Server-side TypeScript example"><code>const API_BASE = "https://platinum-gold-backend.vercel.app";
@@ -235,7 +235,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 						<figcaption>
 							<span>Successful response</span>
 							<span class="guide-code-hint">Scroll horizontally if needed</span>
-							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<button type="button" class="guide-copy" data-copy-code aria-label="Copy successful response">Copy</button>
 							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
 						</figcaption>
 						<pre tabindex="0" aria-label="Successful response example"><code>&#123;
@@ -340,7 +340,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 						<figcaption>
 							<span>Dataset metadata</span>
 							<span class="guide-code-hint">Scroll horizontally if needed</span>
-							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<button type="button" class="guide-copy" data-copy-code aria-label="Copy dataset metadata">Copy</button>
 							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
 						</figcaption>
 						<pre tabindex="0" aria-label="Dataset metadata example"><code>&#123;
@@ -521,7 +521,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 						<figcaption>
 							<span>Error response</span>
 							<span class="guide-code-hint">Scroll horizontally if needed</span>
-							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<button type="button" class="guide-copy" data-copy-code aria-label="Copy error response">Copy</button>
 							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
 						</figcaption>
 						<pre tabindex="0" aria-label="Error response example"><code>&#123; "error": &#123; "code": "INVALID_API_KEY", "message": "Invalid API key" &#125; &#125;</code></pre>
@@ -585,7 +585,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 						<figcaption>
 							<span>Request correlation header</span>
 							<span class="guide-code-hint">Scroll horizontally if needed</span>
-							<button type="button" class="guide-copy" data-copy-code>Copy</button>
+							<button type="button" class="guide-copy" data-copy-code aria-label="Copy request correlation header">Copy</button>
 							<span class="guide-copy-status" data-copy-status aria-live="polite"></span>
 						</figcaption>
 						<pre tabindex="0" aria-label="Request correlation header example"><code>X-Request-ID: 7c9e2f5e-1b3d-4f8a-9b6e-2c0a4f7d8e9b</code></pre>
@@ -1015,7 +1015,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		block-size: auto;
 		overflow: visible;
 		clip-path: none;
-		color: var(--color-error);
+		color: var(--color-paper-error);
 		font-size: var(--text-body-sm);
 		font-weight: 400;
 		line-height: var(--text-body-sm--line-height);

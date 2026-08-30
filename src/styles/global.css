@@ -75,6 +75,7 @@
   --pg-paper-raised: oklch(0.91 0.045 88);
   --pg-paper-shadow: oklch(0.08 0.018 48 / 0.72);
   --pg-paper-border: oklch(0.55 0.075 67);
+  --pg-paper-error: oklch(0.4 0.17 28);
   --pg-ink: oklch(0.22 0.045 52);
   --pg-ink-muted: oklch(0.4 0.045 55);
   --pg-ink-link: oklch(0.41 0.115 34);
@@ -101,6 +102,7 @@
   --color-paper: var(--pg-paper);
   --color-paper-raised: var(--pg-paper-raised);
   --color-paper-border: var(--pg-paper-border);
+  --color-paper-error: var(--pg-paper-error);
   --color-ink: var(--pg-ink);
   --color-ink-muted: var(--pg-ink-muted);
   --color-ink-link: var(--pg-ink-link);

@@ -62,9 +62,7 @@ const isAdminPage = pathname.startsWith("/admin");
 				</a>
 				<a href="/items" aria-current={isItemsPage ? "page" : undefined}>Live example</a>
 				<a href="https://platinum-gold-backend.vercel.app/docs">API reference</a>
-				{!isItemsPage && (
-					<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
-				)}
+				<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
 				{!isAdminPage && <ApiKeyRequestDialog client:idle placement="nav" />}
 			</nav>
 		</header>
@@ -72,10 +70,14 @@ const isAdminPage = pathname.startsWith("/admin");
 		{!isAdminPage && (
 			<script>
 				document.addEventListener("click", (event) => {
-					if (!(event.target instanceof Element) || !event.target.closest("[data-open-request-access]")) {
+					if (!(event.target instanceof Element)) {
 						return;
 					}
-					const accessEvent = new CustomEvent("pg:request-access", { cancelable: true });
+					const opener = event.target.closest("[data-open-request-access]");
+					if (!(opener instanceof HTMLElement)) {
+						return;
+					}
+					const accessEvent = new CustomEvent("pg:request-access", { cancelable: true, detail: opener });
 					document.dispatchEvent(accessEvent);
 					if (!accessEvent.defaultPrevented) {
 						document.documentElement.dataset.pgOpenRequest = "";

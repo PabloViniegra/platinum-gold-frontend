@@ -84,7 +84,7 @@
 	block-size: auto;
 	overflow: visible;
 	clip-path: none;
-	color: var(--color-error);
+	color: var(--color-paper-error);
 	font-size: var(--text-body-sm);
 	font-weight: 400;
 	white-space: normal;

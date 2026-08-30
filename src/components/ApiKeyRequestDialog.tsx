@@ -86,6 +86,7 @@ type ApiKeyRequestDialogProps = {
 export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	const dialogRef = useRef<HTMLDialogElement>(null);
 	const triggerRef = useRef<HTMLButtonElement>(null);
+	const openerRef = useRef<HTMLElement | null>(null);
 	const errorToastRef = useRef<HTMLOutputElement>(null);
 	const successToastRef = useRef<HTMLOutputElement>(null);
 	const [toast, setToast] = useState<ToastState | null>(null);
@@ -168,6 +169,9 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 		function onRequestAccess(event: Event): void {
 			if (event.defaultPrevented) return;
 			event.preventDefault();
+			openerRef.current = event instanceof CustomEvent && event.detail instanceof HTMLElement
+				? event.detail
+				: triggerRef.current;
 			openDialog();
 		}
 		document.addEventListener(REQUEST_ACCESS_OPEN_EVENT, onRequestAccess);
@@ -251,7 +255,13 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 				onCancel={(event) => { if (isSubmitting) event.preventDefault(); }}
 				onClose={() => {
 					setDialogOpen(false);
-					triggerRef.current?.focus();
+					const opener = openerRef.current;
+					openerRef.current = null;
+					if (opener?.isConnected) {
+						opener.focus();
+					} else {
+						triggerRef.current?.focus();
+					}
 					// Closing blurs the autofocused field, which fires onBlur validation; clear after that synthetic blur lands.
 					window.setTimeout(() => clearErrors(), 0);
 				}}
@@ -261,7 +271,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 					<button className="request-dialog-close" type="button" onClick={closeDialog} disabled={isSubmitting}>Close</button>
 				</header>
 				<p id="request-dialog-description" className="request-dialog-description">
-					Tell us what you are building. Every request is reviewed manually.
+					Tell us what you are building. Every request is reviewed manually. All fields are required.
 				</p>
 				<output
 					ref={errorToastRef}
@@ -283,10 +293,11 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 							<input
 								id="request-first-name"
 								autoFocus
-								autoComplete="name"
+								autoComplete="given-name"
 								aria-invalid={errors.firstName ? "true" : "false"}
 								aria-describedby={errors.firstName ? "request-first-name-error" : undefined}
 								{...register("firstName", { required: "Enter your first name.", maxLength: { value: 80, message: "Use 80 characters or fewer." } })}
+								required
 							/>
 							<FieldError id="request-first-name-error" message={errors.firstName?.message} />
 						</label>
@@ -294,10 +305,11 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 							<span>Last name</span>
 							<input
 								id="request-last-name"
-								autoComplete="name"
+								autoComplete="family-name"
 								aria-invalid={errors.lastName ? "true" : "false"}
 								aria-describedby={errors.lastName ? "request-last-name-error" : undefined}
 								{...register("lastName", { required: "Enter your last name.", maxLength: { value: 100, message: "Use 100 characters or fewer." } })}
+								required
 							/>
 							<FieldError id="request-last-name-error" message={errors.lastName?.message} />
 						</label>
@@ -316,6 +328,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								maxLength: { value: 254, message: "Use 254 characters or fewer." },
 								pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/u, message: "Enter a valid email address." },
 							})}
+							required
 						/>
 						<FieldError id="request-email-error" message={errors.email?.message} />
 					</label>
@@ -330,6 +343,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								aria-invalid={errors.country ? "true" : "false"}
 								aria-describedby={errors.country ? "request-country-error" : undefined}
 								{...register("country", { required: "Choose your country." })}
+								required
 							>
 								<option value="" disabled>{countries.length === 0 ? (countriesUnavailable ? "Could not load countries. Refresh to try again." : "Loading countries...") : "Select one"}</option>
 								{countries.map((name) => (
@@ -347,6 +361,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								aria-invalid={errors.occupation ? "true" : "false"}
 								aria-describedby={errors.occupation ? "request-occupation-error" : undefined}
 								{...register("occupation", { required: "Choose your occupation." })}
+								required
 							>
 								<option value="" disabled>Select one</option>
 								{OCCUPATIONS.map((name) => (
@@ -364,6 +379,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 							aria-invalid={errors.useCase ? "true" : "false"}
 							aria-describedby={errors.useCase ? "request-use-case-error" : undefined}
 							{...register("useCase", { required: "Choose a use case." })}
+							required
 						>
 							<option value="" disabled>Select one</option>
 							<option value="personal_project">Personal project</option>
@@ -383,6 +399,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								aria-invalid={errors.useCaseDetails ? "true" : "false"}
 								aria-describedby={errors.useCaseDetails ? "request-use-case-details-error" : undefined}
 								{...register("useCaseDetails", { required: "Describe how you will use the API.", maxLength: { value: 1_000, message: "Use 1,000 characters or fewer." } })}
+								required
 							/>
 							<FieldError id="request-use-case-details-error" message={errors.useCaseDetails?.message} />
 						</label>

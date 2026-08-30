@@ -479,7 +479,6 @@ function ItemExplorerContent() {
 				className="item-detail"
 				closedby="any"
 				aria-labelledby={selected === null ? undefined : "item-detail-title"}
-				aria-describedby={selected === null ? undefined : "item-detail-fields"}
 				onClose={() => setSelected(null)}
 			>
 				{selected !== null && <ItemDetail {...selected} />}

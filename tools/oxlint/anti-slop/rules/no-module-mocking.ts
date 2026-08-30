@@ -25,7 +25,21 @@ function importedName(node: ESTree.Node): string | null {
 function isTestFrameworkObject(
   sourceCode: SourceCode,
   expression: ESTree.Expression,
-): expression is ESTree.IdentifierReference {
+): boolean {
+  if ("property" in expression && "object" in expression && "computed" in expression &&
+    expression.object.type === "Identifier") {
+    const propertyIsVi = expression.computed
+      ? expression.property.type === "Literal" && expression.property.value === "vi"
+      : expression.property.type === "Identifier" && expression.property.name === "vi";
+    if (!propertyIsVi) return false;
+    const namespace = resolveVariable(sourceCode, expression.object);
+    return namespace?.defs.some((definition) =>
+      definition.type === "ImportBinding" &&
+      definition.node.type === "ImportNamespaceSpecifier" &&
+      definition.parent?.type === "ImportDeclaration" &&
+      definition.parent.source.value === "vitest"
+    ) ?? false;
+  }
   if (expression.type !== "Identifier") return false;
   if (
     (expression.name === "vi" || expression.name === "jest") &&

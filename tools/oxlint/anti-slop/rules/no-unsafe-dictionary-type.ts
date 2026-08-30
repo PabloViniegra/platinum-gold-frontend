@@ -10,9 +10,9 @@ import {
 import type { ESTree } from "@oxlint/plugins";
 
 const typeNodeKinds: ReadonlySet<string> = new Set([
-	"JSDocNonNullableType",
-	"JSDocNullableType",
-	"JSDocUnknownType",
+	"TSJSDocNonNullableType",
+	"TSJSDocNullableType",
+	"TSJSDocUnknownType",
 	"TSAnyKeyword",
 	"TSArrayType",
 	"TSBigIntKeyword",
@@ -77,6 +77,14 @@ function shouldReportType(node: ESTree.TSType, environment: TypeEnvironment): bo
 	if (classifyUnsafeDictionary(node, environment) === null) return false;
 	let current: ESTree.Node | null = node.parent;
 	while (current !== null && current.type !== "Program") {
+		if (current.type === "TSTypeReference" &&
+			typeReferenceName(current) === "Pick" &&
+			!environment.shadowedBuiltIns.has("Pick")) {
+			const source = current.typeArguments?.params[0];
+			if (source !== undefined && classifyUnsafeDictionary(source, environment) !== null) {
+				return false;
+			}
+		}
 		if (isTypeNode(current) && classifyUnsafeDictionary(current, environment) !== null)
 			return false;
 		current = current.parent;

@@ -1,6 +1,9 @@
 import { defineRule } from "@oxlint/plugins";
 import type { ESTree } from "@oxlint/plugins";
 
+import { createTypeEnvironment, resolvesToUnknown, type TypeEnvironment } from "../shared/dictionary-types.ts";
+import { lexicalTypeParameterNames } from "../shared/lexical-type-parameters.ts";
+
 type Parameter = ESTree.ParamPattern;
 type ParameterOwner =
   | ESTree.ArrowFunctionExpression
@@ -53,10 +56,14 @@ export const noUnknownParametersRule = defineRule({
     },
   },
   createOnce(context) {
+    let environment: TypeEnvironment | null = null;
     const checkParameters = (node: ParameterOwner) => {
+      if (environment === null) return;
+      const shadowedNames = lexicalTypeParameterNames(node, context.sourceCode.visitorKeys);
       for (const parameter of node.params) {
         const annotation = parameterAnnotation(parameter);
-        if (annotation?.typeAnnotation.type !== "TSUnknownKeyword") continue;
+        if (annotation === null || annotation === undefined ||
+          !resolvesToUnknown(annotation.typeAnnotation, environment, shadowedNames)) continue;
         const name = parameterName(parameter, context.sourceCode.getText(parameter));
         if (name === "cause") continue;
         context.report({
@@ -68,6 +75,9 @@ export const noUnknownParametersRule = defineRule({
     };
 
     return {
+      Program(node) {
+        environment = createTypeEnvironment(node);
+      },
       ArrowFunctionExpression: checkParameters,
       FunctionDeclaration: checkParameters,
       FunctionExpression: checkParameters,

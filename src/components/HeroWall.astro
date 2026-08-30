@@ -1,0 +1,31 @@
+---
+import {
+	HERO_WALL_AVIF_SRCSET,
+	HERO_WALL_WEBP_LG_SRC,
+	HERO_WALL_WEBP_SRC,
+	HERO_WALL_WEBP_SRCSET,
+} from "../lib/hero-wall";
+
+type Props = {
+	imgClass?: string;
+	fallback: "narrow" | "wide";
+};
+
+const { imgClass, fallback } = Astro.props;
+const src = fallback === "wide" ? HERO_WALL_WEBP_LG_SRC : HERO_WALL_WEBP_SRC;
+---
+
+<picture>
+	<source type="image/avif" srcset={HERO_WALL_AVIF_SRCSET} sizes="100vw" />
+	<img
+		src={src}
+		srcset={HERO_WALL_WEBP_SRCSET}
+		sizes="100vw"
+		alt=""
+		width="1920"
+		height="1080"
+		fetchpriority="high"
+		decoding="async"
+		class={imgClass}
+	/>
+</picture>

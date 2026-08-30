@@ -9,7 +9,7 @@ const extraRoutes = [
 		continue: true,
 	},
 	{
-		src: "^/(tboi-wall|tboi-wall-lg)\\.(webp|avif)$|^/wall2\\.webp$",
+		src: "^/wall2\\.webp$",
 		headers: { "cache-control": cacheControl },
 		continue: true,
 	},

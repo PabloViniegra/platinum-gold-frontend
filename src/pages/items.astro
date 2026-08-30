@@ -1,4 +1,5 @@
 ---
+import HeroWall from "../components/HeroWall.astro";
 import ItemExplorer from "../components/ItemExplorer";
 import Root from "../layouts/Root.astro";
 import "../components/item-explorer.css";
@@ -12,23 +13,7 @@ import "../components/item-explorer.css";
 	<link slot="head" rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
 	<a slot="skip" class="items-skip" href="#items-content">Skip to item example</a>
 	<div class="items-scene" aria-hidden="true">
-		<picture>
-			<source
-				type="image/avif"
-				srcset="/tboi-wall.avif 1280w, /tboi-wall-lg.avif 1920w"
-				sizes="100vw"
-			/>
-			<img
-				src="/tboi-wall.webp"
-				srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
-				sizes="100vw"
-				alt=""
-				width="1920"
-				height="1080"
-				fetchpriority="high"
-				decoding="async"
-			/>
-		</picture>
+		<HeroWall fallback="narrow" />
 	</div>
 	<main id="items-content" class="items-shell px-margin py-xxl" tabindex="-1">
 		<nav class="items-breadcrumb text-body-sm" aria-label="Breadcrumb">

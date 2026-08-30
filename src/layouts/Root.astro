@@ -1,5 +1,6 @@
 ---
 import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
+import { HERO_WALL_AVIF_SRC, HERO_WALL_AVIF_SRCSET } from "../lib/hero-wall";
 import "../styles/global.css";
 
 type Props = {
@@ -28,8 +29,8 @@ const isAdminPage = pathname.startsWith("/admin");
 				rel="preload"
 				as="image"
 				type="image/avif"
-				href="/tboi-wall.avif"
-				imagesrcset="/tboi-wall.avif 1280w, /tboi-wall-lg.avif 1920w"
+				href={HERO_WALL_AVIF_SRC}
+				imagesrcset={HERO_WALL_AVIF_SRCSET}
 				imagesizes="100vw"
 				fetchpriority="high"
 			/>

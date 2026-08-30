@@ -19,42 +19,6 @@
 			]
 		},
 		{
-			"source": "/tboi-wall.webp",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=86400, stale-while-revalidate=604800"
-				}
-			]
-		},
-		{
-			"source": "/tboi-wall-lg.webp",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=86400, stale-while-revalidate=604800"
-				}
-			]
-		},
-		{
-			"source": "/tboi-wall.avif",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=86400, stale-while-revalidate=604800"
-				}
-			]
-		},
-		{
-			"source": "/tboi-wall-lg.avif",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=86400, stale-while-revalidate=604800"
-				}
-			]
-		},
-		{
 			"source": "/wall2.webp",
 			"headers": [
 				{

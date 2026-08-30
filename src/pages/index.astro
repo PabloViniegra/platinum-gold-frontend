@@ -1,4 +1,6 @@
 ---
+import HeroWall from "../components/HeroWall.astro";
+import { HERO_WALL_AVIF_SRC } from "../lib/hero-wall";
 import Root from "../layouts/Root.astro";
 ---
 
@@ -20,24 +22,7 @@ import Root from "../layouts/Root.astro";
 				class="scheme-dark relative min-h-[calc(100dvh-var(--pg-header-height))] overflow-hidden text-on-surface"
 			>
 				<div data-hero-wall class="absolute inset-0">
-					<picture>
-						<source
-							type="image/avif"
-							srcset="/tboi-wall.avif 1280w, /tboi-wall-lg.avif 1920w"
-							sizes="100vw"
-						/>
-						<img
-							src="/tboi-wall-lg.webp"
-							srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
-							sizes="100vw"
-							alt=""
-							width="1920"
-							height="1080"
-							fetchpriority="high"
-							decoding="async"
-							class="absolute inset-0 size-full object-cover object-center"
-						/>
-					</picture>
+					<HeroWall fallback="wide" imgClass="absolute inset-0 size-full object-cover object-center" />
 					<div data-hero-shade aria-hidden="true"></div>
 				</div>
 				<div
@@ -77,6 +62,7 @@ import Root from "../layouts/Root.astro";
 			id="first-call"
 			class="first-call scroll-mt-12 px-margin py-xxl"
 			tabindex="-1"
+			style={`--heroWall: url("${HERO_WALL_AVIF_SRC}")`}
 		>
 			<div class="first-call-sheet">
 				<div class="first-call-copy">
@@ -284,7 +270,7 @@ Accept: application/json</code></pre>
 		position: relative;
 		background:
 			linear-gradient(oklch(0.09 0.02 50 / 0.76), oklch(0.09 0.02 50 / 0.92)),
-			url("/tboi-wall.avif") center 38% / cover;
+			var(--heroWall) center 38% / cover;
 	}
 
 	.first-call-sheet {

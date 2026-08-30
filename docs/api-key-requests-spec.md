@@ -75,7 +75,7 @@ type ApiKeyRequestInput = {
 
 ### Persistence
 
-The `api_key_requests` table stores a UUID, normalized/display email, submitted fields, `pending|approved` status, timestamps, and Resend message IDs. A unique constraint on normalized email prevents duplicate queue entries. A small `request_rate_limits` table stores hashed client identifiers and counters; raw IP addresses are not persisted.
+The `api_key_requests` table stores a UUID, normalized/display email, submitted fields, status, timestamps, and Resend message IDs. Public states are `pending`, `approved`, and `denied`. Internal `approving` and `denying` reservations prevent competing decisions from sending contradictory emails: one handler atomically claims the decision with an owner token and a ten-minute lease, releases it when delivery fails, and a crashed claim resumes only after the lease lapses. Approval additionally pins a keyed hash of the submitted API key so retries cannot change the emailed key. A unique constraint on normalized email prevents duplicate queue entries. A small `request_rate_limits` table stores bounded hashed-identifier counters; raw IP addresses are not persisted.
 
 Schema creation is idempotent and runs server-side before first use. All SQL values use libSQL parameters.
 
@@ -99,7 +99,7 @@ All templates are React Email components and use both HTML and plain-text-compat
 
 ### Controls
 
-- Validate field types, allowlisted use cases, trimmed lengths, and body size at the server boundary.
+- Validate field types, pinned canonical country and occupation catalogs, allowlisted use cases, trimmed lengths, and body size at the server boundary. The public country dropdown only offers names inside the canonical catalog, so UI and validation agree across instances.
 - Use a honeypot plus hashed-IP/email throttling for public submissions.
 - Store only a scrypt password hash in `REQUESTS_ADMIN_PASSWORD_HASH`; compare derived values in constant time.
 - Sign expiring session data with `REQUESTS_SESSION_SECRET`; never use browser storage for authentication.
@@ -182,7 +182,7 @@ Follow the repository's tab indentation in Astro/React files and satisfy all `an
 
 - Unit-test input normalization, length limits, use-case rules, duplicate behavior, session signing/expiry, password verification, and rate-limit decisions with Vitest.
 - Test repository behavior against a temporary local libSQL database, including uniqueness and approval state transitions.
-- Test endpoint contracts with mocked Resend delivery, including partial failures and idempotent retries.
+- Test endpoint contracts with an injected Resend transport, including partial failures, competing decisions, and idempotent retries.
 - Verify all three React Email templates render with representative and escaped user data.
 - Run browser checks for dialog focus, field errors, success/error toast announcements, admin login/logout, approval, responsive layout, headers, and absence of console errors.
 - Inspect the production client output to confirm that no server secret or submitted API key is bundled.

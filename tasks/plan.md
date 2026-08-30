@@ -9,9 +9,9 @@ Implement the approved contract in `docs/api-key-requests-spec.md` as three vert
 - Keep public content prerendered and use same-origin Astro API routes for all secret-bearing work.
 - Use `@libsql/client` directly. Initialize the small schema idempotently at the repository boundary instead of adding an ORM or migration framework.
 - Use React Hook Form only where interactive form state benefits from it. Do not add a toast, modal, auth, or state-management library.
-- Treat duplicate normalized emails as successful no-ops to avoid queue enumeration and duplicate mail.
+- Return the specified `409` response for duplicate normalized emails and do not duplicate mail.
 - Send applicant and administrator intake emails with separate Resend idempotency keys and persist their message IDs.
-- Keep issued API keys ephemeral: approval sends first, records only the Resend message ID, then transitions the request to approved.
+- Keep issued API keys ephemeral: approval reserves the decision, sends with a stable idempotency key, records only the Resend message ID, then transitions the request to approved.
 - Store a scrypt admin password hash in the environment and use a short-lived HMAC-signed `HttpOnly` cookie. The environment-configured admin path is defense in depth, not authorization.
 - Enforce public and login throttles through Turso using hashed identifiers so rate limits work across Vercel instances without storing raw IP addresses.
 
@@ -143,7 +143,7 @@ Dependencies and environment contract
 - [ ] Responses include `no-store`, `nosniff`, and `X-Request-ID`; logs contain request IDs but no PII.
 
 **Verification:**
-- [ ] `pnpm test -- src/pages/api/key-requests.test.ts`
+- [ ] `pnpm exec vitest run src/lib/api-key-requests/service.test.ts`
 - [ ] Exercise the endpoint locally with mocked delivery and local libSQL.
 - [ ] `pnpm exec astro check`
 
@@ -196,7 +196,7 @@ Dependencies and environment contract
 - [ ] `/admin/{REQUESTS_ADMIN_PATH}` is unlinked, rejects the wrong path, is on demand, and returns `noindex`, `no-store`, no-referrer, and frame-denial headers.
 
 **Verification:**
-- [ ] `pnpm test -- src/pages/api/admin/session.test.ts`
+- [ ] `pnpm exec vitest run src/lib/api-key-requests/admin-session-route.test.ts src/lib/api-key-requests/admin-session.test.ts`
 - [ ] Browser check: invalid login, valid login, refresh, expiry simulation, and logout.
 - [ ] Inspect cookies and response headers in browser DevTools.
 
@@ -221,7 +221,7 @@ Dependencies and environment contract
 - [ ] Pending, empty, loading, and friendly error states are accessible and responsive.
 
 **Verification:**
-- [ ] `pnpm test -- src/pages/api/admin/key-requests/index.test.ts`
+- [ ] `pnpm exec vitest run src/lib/api-key-requests/admin-session-route.test.ts`
 - [ ] `pnpm exec astro check`
 - [ ] Browser check: protected access, queue order, empty/error states, mobile and desktop.
 
@@ -245,7 +245,7 @@ Dependencies and environment contract
 - [ ] Missing sessions, invalid origins/IDs, already-approved requests, Resend failures, and database failures have tested safe behavior with no key in logs or responses.
 
 **Verification:**
-- [ ] `pnpm test -- src/pages/api/admin/key-requests/approve.test.ts src/lib/api-key-requests/email.test.ts`
+- [ ] `pnpm exec vitest run src/lib/api-key-requests/approval.test.ts src/lib/api-key-requests/denial.test.ts src/lib/api-key-requests/email.test.tsx`
 - [ ] Browser check: failed and successful approval, focus/error announcement, and queue update.
 - [ ] Search source, logs, database rows, and built assets for the test API key; expect no persisted match.
 
@@ -304,7 +304,7 @@ Dependencies and environment contract
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Email succeeds but the following database update fails | High | Stable Resend idempotency keys, persisted message IDs, explicit retry tests, and no premature success response |
+| Competing or interrupted admin decisions | High | Reserve one decision before delivery, use stable Resend idempotency keys, and allow retries only for the reserved decision |
 | Serverless instances bypass in-memory throttles | High | Store bounded hashed-identifier counters in Turso |
 | Hidden URL is mistaken for authorization | Critical | Authenticate every admin endpoint independently and test direct endpoint access |
 | API key leaks through persistence or diagnostics | Critical | Never pass it to repository/logging code; scan database, logs, source, and build artifacts |

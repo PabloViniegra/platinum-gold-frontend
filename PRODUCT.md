@@ -29,7 +29,7 @@ Safe frontend integration: auth, status codes, caching, and `X-Request-ID` in la
 - Contract: `docs/api-frontend-guide.md` (local, gitignored). OpenAPI at `/openapi.json`; Swagger at `/docs`.
 - Current base URL: `https://platinum-gold-backend.vercel.app/` — data routes under `/v1`. Production URL may come from a backend contact.
 - Every `/v1/...` call sends `X-API-Key`. Missing or invalid → 401; key lacks `api:access` → 403.
-- Keys are Clerk-issued. This site does not issue keys.
+- Keys are issued outside this application. Developers request access through the site, and an administrator emails a manually supplied key after approval.
 - Local app: `pnpm dev` at `localhost:4321`.
 
 ## Capabilities and Constraints
@@ -41,7 +41,7 @@ Safe frontend integration: auth, status codes, caching, and `X-Request-ID` in la
 - Wire: camelCase JSON. Unknown fields are opaque. `/v1` stays until an announced `/v2`.
 - Client cache: list 15 min by full query string; item-by-id 24 h; meta 24 h; random only if reused; never cache `/health/*`.
 - Terminology: Item (`ItemResponse`), `gameId`, quality `0`–`4`, type `active` | `passive` | `familiar`, `rechargeTime`, `introducedInVersion`, `datasetVersion`, meta, `api:access`.
-- Undecided: how readers obtain an API key; production deploy target.
+- API access requests use the public waiting-list form. The production deploy target remains undecided.
 
 ## Brand Commitments
 

@@ -20,8 +20,8 @@ const isAdminPage = pathname.startsWith("/admin");
 <html lang="en" class="scheme-dark" data-page={pathname === "/" ? "home" : isItemsPage ? "items" : "guide"}>
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
+		<link rel="icon" href="/favicon.ico" sizes="32x32" />
 		<meta name="viewport" content="width=device-width" />
 		{preloadDisplayFont && (
 			<link

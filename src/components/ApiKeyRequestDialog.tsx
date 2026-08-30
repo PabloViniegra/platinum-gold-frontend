@@ -75,6 +75,8 @@ export const REQUEST_ACCESS_PLACEMENT = {
 	NAV: "nav",
 } as const;
 
+export const REQUEST_ACCESS_OPEN_EVENT = "pg:request-access";
+
 type RequestAccessPlacement = (typeof REQUEST_ACCESS_PLACEMENT)[keyof typeof REQUEST_ACCESS_PLACEMENT];
 
 type ApiKeyRequestDialogProps = {
@@ -158,6 +160,16 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 		setToast(null);
 		dialogRef.current?.showModal();
 	}
+
+	useEffect(() => {
+		function onRequestAccess(event: Event): void {
+			if (event.defaultPrevented) return;
+			event.preventDefault();
+			openDialog();
+		}
+		document.addEventListener(REQUEST_ACCESS_OPEN_EVENT, onRequestAccess);
+		return () => document.removeEventListener(REQUEST_ACCESS_OPEN_EVENT, onRequestAccess);
+	}, []);
 
 	function closeDialog(): void {
 		if (submittingRef.current) return;

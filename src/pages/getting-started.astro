@@ -32,7 +32,9 @@ import Root from "../layouts/Root.astro";
 			<ol class="guide-path">
 				<li>
 					<a href="#authentication" aria-current="location">Get API access</a>
-					<span>Ask your backend contact for a key with <code>api:access</code>.</span>
+					<button class="guide-path-note" type="button" data-open-request-access>
+						Request a key with <code>api:access</code>.
+					</button>
 				</li>
 				<li>
 					<a href="#first-request">Make one request</a>
@@ -663,6 +665,13 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 			<a href="/">Back to Platinum Gold</a>
 		</div>
 	</footer>
+	<script>
+		document.addEventListener("click", (event) => {
+			if (event.target instanceof Element && event.target.closest("[data-open-request-access]")) {
+				document.dispatchEvent(new CustomEvent("pg:request-access", { cancelable: true }));
+			}
+		});
+	</script>
 </Root>
 
 <style>
@@ -1155,6 +1164,24 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	.guide-path a {
 		color: var(--color-primary);
 		text-decoration: none;
+	}
+
+	.guide-path-note {
+		border: 0;
+		padding: 0;
+		background: none;
+		color: var(--color-on-surface);
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+
+	.guide-path-note:hover {
+		color: var(--color-primary-hover);
+	}
+
+	.guide-path-note:focus-visible {
+		outline-offset: 4px;
 	}
 
 	.guide-layout {

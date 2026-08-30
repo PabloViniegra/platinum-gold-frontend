@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { afterNextPaint } from "../lib/after-next-paint";
 import { OCCUPATIONS } from "../lib/api-key-requests/occupations";
 import "./api-key-request-dialog.css";
 
@@ -95,6 +96,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	const [countriesUnavailable, setCountriesUnavailable] = useState(false);
 	const generationRef = useRef(0);
 	const submittingRef = useRef(false);
+	const cancelPaintRef = useRef<(() => void) | null>(null);
 	const {
 		register,
 		handleSubmit,
@@ -108,6 +110,10 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	useEffect(() => {
 		submittingRef.current = isSubmitting;
 	}, [isSubmitting]);
+
+	useEffect(() => {
+		return () => cancelPaintRef.current?.();
+	}, []);
 
 	useEffect(() => {
 		const dialog = dialogRef.current;
@@ -161,8 +167,12 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	function openDialog(): void {
 		generationRef.current += 1;
 		setToast(null);
-		setDialogOpen(true);
+		cancelPaintRef.current?.();
 		dialogRef.current?.showModal();
+		cancelPaintRef.current = afterNextPaint(() => {
+			cancelPaintRef.current = null;
+			if (dialogRef.current?.open) setDialogOpen(true);
+		});
 	}
 
 	useEffect(() => {
@@ -254,6 +264,8 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 				aria-describedby="request-dialog-description"
 				onCancel={(event) => { if (isSubmitting) event.preventDefault(); }}
 				onClose={() => {
+					cancelPaintRef.current?.();
+					cancelPaintRef.current = null;
 					setDialogOpen(false);
 					const opener = openerRef.current;
 					openerRef.current = null;
@@ -364,7 +376,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								required
 							>
 								<option value="" disabled>Select one</option>
-								{OCCUPATIONS.map((name) => (
+								{dialogOpen && OCCUPATIONS.map((name) => (
 									<option key={name} value={name}>{name}</option>
 								))}
 							</select>

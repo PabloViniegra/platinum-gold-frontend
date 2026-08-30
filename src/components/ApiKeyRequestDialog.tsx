@@ -88,12 +88,14 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	const successToastRef = useRef<HTMLOutputElement>(null);
 	const [toast, setToast] = useState<ToastState | null>(null);
 	const [countries, setCountries] = useState<string[]>([]);
+	const [countriesUnavailable, setCountriesUnavailable] = useState(false);
 	const generationRef = useRef(0);
 	const submittingRef = useRef(false);
 	const {
 		register,
 		handleSubmit,
 		reset,
+		clearErrors,
 		control,
 		formState: { errors, isSubmitting },
 	} = useForm<RequestForm>({ mode: "onBlur", shouldUnregister: true });
@@ -114,12 +116,19 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 		async function loadCountries(): Promise<void> {
 			try {
 				const response = await fetch("/api/countries", { signal: controller.signal });
-				if (!response.ok) return;
+				if (!response.ok) {
+					setCountriesUnavailable(true);
+					return;
+				}
 				const payload: { countries: string[] } = await response.json();
-				if (!Array.isArray(payload.countries)) return;
+				if (!Array.isArray(payload.countries)) {
+					setCountriesUnavailable(true);
+					return;
+				}
 				setCountries(payload.countries.filter((name) => name?.constructor === String));
 			} catch (error) {
 				if (error instanceof DOMException && error.name === "AbortError") return;
+				setCountriesUnavailable(true);
 			}
 		}
 		void loadCountries();
@@ -219,13 +228,14 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 				aria-labelledby="request-dialog-title"
 				aria-describedby="request-dialog-description"
 				onCancel={(event) => { if (isSubmitting) event.preventDefault(); }}
-				onClose={() => triggerRef.current?.focus()}
+				onClose={() => {
+					triggerRef.current?.focus();
+					// Closing blurs the autofocused field, which fires onBlur validation; clear after that synthetic blur lands.
+					window.setTimeout(() => clearErrors(), 0);
+				}}
 			>
 				<header className="request-dialog-header">
-					<div>
-						<p className="request-dialog-kicker">Access queue</p>
-						<h2 id="request-dialog-title">Request an API key</h2>
-					</div>
+					<h2 id="request-dialog-title">Request an API key</h2>
 					<button className="request-dialog-close" type="button" onClick={closeDialog} disabled={isSubmitting}>Close</button>
 				</header>
 				<p id="request-dialog-description" className="request-dialog-description">
@@ -299,7 +309,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								aria-describedby={errors.country ? "request-country-error" : undefined}
 								{...register("country", { required: "Choose your country." })}
 							>
-								<option value="" disabled>{countries.length === 0 ? "Loading countries..." : "Select one"}</option>
+								<option value="" disabled>{countries.length === 0 ? (countriesUnavailable ? "Could not load countries. Refresh to try again." : "Loading countries...") : "Select one"}</option>
 								{countries.map((name) => (
 									<option key={name} value={name}>{name}</option>
 								))}
@@ -357,7 +367,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 					)}
 					<label className="request-honeypot" aria-hidden="true">
 						Website
-						<input tabIndex={-1} autoComplete="off" {...register("website")} />
+						<input aria-hidden="true" tabIndex={-1} autoComplete="off" {...register("website")} />
 					</label>
 					<p className="request-privacy-note">
 						We only use these details to review and manage your API access request.

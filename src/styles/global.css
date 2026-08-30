@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "@fontsource/source-sans-3/latin-400.css";
-@import "@fontsource/source-sans-3/latin-400-italic.css";
 @import "@fontsource/source-sans-3/latin-600.css";
 
 @font-face {
@@ -119,7 +118,7 @@
     background-color: var(--color-surface);
     color: var(--color-on-surface);
     font-family: var(--font-sans);
-    font-size-adjust: from-font;
+    font-size-adjust: 0.486;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: clip;
@@ -145,7 +144,6 @@
     font-weight: var(--text-title--font-weight);
     font-synthesis: none;
     text-wrap: balance;
-    font-size-adjust: from-font;
   }
 
   h2 {
@@ -156,7 +154,6 @@
     font-weight: var(--text-headline-lg--font-weight);
     font-synthesis: none;
     text-wrap: balance;
-    font-size-adjust: from-font;
   }
 
   h3 {
@@ -256,6 +253,7 @@
     color: var(--color-on-surface);
     font-family: var(--font-display);
     font-size: clamp(1.5rem, 3vw, 2rem);
+    font-size-adjust: 0.5;
     line-height: 1;
     letter-spacing: 0.02em;
     text-decoration: none;

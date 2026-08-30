@@ -1,6 +1,7 @@
 ---
 import ItemExplorer from "../components/ItemExplorer";
 import Root from "../layouts/Root.astro";
+import "../components/item-explorer.css";
 ---
 
 <Root
@@ -8,8 +9,20 @@ import Root from "../layouts/Root.astro";
 	description="Filter, sort, and paginate the Platinum Gold item API through a secure server-side proxy."
 	preloadDisplayFont={true}
 >
+	<link slot="head" rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
 	<a slot="skip" class="items-skip" href="#items-content">Skip to item example</a>
-	<div class="items-scene" aria-hidden="true"></div>
+	<div class="items-scene" aria-hidden="true">
+		<img
+			src="/tboi-wall.webp"
+			srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
+			sizes="100vw"
+			alt=""
+			width="1920"
+			height="1080"
+			fetchpriority="high"
+			decoding="async"
+		/>
+	</div>
 	<main id="items-content" class="items-shell px-margin py-xxl" tabindex="-1">
 		<nav class="items-breadcrumb text-body-sm" aria-label="Breadcrumb">
 			<a href="/">Platinum Gold</a>
@@ -27,7 +40,17 @@ import Root from "../layouts/Root.astro";
 
 		<article class="items-sheet">
 			<ItemExplorer client:only="react">
-				<p>Loading GET /v1/items…</p>
+				<div class="item-loading" aria-busy="true">
+					<p>Loading GET /v1/items…</p>
+					<ul class="item-grid" aria-hidden="true">
+						{Array.from({ length: 12 }, () => (
+							<li class="item-card-skeleton">
+								<div class="item-image item-skeleton-block"></div>
+								<div class="item-skeleton-line item-skeleton-title"></div>
+							</li>
+						))}
+					</ul>
+				</div>
 			</ItemExplorer>
 		</article>
 	</main>
@@ -70,11 +93,25 @@ import Root from "../layouts/Root.astro";
 		position: fixed;
 		inset: var(--pg-header-height) 0 0;
 		z-index: 0;
+		overflow: hidden;
 		pointer-events: none;
-		background:
-			linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.96)),
-			url("/tboi-wall.webp") center 20% / cover no-repeat;
 		filter: saturate(0.65) contrast(1.1);
+	}
+
+	.items-scene img {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		object-position: center 20%;
+	}
+
+	.items-scene::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.96));
 	}
 
 	.items-shell,
@@ -101,6 +138,7 @@ import Root from "../layouts/Root.astro";
 	.items-header h1 {
 		font-family: var(--font-display);
 		font-size: clamp(2.5rem, 6vw, 4rem);
+		font-size-adjust: 0.5;
 		font-weight: 400;
 		line-height: 1;
 		letter-spacing: 0.02em;
@@ -115,6 +153,7 @@ import Root from "../layouts/Root.astro";
 
 	.items-sheet {
 		position: relative;
+		min-block-size: 52rem;
 		border: 2px solid var(--color-paper-border);
 		background:
 			repeating-linear-gradient(1deg, transparent 0 3.25rem, oklch(0.48 0.055 65 / 0.06) 3.25rem calc(3.25rem + 1px)),
@@ -167,15 +206,11 @@ import Root from "../layouts/Root.astro";
 		gap: var(--spacing-md) var(--spacing-lg);
 	}
 
-	@media (min-width: 64rem) {
-		.items-scene {
-			background-image:
-				linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.96)),
-				url("/tboi-wall-lg.webp");
-		}
-	}
-
 	@media (max-width: 48rem) {
+		.items-sheet {
+			min-block-size: 72rem;
+		}
+
 		.items-shell {
 			padding-block-start: var(--spacing-md);
 		}

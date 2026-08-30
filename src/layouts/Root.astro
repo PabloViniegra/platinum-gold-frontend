@@ -37,6 +37,7 @@ const isAdminPage = pathname.startsWith("/admin");
 		{noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<slot name="head" />
 	</head>
 	<body>
 		<slot name="skip" />
@@ -54,9 +55,23 @@ const isAdminPage = pathname.startsWith("/admin");
 				{!isItemsPage && (
 					<a href="https://platinum-gold-backend.vercel.app/openapi.json">OpenAPI</a>
 				)}
-				{!isAdminPage && <ApiKeyRequestDialog client:load placement="nav" />}
+				{!isAdminPage && <ApiKeyRequestDialog client:idle placement="nav" />}
 			</nav>
 		</header>
 		<slot />
+		{!isAdminPage && (
+			<script>
+				document.addEventListener("click", (event) => {
+					if (!(event.target instanceof Element) || !event.target.closest("[data-open-request-access]")) {
+						return;
+					}
+					const accessEvent = new CustomEvent("pg:request-access", { cancelable: true });
+					document.dispatchEvent(accessEvent);
+					if (!accessEvent.defaultPrevented) {
+						document.documentElement.dataset.pgOpenRequest = "";
+					}
+				});
+			</script>
+		)}
 	</body>
 </html>

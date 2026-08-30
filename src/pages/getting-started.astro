@@ -8,7 +8,18 @@ import Root from "../layouts/Root.astro";
 	preloadDisplayFont={true}
 >
 	<a slot="skip" class="guide-skip" href="#guide-content">Skip to guide</a>
-	<div class="guide-scene" aria-hidden="true"></div>
+	<div class="guide-scene" aria-hidden="true">
+		<img
+			src="/tboi-wall.webp"
+			srcset="/tboi-wall.webp 1280w, /tboi-wall-lg.webp 1920w"
+			sizes="100vw"
+			alt=""
+			width="1920"
+			height="1080"
+			fetchpriority="high"
+			decoding="async"
+		/>
+	</div>
 	<main id="guide-content" class="guide-shell px-margin py-xxl" tabindex="-1">
 		<nav class="guide-breadcrumb text-body-sm" aria-label="Breadcrumb">
 			<a href="/">Platinum Gold</a>
@@ -665,13 +676,6 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 			<a href="/">Back to Platinum Gold</a>
 		</div>
 	</footer>
-	<script>
-		document.addEventListener("click", (event) => {
-			if (event.target instanceof Element && event.target.closest("[data-open-request-access]")) {
-				document.dispatchEvent(new CustomEvent("pg:request-access", { cancelable: true }));
-			}
-		});
-	</script>
 </Root>
 
 <style>
@@ -1068,11 +1072,25 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		position: fixed;
 		inset: var(--pg-header-height) 0 0;
 		z-index: 0;
+		overflow: hidden;
 		pointer-events: none;
-		background:
-			linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.95)),
-			url("/tboi-wall.webp") center 20% / cover no-repeat;
 		filter: saturate(0.65) contrast(1.1);
+	}
+
+	.guide-scene img {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		object-position: center 20%;
+	}
+
+	.guide-scene::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.95));
 	}
 
 	.guide-shell {
@@ -1094,6 +1112,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		max-inline-size: none;
 		font-family: var(--font-display);
 		font-size: clamp(4rem, 10vw, 6rem);
+		font-size-adjust: 0.5;
 		font-weight: 400;
 		line-height: 1.05;
 		letter-spacing: 0.02em;
@@ -1122,6 +1141,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	.guide-start h2 {
 		font-family: var(--font-display);
 		font-size: clamp(2.5rem, 5vw, 4rem);
+		font-size-adjust: 0.5;
 		font-weight: 400;
 		line-height: 1.05;
 		letter-spacing: 0.02em;
@@ -1206,6 +1226,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		color: var(--color-on-surface);
 		font-family: var(--font-display);
 		font-size: 2rem;
+		font-size-adjust: 0.5;
 		font-weight: 400;
 		line-height: 1.05;
 		letter-spacing: 0.02em;
@@ -1266,6 +1287,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 	.guide-reference-heading h2 {
 		font-family: var(--font-display);
 		font-size: clamp(2.5rem, 5vw, 4rem);
+		font-size-adjust: 0.5;
 		font-weight: 400;
 		line-height: 1.05;
 		letter-spacing: 0.02em;
@@ -1394,14 +1416,6 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		z-index: 1;
 		max-inline-size: 92rem;
 		color: var(--color-on-surface-muted);
-	}
-
-	@media (min-width: 64rem) {
-		.guide-scene {
-			background-image:
-				linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.95)),
-				url("/tboi-wall-lg.webp");
-		}
 	}
 
 	@media (max-width: 48rem) {

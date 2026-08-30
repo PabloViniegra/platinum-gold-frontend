@@ -89,6 +89,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	const errorToastRef = useRef<HTMLOutputElement>(null);
 	const successToastRef = useRef<HTMLOutputElement>(null);
 	const [toast, setToast] = useState<ToastState | null>(null);
+	const [dialogOpen, setDialogOpen] = useState(false);
 	const [countries, setCountries] = useState<string[]>([]);
 	const [countriesUnavailable, setCountriesUnavailable] = useState(false);
 	const generationRef = useRef(0);
@@ -114,6 +115,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	}, []);
 
 	useEffect(() => {
+		if (!dialogOpen || countries.length > 0 || countriesUnavailable) return;
 		const controller = new AbortController();
 		async function loadCountries(): Promise<void> {
 			try {
@@ -135,7 +137,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 		}
 		void loadCountries();
 		return () => controller.abort();
-	}, []);
+	}, [dialogOpen, countries.length, countriesUnavailable]);
 
 	useEffect(() => {
 		const errorElement = errorToastRef.current;
@@ -158,6 +160,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	function openDialog(): void {
 		generationRef.current += 1;
 		setToast(null);
+		setDialogOpen(true);
 		dialogRef.current?.showModal();
 	}
 
@@ -168,6 +171,12 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 			openDialog();
 		}
 		document.addEventListener(REQUEST_ACCESS_OPEN_EVENT, onRequestAccess);
+		if ("pgOpenRequest" in document.documentElement.dataset) {
+			delete document.documentElement.dataset.pgOpenRequest;
+			queueMicrotask(() => {
+				openDialog();
+			});
+		}
 		return () => document.removeEventListener(REQUEST_ACCESS_OPEN_EVENT, onRequestAccess);
 	}, []);
 
@@ -229,7 +238,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 				className="request-access-trigger"
 				type="button"
 				data-placement={placement}
-				onClick={openDialog}
+				data-open-request-access
 			>
 				Request API access
 			</button>
@@ -241,6 +250,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 				aria-describedby="request-dialog-description"
 				onCancel={(event) => { if (isSubmitting) event.preventDefault(); }}
 				onClose={() => {
+					setDialogOpen(false);
 					triggerRef.current?.focus();
 					// Closing blurs the autofocused field, which fires onBlur validation; clear after that synthetic blur lands.
 					window.setTimeout(() => clearErrors(), 0);

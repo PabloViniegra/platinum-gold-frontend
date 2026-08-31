@@ -12,13 +12,16 @@ import {
 import { handleRequestDenial } from "../../../../../lib/api-key-requests/denial";
 import { adminJsonResponse } from "../../../../../lib/api-key-requests/admin-response";
 import { getRequestsDatabase } from "../../../../../lib/api-key-requests/database";
-import { createEmailTransport } from "../../../../../lib/api-key-requests/email";
+import { createEmailTransport, parseMailboxConfig } from "../../../../../lib/api-key-requests/email";
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, params }) => {
+	const mailbox = REQUESTS_FROM_ADDRESS && REQUESTS_ADMIN_EMAIL
+		? parseMailboxConfig(REQUESTS_FROM_ADDRESS, REQUESTS_ADMIN_EMAIL)
+		: null;
 	if (!REQUESTS_ADMIN_USERNAME || !REQUESTS_SESSION_SECRET || !REQUESTS_TURSO_DB
-		|| !REQUESTS_TURSO_TOKEN || !RESEND_API_KEY || !REQUESTS_FROM_ADDRESS || !REQUESTS_ADMIN_EMAIL) {
+		|| !REQUESTS_TURSO_TOKEN || !RESEND_API_KEY || !mailbox) {
 		return adminJsonResponse("Administration is not configured.", 503);
 	}
 	try {
@@ -26,12 +29,12 @@ export const POST: APIRoute = async ({ request, params }) => {
 		return await handleRequestDenial(
 			request,
 			client,
-			createEmailTransport(RESEND_API_KEY),
+			createEmailTransport(RESEND_API_KEY, params.id ?? crypto.randomUUID()),
 			REQUESTS_ADMIN_USERNAME,
 			REQUESTS_SESSION_SECRET,
 			params.id,
 			Date.now(),
-			{ fromAddress: REQUESTS_FROM_ADDRESS, adminAddress: REQUESTS_ADMIN_EMAIL },
+			mailbox,
 		);
 	} catch {
 		return adminJsonResponse("Denial could not be completed. Try again.", 503);

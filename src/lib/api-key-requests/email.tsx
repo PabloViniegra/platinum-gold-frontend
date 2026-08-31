@@ -12,11 +12,24 @@ export type EmailMessage = {
 	to: string;
 	subject: string;
 	react: ReactElement;
+	tags: EmailTag[];
+};
+
+type EmailTag = {
+	name: string;
+	value: string;
 };
 
 export interface EmailTransport {
 	send(message: EmailMessage, idempotencyKey: string): Promise<string>;
 }
+
+export type EmailFailureReporter = (
+	requestId: string,
+	operation: string,
+	errorName: string,
+	statusCode: number | null,
+) => void;
 
 export type IntakeEmailResult = {
 	applicantEmailId: string;
@@ -28,22 +41,70 @@ export type MailboxConfig = {
 	adminAddress: string;
 };
 
+const EMAIL_ADDRESS_PATTERN = /^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i;
+
+function validAddress(value: string): boolean {
+	return EMAIL_ADDRESS_PATTERN.test(value);
+}
+
+export function parseMailboxConfig(fromAddress: string, adminAddress: string): MailboxConfig | null {
+	if (fromAddress !== fromAddress.trim() || adminAddress !== adminAddress.trim()
+		|| fromAddress.startsWith('"') || fromAddress.endsWith('"')) return null;
+	const displayAddress = fromAddress.match(/^([^<>\r\n]+) <([^<>]+)>$/);
+	if (!(validAddress(fromAddress) || displayAddress && validAddress(displayAddress[2] ?? ""))
+		|| !validAddress(adminAddress)) return null;
+	return { fromAddress, adminAddress };
+}
+
+function emailTags(event: string): EmailTag[] {
+	return [
+		{ name: "application", value: "platinum-gold" },
+		{ name: "event", value: event },
+	];
+}
+
 class ResendTransport implements EmailTransport {
 	readonly resend: Resend;
+	readonly requestId: string;
+	readonly reportFailure: EmailFailureReporter;
 
-	constructor(apiKey: string) {
+	constructor(apiKey: string, requestId: string, reportFailure: EmailFailureReporter) {
 		this.resend = new Resend(apiKey);
+		this.requestId = requestId;
+		this.reportFailure = reportFailure;
 	}
 
 	async send(message: EmailMessage, idempotencyKey: string): Promise<string> {
 		const result = await this.resend.emails.send(message, { idempotencyKey });
-		if (result.error || !result.data) throw new Error("Email delivery failed.");
+		if (result.error) {
+			this.reportFailure(
+				this.requestId,
+				idempotencyKey.split("/", 1)[0] ?? "email",
+				result.error.name,
+				result.error.statusCode,
+			);
+			throw new Error("Email delivery failed.");
+		}
+		if (!result.data) throw new Error("Email delivery failed.");
 		return result.data.id;
 	}
 }
 
-export function createEmailTransport(apiKey: string): EmailTransport {
-	return new ResendTransport(apiKey);
+function reportEmailFailure(
+	requestId: string,
+	operation: string,
+	errorName: string,
+	statusCode: number | null,
+): void {
+	console.error("Resend email request failed", { requestId, operation, errorName, statusCode });
+}
+
+export function createEmailTransport(
+	apiKey: string,
+	requestId: string,
+	reportFailure: EmailFailureReporter = reportEmailFailure,
+): EmailTransport {
+	return new ResendTransport(apiKey, requestId, reportFailure);
 }
 
 export async function sendIntakeEmails(
@@ -68,6 +129,7 @@ export function sendWaitingListEmail(
 		to: request.email,
 		subject: "Your Platinum Gold API request",
 		react: <WaitingListEmail firstName={request.firstName} />,
+		tags: emailTags("waiting-list"),
 	}, `waiting-list/${requestId}`);
 }
 
@@ -82,6 +144,7 @@ export function sendAdminNotificationEmail(
 		to: mailbox.adminAddress,
 		subject: `API access request from ${request.firstName} ${request.lastName}`,
 		react: <AdminRequestEmail request={request} requestId={requestId} />,
+		tags: emailTags("admin-notification"),
 	}, `admin-notification/${requestId}`);
 }
 
@@ -98,6 +161,7 @@ export function sendApprovalEmail(
 		to: email,
 		subject: "Your Platinum Gold API access",
 		react: <ApiKeyApprovedEmail firstName={firstName} apiKey={apiKey} />,
+		tags: emailTags("api-key-approved"),
 	}, `api-key-approved/${requestId}`);
 }
 
@@ -113,5 +177,6 @@ export function sendDenialEmail(
 		to: email,
 		subject: "Your Platinum Gold API request",
 		react: <ApiKeyDeniedEmail firstName={firstName} />,
+		tags: emailTags("api-key-denied"),
 	}, `api-key-denied/${requestId}`);
 }

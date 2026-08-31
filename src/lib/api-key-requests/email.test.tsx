@@ -1,5 +1,5 @@
 import { render } from "react-email";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AdminRequestEmail } from "../../emails/AdminRequestEmail";
 import { ApiKeyApprovedEmail } from "../../emails/ApiKeyApprovedEmail";
@@ -7,13 +7,21 @@ import { ApiKeyDeniedEmail } from "../../emails/ApiKeyDeniedEmail";
 import { WaitingListEmail } from "../../emails/WaitingListEmail";
 import { API_KEY_USE_CASE, type ApiKeyRequest } from "./contracts";
 import {
+	createEmailTransport,
+	parseMailboxConfig,
 	sendIntakeEmails,
 	sendApprovalEmail,
 	sendDenialEmail,
+	sendWaitingListEmail,
 	type EmailMessage,
 	type EmailTransport,
 	type MailboxConfig,
 } from "./email";
+
+afterEach(() => {
+	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
+});
 
 const REQUEST: ApiKeyRequest = {
 	firstName: "<Isaac>",
@@ -84,6 +92,17 @@ describe("React Email intake templates", () => {
 });
 
 describe("sendIntakeEmails", () => {
+	it("accepts valid mailbox configuration and rejects quoted or malformed addresses", () => {
+		expect(parseMailboxConfig("Platinum Gold <api@send.example.com>", "ops@example.com"))
+			.toEqual({
+				fromAddress: "Platinum Gold <api@send.example.com>",
+				adminAddress: "ops@example.com",
+			});
+		expect(parseMailboxConfig('"Platinum Gold <api@send.example.com>"', "ops@example.com"))
+			.toBeNull();
+		expect(parseMailboxConfig("api@send.example.com", "not-an-email")).toBeNull();
+	});
+
 	it("sends applicant and administrator emails with stable idempotency keys", async () => {
 		const transport = new RecordingTransport();
 
@@ -101,11 +120,45 @@ describe("sendIntakeEmails", () => {
 			"waiting-list/request-1",
 			"admin-notification/request-1",
 		]);
+		expect(transport.messages.map((message) => message.tags)).toEqual([
+			[
+				{ name: "application", value: "platinum-gold" },
+				{ name: "event", value: "waiting-list" },
+			],
+			[
+				{ name: "application", value: "platinum-gold" },
+				{ name: "event", value: "admin-notification" },
+			],
+		]);
 	});
 
 	it("surfaces delivery failures to the caller", async () => {
 		await expect(sendIntakeEmails(new FailingTransport(), REQUEST, "request-1", MAILBOX))
 			.rejects.toThrow("Email delivery failed");
+	});
+
+	it("reports safe provider diagnostics without message data", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+			name: "validation_error",
+			message: "The recipient address is invalid.",
+			statusCode: 422,
+		}), {
+			status: 422,
+			headers: { "Content-Type": "application/json" },
+		})));
+		const failures: [string, string, string, number | null][] = [];
+		const transport = createEmailTransport(
+			"re_test",
+			"request-1",
+			(requestId, operation, errorName, statusCode) => {
+				failures.push([requestId, operation, errorName, statusCode]);
+			},
+		);
+
+		await expect(sendWaitingListEmail(transport, REQUEST, "stored-1", MAILBOX))
+			.rejects.toThrow("Email delivery failed");
+		expect(failures).toEqual([["request-1", "waiting-list", "validation_error", 422]]);
 	});
 
 	it("sends approval with an event-scoped idempotency key", async () => {

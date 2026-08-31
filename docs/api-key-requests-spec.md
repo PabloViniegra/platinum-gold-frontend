@@ -88,6 +88,10 @@ All templates are React Email components and use both HTML and plain-text-compat
 - Administrator notification: sent to `REQUESTS_ADMIN_EMAIL` with the request details, but never an API key.
 - Approval email: contains the manually entered API key and a reminder to keep it out of public browser bundles.
 - Resend idempotency keys are scoped by event and request UUID to prevent duplicate delivery during safe retries.
+- Every message carries application and event tags. A signed Resend webhook records delivery lifecycle events by message ID without storing recipients or message content.
+- `REQUESTS_FROM_ADDRESS` and `REQUESTS_ADMIN_EMAIL` are parsed before any request is persisted. Invalid mailbox configuration makes the service unavailable without creating an orphan row.
+- Pending requests expose whether applicant and administrator intake messages were accepted. An authenticated same-origin admin action retries only missing intake messages.
+- Resend failures are logged with the HTTP request ID, operation, provider error name, and status code, but never with PII, message content, credentials, or issued API keys.
 
 ## Security Model
 
@@ -114,6 +118,7 @@ Required server-only variables:
 
 ```text
 RESEND_API_KEY
+RESEND_WEBHOOK_SECRET
 REQUESTS_TURSO_DB
 REQUESTS_TURSO_TOKEN
 REQUESTS_ADMIN_PATH
@@ -183,6 +188,8 @@ Follow the repository's tab indentation in Astro/React files and satisfy all `an
 - Unit-test input normalization, length limits, use-case rules, duplicate behavior, session signing/expiry, password verification, and rate-limit decisions with Vitest.
 - Test repository behavior against a temporary local libSQL database, including uniqueness and approval state transitions.
 - Test endpoint contracts with an injected Resend transport, including partial failures, competing decisions, and idempotent retries.
+- Test webhook signature rejection, application-tag filtering, lifecycle event ordering, and duplicate delivery events.
+- Test invalid mailbox configuration before persistence and authenticated recovery of missing intake messages.
 - Verify all three React Email templates render with representative and escaped user data.
 - Run browser checks for dialog focus, field errors, success/error toast announcements, admin login/logout, approval, responsive layout, headers, and absence of console errors.
 - Inspect the production client output to confirm that no server secret or submitted API key is bundled.
@@ -196,6 +203,9 @@ Follow the repository's tab indentation in Astro/React files and satisfy all `an
 ## Success Criteria
 
 - A valid submission creates exactly one pending Turso row and sends exactly one waiting-list email plus one administrator notification.
+- Invalid mailbox configuration creates no request row and emits no email.
+- The administrator can identify and retry only missing intake messages without duplicating successful sends.
+- Verified Resend lifecycle events are stored by message ID and visible for operational diagnosis; unsigned or foreign-application events change no state.
 - Invalid, oversized, automated, throttled, and duplicate submissions have deterministic tested behavior and leak no internal details.
 - The public dialog and toast are usable with keyboard and screen reader semantics on mobile and desktop.
 - Only an authenticated, unexpired admin session can read pending requests or approve one.

@@ -9,7 +9,7 @@ import {
 } from "astro:env/server";
 
 import { getRequestsDatabase } from "../../lib/api-key-requests/database";
-import { createEmailTransport } from "../../lib/api-key-requests/email";
+import { createEmailTransport, parseMailboxConfig } from "../../lib/api-key-requests/email";
 import { handleApiKeyRequest } from "../../lib/api-key-requests/service";
 
 export const prerender = false;
@@ -30,11 +30,13 @@ function unavailableResponse(requestId: string): Response {
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
 	const requestId = crypto.randomUUID();
+	const mailbox = REQUESTS_FROM_ADDRESS && REQUESTS_ADMIN_EMAIL
+		? parseMailboxConfig(REQUESTS_FROM_ADDRESS, REQUESTS_ADMIN_EMAIL)
+		: null;
 	if (!REQUESTS_TURSO_DB
 		|| !REQUESTS_TURSO_TOKEN
 		|| !RESEND_API_KEY
-		|| !REQUESTS_FROM_ADDRESS
-		|| !REQUESTS_ADMIN_EMAIL
+		|| !mailbox
 		|| !REQUESTS_SESSION_SECRET
 		|| REQUESTS_SESSION_SECRET.length < 32) {
 		console.error("API key request service is not configured", { requestId });
@@ -43,7 +45,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
 	try {
 		const requestsDatabase = await getRequestsDatabase(REQUESTS_TURSO_DB, REQUESTS_TURSO_TOKEN);
-		const transport = createEmailTransport(RESEND_API_KEY);
+		const transport = createEmailTransport(RESEND_API_KEY, requestId);
 		return await handleApiKeyRequest(
 			request,
 			requestsDatabase,
@@ -52,7 +54,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 			clientAddress,
 			requestId,
 			Date.now(),
-			{ fromAddress: REQUESTS_FROM_ADDRESS, adminAddress: REQUESTS_ADMIN_EMAIL },
+			mailbox,
 		);
 	} catch {
 		console.error("API key request did not complete", { requestId });

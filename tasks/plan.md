@@ -293,6 +293,44 @@ Dependencies and environment contract
 
 **Estimated scope:** Small
 
+## Production Reliability Remediation
+
+### Task 11: Reject Invalid Mailbox Configuration
+
+**Description:** Parse the sender and administrator addresses before persistence and preserve safe Resend failure metadata in correlated server logs.
+
+**Acceptance criteria:**
+- [ ] Quoted or malformed addresses are rejected before Turso creates a request.
+- [ ] Provider failures log only request ID, operation, provider error name, and status.
+
+**Verification:**
+- [ ] Focused email and intake tests pass.
+
+### Task 12: Persist Verified Resend Delivery Events
+
+**Description:** Tag Platinum Gold messages, verify raw webhook requests with the Resend signing secret, and persist lifecycle status by email ID without PII.
+
+**Acceptance criteria:**
+- [ ] Invalid signatures and events from other applications change no state.
+- [ ] Duplicate and out-of-order events are idempotent and cannot replace a newer status.
+- [ ] Delivered, delayed, bounced, complained, failed, and suppressed states are queryable.
+
+**Verification:**
+- [ ] Repository and webhook contract tests pass.
+
+### Task 13: Recover Missing Intake Delivery
+
+**Description:** Show intake acceptance/delivery state in the protected queue and provide a same-origin authenticated action that sends only missing messages.
+
+**Acceptance criteria:**
+- [ ] A complete request cannot be retried.
+- [ ] A partial or orphaned request sends only missing applicant/admin messages.
+- [ ] The production orphan is reconciled once after deployment.
+
+**Verification:**
+- [ ] Focused service, route, and browser checks pass.
+- [ ] Full tests, type check, lint, build, dependency audit, and production status checks pass.
+
 ## Parallelization
 
 - Tasks 2 and the email-template portion of Task 4 can proceed in parallel only after Task 1, but repository and delivery integration remain sequential.

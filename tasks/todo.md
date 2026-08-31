@@ -15,4 +15,4 @@
 - [x] Task 10: Run complete quality, browser, dependency, security, and code-review gates.
 - [x] Task 11: Validate mailbox configuration and preserve safe Resend diagnostics.
 - [x] Task 12: Verify and persist Resend delivery lifecycle events.
-- [ ] Task 13: Expose and recover missing intake deliveries, then reconcile production.
+- [x] Task 13: Expose and recover missing intake deliveries, then reconcile production.

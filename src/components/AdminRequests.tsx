@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 
 import type { ApiKeyUseCase } from "../lib/api-key-requests/contracts";
+import type { EmailDeliveryStatus } from "../lib/api-key-requests/repository";
 import "./admin-requests.css";
 
 type PendingRequest = {
@@ -15,6 +16,10 @@ type PendingRequest = {
 	useCase: ApiKeyUseCase;
 	useCaseDetails: string | null;
 	createdAt: string;
+	applicantEmailAccepted: boolean;
+	applicantEmailStatus: EmailDeliveryStatus | null;
+	adminEmailAccepted: boolean;
+	adminEmailStatus: EmailDeliveryStatus | null;
 };
 
 const ADMIN_REQUEST_STATUS = {
@@ -33,6 +38,11 @@ type SessionResponse = {
 	authenticated: boolean;
 };
 
+type IntakeRetryResponse = {
+	applicantEmailAccepted: boolean;
+	adminEmailAccepted: boolean;
+};
+
 const ADMIN_VIEW = {
 	LOADING: "loading",
 	LOGIN: "login",
@@ -44,6 +54,28 @@ type AdminView = (typeof ADMIN_VIEW)[keyof typeof ADMIN_VIEW];
 
 function formatUseCase(useCase: ApiKeyUseCase): string {
 	return useCase.split("_").map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`).join(" ");
+}
+
+function deliveryLabel(accepted: boolean, status: EmailDeliveryStatus | null): string {
+	if (!accepted) return "Missing";
+	switch (status) {
+		case "sent":
+			return "Sent by Resend";
+		case "delivered":
+			return "Delivered to recipient server";
+		case "delivery_delayed":
+			return "Delivery delayed";
+		case "complained":
+			return "Marked as spam";
+		case "bounced":
+			return "Bounced";
+		case "failed":
+			return "Delivery failed";
+		case "suppressed":
+			return "Suppressed by Resend";
+		default:
+			return "Accepted by Resend";
+	}
 }
 
 type MessageBody = {
@@ -72,6 +104,7 @@ export function AdminRequests() {
 	const [apiKey, setApiKey] = useState("");
 	const [confirmation, setConfirmation] = useState("");
 	const [submitting, setSubmitting] = useState(false);
+	const [retryingId, setRetryingId] = useState<string | null>(null);
 	const approvalDialogRef = useRef<HTMLDialogElement>(null);
 	const denialDialogRef = useRef<HTMLDialogElement>(null);
 	const titleRef = useRef<HTMLHeadingElement>(null);
@@ -79,6 +112,7 @@ export function AdminRequests() {
 	const generationRef = useRef(0);
 	const submittingRef = useRef(false);
 	const keyMismatch = message === "The API keys must match.";
+	const retrySucceeded = message === "Missing intake emails were accepted by Resend.";
 
 	useEffect(() => {
 		submittingRef.current = submitting;
@@ -250,6 +284,36 @@ export function AdminRequests() {
 		}
 	}
 
+	async function retryIntake(request: PendingRequest): Promise<void> {
+		setRetryingId(request.id);
+		setMessage("");
+		try {
+			const response = await fetch(
+				`/api/admin/key-requests/${encodeURIComponent(request.id)}/retry-intake`,
+				{ method: "POST" },
+			);
+			if (!response.ok) {
+				setMessage(response.status === 409
+					? "No intake email needs recovery."
+					: "Intake emails could not be recovered. Try again.");
+				return;
+			}
+			const acceptance: IntakeRetryResponse = await response.json();
+			if (acceptance.applicantEmailAccepted?.constructor !== Boolean
+				|| acceptance.adminEmailAccepted?.constructor !== Boolean) {
+				throw new Error("Invalid retry response");
+			}
+			setRequests((current) => current.map((item) => item.id === request.id
+				? { ...item, ...acceptance }
+				: item));
+			setMessage("Missing intake emails were accepted by Resend.");
+		} catch {
+			setMessage("Intake emails could not be recovered. Check your connection.");
+		} finally {
+			setRetryingId(null);
+		}
+	}
+
 	if (view === ADMIN_VIEW.LOADING) return <output className="admin-state">Loading requests...</output>;
 	if (view === ADMIN_VIEW.ERROR) return <p className="admin-state">Administration is unavailable.</p>;
 	if (view === ADMIN_VIEW.LOGIN) {
@@ -277,7 +341,7 @@ export function AdminRequests() {
 				<button type="button" onClick={() => void logout()}>Sign out</button>
 			</header>
 			{message && view === ADMIN_VIEW.QUEUE && !selected && (
-				<p className="admin-error" role="alert">{message}</p>
+				<p className={retrySucceeded ? "admin-notice" : "admin-error"} role={retrySucceeded ? "status" : "alert"}>{message}</p>
 			)}
 			{requests.length === 0 ? (
 				<p className="admin-empty">The waiting list is clear.</p>
@@ -292,8 +356,21 @@ export function AdminRequests() {
 								<div><dt>Occupation</dt><dd>{request.occupation}</dd></div>
 								<div><dt>Use case</dt><dd>{formatUseCase(request.useCase)}</dd></div>
 								{request.useCaseDetails && <div><dt>Details</dt><dd>{request.useCaseDetails}</dd></div>}
+								<div><dt>Applicant email</dt><dd>{deliveryLabel(request.applicantEmailAccepted, request.applicantEmailStatus)}</dd></div>
+								<div><dt>Admin email</dt><dd>{deliveryLabel(request.adminEmailAccepted, request.adminEmailStatus)}</dd></div>
 							</dl>
 							<div className="admin-request-actions">
+								{request.status === ADMIN_REQUEST_STATUS.PENDING
+									&& (!request.applicantEmailAccepted || !request.adminEmailAccepted) && (
+									<button
+										className="admin-retry"
+										type="button"
+										disabled={retryingId !== null}
+										onClick={() => void retryIntake(request)}
+									>
+										{retryingId === request.id ? "Retrying..." : "Retry missing intake emails"}
+									</button>
+								)}
 								{request.status !== ADMIN_REQUEST_STATUS.DENYING && (
 									<button type="button" onClick={() => openApproval(request)}>
 										{request.status === ADMIN_REQUEST_STATUS.APPROVING ? "Retry approval" : "Approve and send key"}

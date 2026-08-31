@@ -41,6 +41,11 @@
 	font-weight: 600;
 }
 
+.admin-notice {
+	color: var(--color-on-surface);
+	font-weight: 600;
+}
+
 .admin-request-actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -52,6 +57,12 @@
 	border-color: var(--color-error);
 	background: transparent;
 	color: var(--color-error);
+}
+
+.admin-queue .admin-retry {
+	border-color: var(--color-ink-muted);
+	background: transparent;
+	color: var(--color-ink);
 }
 
 .admin-queue > header,

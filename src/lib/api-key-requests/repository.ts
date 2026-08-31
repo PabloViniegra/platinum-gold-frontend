@@ -21,7 +21,7 @@ export type ActionableRequestStatus = typeof REQUEST_STATUS.PENDING
 	| typeof REQUEST_STATUS.APPROVING
 	| typeof REQUEST_STATUS.DENYING;
 
-export type PendingApiKeyRequest = {
+export type ActionableApiKeyRequest = {
 	id: string;
 	status: ActionableRequestStatus;
 	firstName: string;
@@ -32,6 +32,13 @@ export type PendingApiKeyRequest = {
 	useCase: ApiKeyUseCase;
 	useCaseDetails: string | null;
 	createdAt: string;
+};
+
+export type PendingApiKeyRequest = ActionableApiKeyRequest & {
+	applicantEmailAccepted: boolean;
+	applicantEmailStatus: EmailDeliveryStatus | null;
+	adminEmailAccepted: boolean;
+	adminEmailStatus: EmailDeliveryStatus | null;
 };
 
 export type StoredApiKeyRequest = {
@@ -55,6 +62,15 @@ export const EMAIL_DELIVERY_STATUS = {
 export type EmailDeliveryStatus = (
 	typeof EMAIL_DELIVERY_STATUS
 )[keyof typeof EMAIL_DELIVERY_STATUS];
+
+function databaseEmailDeliveryStatus(value: Value, field: string): EmailDeliveryStatus | null {
+	if (value === null) return null;
+	const status = databaseString(value, field);
+	for (const knownStatus of Object.values(EMAIL_DELIVERY_STATUS)) {
+		if (status === knownStatus) return knownStatus;
+	}
+	throw new Error(`Invalid ${field} row.`);
+}
 
 function databaseString(value: Value, field: string): string {
 	if (value?.constructor !== String) throw new Error(`Invalid ${field} in API key request row.`);
@@ -265,11 +281,7 @@ export async function findEmailDeliveryStatus(
 	});
 	const value = result.rows[0]?.status;
 	if (value === undefined) return null;
-	const status = databaseString(value, "email_delivery_status");
-	for (const knownStatus of Object.values(EMAIL_DELIVERY_STATUS)) {
-		if (status === knownStatus) return knownStatus;
-	}
-	throw new Error("Invalid email delivery status row.");
+	return databaseEmailDeliveryStatus(value, "email_delivery_status");
 }
 
 export async function findStoredRequest(
@@ -283,7 +295,24 @@ export async function findStoredRequest(
 		args: [normalizeEmail(email)],
 	});
 	const row = result.rows[0];
-	if (!row) return null;
+	return row ? storedRequestFromRow(row) : null;
+}
+
+export async function findStoredRequestById(
+	client: Client,
+	id: string,
+): Promise<StoredApiKeyRequest | null> {
+	const result = await client.execute({
+		sql: `SELECT id, status, applicant_email_id, admin_email_id, first_name, last_name,
+			email, country, occupation, use_case, use_case_details
+			FROM api_key_requests WHERE id = ?`,
+		args: [id],
+	});
+	const row = result.rows[0];
+	return row ? storedRequestFromRow(row) : null;
+}
+
+function storedRequestFromRow(row: Readonly<Record<string, Value>>): StoredApiKeyRequest {
 	const statusValue = parseRequestStatus(databaseString(row.status, "status"));
 	if (!statusValue) {
 		throw new Error("Invalid status in API key request row.");
@@ -310,11 +339,18 @@ export async function findStoredRequest(
 
 export async function listPendingRequests(client: Client): Promise<PendingApiKeyRequest[]> {
 	const result = await client.execute(`SELECT
-		id, status, first_name, last_name, email, country, occupation,
-		use_case, use_case_details, created_at
-		FROM api_key_requests
-		WHERE status IN ('pending', 'approving', 'denying')
-		ORDER BY created_at DESC`);
+		requests.id, requests.status, requests.first_name, requests.last_name,
+		requests.email, requests.country, requests.occupation, requests.use_case,
+		requests.use_case_details, requests.created_at, requests.applicant_email_id,
+		requests.admin_email_id, applicant_delivery.status AS applicant_delivery_status,
+		admin_delivery.status AS admin_delivery_status
+		FROM api_key_requests AS requests
+		LEFT JOIN request_email_delivery_statuses AS applicant_delivery
+			ON applicant_delivery.email_id = requests.applicant_email_id
+		LEFT JOIN request_email_delivery_statuses AS admin_delivery
+			ON admin_delivery.email_id = requests.admin_email_id
+		WHERE requests.status IN ('pending', 'approving', 'denying')
+		ORDER BY requests.created_at DESC`);
 
 	return result.rows.map((row) => {
 		const useCase = parseApiKeyUseCase(databaseString(row.use_case, "use_case"));
@@ -330,6 +366,14 @@ export async function listPendingRequests(client: Client): Promise<PendingApiKey
 			useCase,
 			useCaseDetails: databaseNullableString(row.use_case_details, "use_case_details"),
 			createdAt: databaseString(row.created_at, "created_at"),
+			applicantEmailAccepted: row.applicant_email_id !== null,
+			applicantEmailStatus: databaseEmailDeliveryStatus(
+				row.applicant_delivery_status, "applicant_delivery_status",
+			),
+			adminEmailAccepted: row.admin_email_id !== null,
+			adminEmailStatus: databaseEmailDeliveryStatus(
+				row.admin_delivery_status, "admin_delivery_status",
+			),
 		};
 	});
 }
@@ -341,7 +385,7 @@ export async function beginRequestDecision(
 	fingerprint: string | null,
 	owner: string,
 	nowMilliseconds: number,
-): Promise<PendingApiKeyRequest | null> {
+): Promise<ActionableApiKeyRequest | null> {
 	const claimed = await client.execute({
 		sql: `UPDATE api_key_requests
 			SET status = ?, decision_fingerprint = ?, decision_owner = ?, decision_claimed_at = ?
@@ -381,7 +425,7 @@ export async function releaseRequestDecision(
 	});
 }
 
-function pendingRequestFromRow(row: Readonly<Record<string, Value>>): PendingApiKeyRequest {
+function pendingRequestFromRow(row: Readonly<Record<string, Value>>): ActionableApiKeyRequest {
 	const useCase = parseApiKeyUseCase(databaseString(row.use_case, "use_case"));
 	if (!useCase) throw new Error("Invalid use_case in API key request row.");
 	return {

@@ -16,6 +16,7 @@ import {
 	recordAdminDelivery,
 	recordApplicantDelivery,
 	REQUEST_STATUS,
+	type StoredApiKeyRequest,
 } from "./repository";
 
 const MAXIMUM_BODY_BYTES = 8_192;
@@ -34,6 +35,32 @@ function response(message: string, status: number, requestId: string): Response 
 			},
 		},
 	);
+}
+
+export type IntakeEmailAcceptance = {
+	applicantEmailAccepted: boolean;
+	adminEmailAccepted: boolean;
+};
+
+export async function deliverMissingIntakeEmails(
+	client: Client,
+	transport: EmailTransport,
+	stored: StoredApiKeyRequest,
+	mailbox: MailboxConfig,
+): Promise<IntakeEmailAcceptance> {
+	if (!stored.applicantEmailId) {
+		const emailId = await sendWaitingListEmail(transport, stored.request, stored.id, mailbox);
+		if (!await recordApplicantDelivery(client, stored.id, emailId)) {
+			throw new Error("Applicant delivery persistence failed.");
+		}
+	}
+	if (!stored.adminEmailId) {
+		const emailId = await sendAdminNotificationEmail(transport, stored.request, stored.id, mailbox);
+		if (!await recordAdminDelivery(client, stored.id, emailId)) {
+			throw new Error("Administrator delivery persistence failed.");
+		}
+	}
+	return { applicantEmailAccepted: true, adminEmailAccepted: true };
 }
 
 export async function handleApiKeyRequest(
@@ -87,18 +114,7 @@ export async function handleApiKeyRequest(
 			return response(DUPLICATE_MESSAGE, 409, requestId);
 		}
 
-		if (!stored.applicantEmailId) {
-			const emailId = await sendWaitingListEmail(transport, stored.request, stored.id, mailbox);
-			if (!await recordApplicantDelivery(client, stored.id, emailId)) {
-				throw new Error("Applicant delivery persistence failed.");
-			}
-		}
-		if (!stored.adminEmailId) {
-			const emailId = await sendAdminNotificationEmail(transport, stored.request, stored.id, mailbox);
-			if (!await recordAdminDelivery(client, stored.id, emailId)) {
-				throw new Error("Administrator delivery persistence failed.");
-			}
-		}
+		await deliverMissingIntakeEmails(client, transport, stored, mailbox);
 		return response(SUCCESS_MESSAGE, 201, requestId);
 	} catch {
 		return response("Your request could not be submitted. Try again shortly.", 503, requestId);

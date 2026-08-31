@@ -109,6 +109,25 @@ describe("API key request repository", () => {
 		expect(await listPendingRequests(client)).toEqual([]);
 	});
 
+	it("lists intake acceptance and delivery status without exposing provider IDs", async () => {
+		await createPendingRequest(client, REQUEST, "request-1", "2026-08-30T12:00:00.000Z");
+		await recordApplicantDelivery(client, "request-1", "applicant-email");
+		await recordEmailDeliveryEvent(
+			client,
+			"applicant-email",
+			EMAIL_DELIVERY_STATUS.DELIVERED,
+			Date.parse("2026-08-30T12:01:00.000Z"),
+			"2026-08-30T12:01:01.000Z",
+		);
+
+		expect(await listPendingRequests(client)).toEqual([expect.objectContaining({
+			applicantEmailAccepted: true,
+			applicantEmailStatus: EMAIL_DELIVERY_STATUS.DELIVERED,
+			adminEmailAccepted: false,
+			adminEmailStatus: null,
+		})]);
+	});
+
 	it("keeps the newest delivery event and ignores duplicates or older events", async () => {
 		expect(await recordEmailDeliveryEvent(
 			client,

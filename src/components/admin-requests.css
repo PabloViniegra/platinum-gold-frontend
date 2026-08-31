@@ -65,6 +65,11 @@
 	color: var(--color-ink);
 }
 
+.admin-queue button:disabled {
+	cursor: wait;
+	opacity: 0.55;
+}
+
 .admin-queue > header,
 .admin-request-list li > header {
 	display: flex;

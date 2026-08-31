@@ -43,6 +43,13 @@ type IntakeRetryResponse = {
 	adminEmailAccepted: boolean;
 };
 
+async function loadQueue(signal?: AbortSignal): Promise<PendingRequest[]> {
+	const response = await fetch("/api/admin/key-requests", signal ? { signal } : undefined);
+	if (!response.ok) throw new Error("Queue unavailable");
+	const payload: QueueResponse = await response.json();
+	return payload.requests;
+}
+
 const ADMIN_VIEW = {
 	LOADING: "loading",
 	LOGIN: "login",
@@ -105,6 +112,8 @@ export function AdminRequests() {
 	const [confirmation, setConfirmation] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [retryingId, setRetryingId] = useState<string | null>(null);
+	const [retryMessage, setRetryMessage] = useState("");
+	const [retryFailed, setRetryFailed] = useState(false);
 	const approvalDialogRef = useRef<HTMLDialogElement>(null);
 	const denialDialogRef = useRef<HTMLDialogElement>(null);
 	const titleRef = useRef<HTMLHeadingElement>(null);
@@ -112,7 +121,6 @@ export function AdminRequests() {
 	const generationRef = useRef(0);
 	const submittingRef = useRef(false);
 	const keyMismatch = message === "The API keys must match.";
-	const retrySucceeded = message === "Missing intake emails were accepted by Resend.";
 
 	useEffect(() => {
 		submittingRef.current = submitting;
@@ -129,10 +137,7 @@ export function AdminRequests() {
 					setView(ADMIN_VIEW.LOGIN);
 					return;
 				}
-				const response = await fetch("/api/admin/key-requests", { signal: controller.signal });
-				if (!response.ok) throw new Error("Queue unavailable");
-				const payload: QueueResponse = await response.json();
-				setRequests(payload.requests);
+				setRequests(await loadQueue(controller.signal));
 				setView(ADMIN_VIEW.QUEUE);
 			} catch (error) {
 				if (error instanceof DOMException && error.name === "AbortError") return;
@@ -158,10 +163,7 @@ export function AdminRequests() {
 				return;
 			}
 			setPassword("");
-			const queueResponse = await fetch("/api/admin/key-requests");
-			if (!queueResponse.ok) throw new Error("Queue unavailable");
-			const payload: QueueResponse = await queueResponse.json();
-			setRequests(payload.requests);
+			setRequests(await loadQueue());
 			setView(ADMIN_VIEW.QUEUE);
 		} catch {
 			setMessage("Administration is unavailable. Try again.");
@@ -179,6 +181,7 @@ export function AdminRequests() {
 			}
 			setRequests([]);
 			setMessage("");
+			setRetryMessage("");
 			setView(ADMIN_VIEW.LOGIN);
 		} catch {
 			setMessage("Sign out failed. Check your connection.");
@@ -286,16 +289,22 @@ export function AdminRequests() {
 
 	async function retryIntake(request: PendingRequest): Promise<void> {
 		setRetryingId(request.id);
-		setMessage("");
+		setRetryMessage("");
+		setRetryFailed(false);
 		try {
 			const response = await fetch(
 				`/api/admin/key-requests/${encodeURIComponent(request.id)}/retry-intake`,
 				{ method: "POST" },
 			);
 			if (!response.ok) {
-				setMessage(response.status === 409
-					? "No intake email needs recovery."
-					: "Intake emails could not be recovered. Try again.");
+				if (response.status === 409) {
+					setRequests(await loadQueue());
+					setRetryMessage("The request changed while retrying. The queue has been refreshed.");
+				} else {
+					setRetryFailed(true);
+					setRetryMessage("Intake emails could not be recovered. Try again.");
+				}
+				requestAnimationFrame(() => titleRef.current?.focus());
 				return;
 			}
 			const acceptance: IntakeRetryResponse = await response.json();
@@ -303,12 +312,12 @@ export function AdminRequests() {
 				|| acceptance.adminEmailAccepted?.constructor !== Boolean) {
 				throw new Error("Invalid retry response");
 			}
-			setRequests((current) => current.map((item) => item.id === request.id
-				? { ...item, ...acceptance }
-				: item));
-			setMessage("Missing intake emails were accepted by Resend.");
+			setRequests(await loadQueue());
+			setRetryMessage("Missing intake emails were accepted by Resend.");
+			requestAnimationFrame(() => titleRef.current?.focus());
 		} catch {
-			setMessage("Intake emails could not be recovered. Check your connection.");
+			setRetryFailed(true);
+			setRetryMessage("Intake emails could not be recovered. Check your connection.");
 		} finally {
 			setRetryingId(null);
 		}
@@ -341,7 +350,10 @@ export function AdminRequests() {
 				<button type="button" onClick={() => void logout()}>Sign out</button>
 			</header>
 			{message && view === ADMIN_VIEW.QUEUE && !selected && (
-				<p className={retrySucceeded ? "admin-notice" : "admin-error"} role={retrySucceeded ? "status" : "alert"}>{message}</p>
+				<p className="admin-error" role="alert">{message}</p>
+			)}
+			{retryMessage && (
+				<p className={retryFailed ? "admin-error" : "admin-notice"} role={retryFailed ? "alert" : "status"}>{retryMessage}</p>
 			)}
 			{requests.length === 0 ? (
 				<p className="admin-empty">The waiting list is clear.</p>
@@ -366,18 +378,19 @@ export function AdminRequests() {
 										className="admin-retry"
 										type="button"
 										disabled={retryingId !== null}
+										aria-label={`Retry missing intake emails for ${request.firstName} ${request.lastName}`}
 										onClick={() => void retryIntake(request)}
 									>
 										{retryingId === request.id ? "Retrying..." : "Retry missing intake emails"}
 									</button>
 								)}
 								{request.status !== ADMIN_REQUEST_STATUS.DENYING && (
-									<button type="button" onClick={() => openApproval(request)}>
+									<button type="button" disabled={retryingId !== null} onClick={() => openApproval(request)}>
 										{request.status === ADMIN_REQUEST_STATUS.APPROVING ? "Retry approval" : "Approve and send key"}
 									</button>
 								)}
 								{request.status !== ADMIN_REQUEST_STATUS.APPROVING && (
-									<button className="admin-deny" type="button" onClick={() => openDenial(request)}>
+									<button className="admin-deny" type="button" disabled={retryingId !== null} onClick={() => openDenial(request)}>
 										{request.status === ADMIN_REQUEST_STATUS.DENYING ? "Retry denial" : "Deny request"}
 									</button>
 								)}

@@ -93,8 +93,13 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 					Getting started
 				</a>
 				<a href="/items" aria-current={isItemsPage ? "page" : undefined}>Live example</a>
-				<a href="https://tboi-api.pabloviniegra.dev/docs">API reference</a>
-				<a href="https://tboi-api.pabloviniegra.dev/openapi.json">OpenAPI</a>
+				<details class="site-nav-reference">
+					<summary>Reference</summary>
+					<div class="site-nav-reference-menu">
+						<a href="https://tboi-api.pabloviniegra.dev/docs">API reference</a>
+						<a href="https://tboi-api.pabloviniegra.dev/openapi.json">OpenAPI</a>
+					</div>
+				</details>
 				{!isAdminPage && <ApiKeyRequestDialog client:idle placement="nav" />}
 			</nav>
 		</header>

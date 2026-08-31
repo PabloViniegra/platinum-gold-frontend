@@ -34,10 +34,8 @@ import Root from "../layouts/Root.astro";
 			</div>
 			<ol class="guide-path">
 				<li>
-					<a href="#authentication" aria-current="location">Get API access</a>
-					<button class="guide-path-note" type="button" data-open-request-access>
-						Request a key with <code>api:access</code>.
-					</button>
+					<button class="guide-path-action" type="button" data-open-request-access>Request API access</button>
+					<span>We review every request manually and email approved keys with <code>api:access</code>.</span>
 				</li>
 				<li>
 					<a href="#first-request">Make one request</a>
@@ -45,7 +43,7 @@ import Root from "../layouts/Root.astro";
 				</li>
 				<li>
 					<a href="#verify">Verify the result</a>
-					<span>Confirm the response and keep its <code>X-Request-ID</code>.</span>
+					<span>Confirm that the response contains the item data you requested.</span>
 				</li>
 			</ol>
 		</section>
@@ -76,13 +74,14 @@ import Root from "../layouts/Root.astro";
 			</nav>
 
 			<article class="guide-article">
-				<section id="authentication">
-					<h2>Authentication</h2>
-					<p>
-						Every <code>/v1</code> endpoint needs a Clerk-issued API key. Ask the backend
-						contact for your environment for a key with <code>api:access</code>. This guide
-						does not issue keys. The health checks are public; data routes are not.
-					</p>
+			<section id="authentication">
+				<h2>Authentication</h2>
+				<p>
+					Every <code>/v1</code> endpoint needs an API key with <code>api:access</code>.
+					Request access through this form. We review requests manually and email approved
+					keys. Health checks are public; data routes are not.
+				</p>
+				<button class="guide-access-action" type="button" data-open-request-access>Request API access</button>
 
 					<div
 						class="guide-table-wrap"
@@ -134,8 +133,8 @@ Accept: application/json</code></pre>
 				<section id="first-request">
 					<h2>Make the first request</h2>
 					<p>
-						Start with the list endpoint. This example runs in a server route and
-						requests passive items sorted by name.
+						Start with the list endpoint. This example runs in a server route and requests
+						20 items.
 					</p>
 
 					<ol class="guide-steps">
@@ -154,65 +153,36 @@ Accept: application/json</code></pre>
 						<pre tabindex="0" aria-label="Server-side TypeScript example"><code>const API_BASE = "https://tboi-api.pabloviniegra.dev";
 const API_KEY = process.env.PLATINUM_GOLD_API_KEY;
 
-type ItemPage = &#123;
-  items: Array&lt;&#123; gameId: number; name: string; imageUrl: string &#125;&gt;;
-  total: number;
-  limit: number;
-  offset: number;
-&#125;;
-
-type ApiErrorDetail = &#123;
-  code?: string;
-  message?: string;
-&#125;;
-
-type ApiError = &#123;
-  error?: ApiErrorDetail;
-&#125;;
-
-export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
+export async function getItems() &#123;
   if (!API_KEY) &#123;
     throw new Error("PLATINUM_GOLD_API_KEY is not configured.");
   &#125;
 
-  const requestId = crypto.randomUUID();
   const response = await fetch(
-    `$&#123;API_BASE&#125;/v1/items?type=passive&amp;sort=name&amp;order=asc&amp;limit=20`,
+    `$&#123;API_BASE&#125;/v1/items?limit=20`,
     &#123;
       headers: &#123;
         Accept: "application/json",
         "X-API-Key": API_KEY,
-        "X-Request-ID": requestId,
       &#125;,
     &#125;,
   );
-  const responseRequestId = response.headers.get("X-Request-ID") ?? requestId;
 
   if (!response.ok) &#123;
-    const error: ApiError = await response.json().catch(() =&gt; (&#123;&#125;));
-		console.error("Platinum Gold request failed", &#123;
-			status: response.status,
-			requestId: responseRequestId,
-			error,
-		&#125;);
-
-    if (response.status === 401) &#123;
-      throw new Error("Check the server-side API key.");
-    &#125;
-    if (response.status === 403) &#123;
-      throw new Error("Use a key with the api:access scope.");
-    &#125;
-    throw new Error("Unable to load items. Retry and include the request ID if you need support.");
+    throw new Error("Unable to load items.");
   &#125;
 
-  const page: ItemPage = await response.json();
-  return page;
+  return response.json();
 &#125;</code></pre>
 					</figure>
 
 					<p>
 						Keep this module out of the client bundle. The browser can call your own{" "}
 						<code>/api/items</code> route, but it must never receive the API key.
+					</p>
+					<p>
+						Add request IDs, typed response models, logging, and user-facing error handling after
+						the first call works. The later sections cover those production concerns.
 					</p>
 				</section>
 
@@ -244,21 +214,26 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 &#125;</code></pre>
 					</figure>
 
-					<aside id="verify" class="guide-checkpoint" aria-labelledby="verify-title">
+				<aside id="verify" class="guide-checkpoint" aria-labelledby="verify-title">
 						<h3 id="verify-title">First call complete</h3>
-						<p>Continue when these four checks pass:</p>
+					<p>Continue when these three checks pass:</p>
 						<ul class="guide-bullets">
 							<li><strong>Status:</strong> the response is <code>200</code>.</li>
 							<li><strong>Body:</strong> it includes <code>items</code>, <code>total</code>, <code>limit</code>, and <code>offset</code>.</li>
 							<li><strong>Safety:</strong> the API key exists only in your server-side runtime.</li>
-							<li><strong>Trace:</strong> your logs retain the response's <code>X-Request-ID</code>.</li>
-						</ul>
-					</aside>
-				</section>
+					</ul>
+					<div class="guide-next-actions">
+						<a class="guide-next-primary" href="/items">Open the live example</a>
+						<a class="guide-next-secondary" href="#reference" data-open-reference>Explore the API reference</a>
+					</div>
+				</aside>
+			</section>
 
+			<details class="guide-reference" data-guide-reference-content>
+				<summary>Continue with the full reference</summary>
 				<div class="guide-reference-heading">
-					<h2 id="reference">Reference</h2>
-					<p>Once the first request works, use these sections for the rest of the API contract.</p>
+				<h2 id="reference">Reference</h2>
+				<p>Once the first request works, use these sections for the rest of the API contract.</p>
 				</div>
 
 				<section id="data-shape">
@@ -659,6 +634,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 						<li><a href="https://github.com/PabloViniegra/platinum-gold-backend">Visit the backend repository</a></li>
 					</ul>
 				</section>
+			</details>
 			</article>
 		</div>
 	</main>
@@ -879,10 +855,52 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		margin-block-start: var(--spacing-md);
 	}
 
+	.guide-access-action {
+		min-block-size: 2.75rem;
+		margin-block-start: var(--spacing-lg);
+		border: 1px solid var(--color-primary);
+		border-radius: var(--radius-sm);
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		padding-inline: var(--spacing-md);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
 	.guide-checkpoint {
 		margin-block: var(--spacing-lg);
 		border-block: 1px solid var(--color-border);
 		padding-block: var(--spacing-lg);
+	}
+
+	.guide-next-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+		margin-block-start: var(--spacing-lg);
+	}
+
+	.guide-next-primary,
+	.guide-next-secondary {
+		display: inline-flex;
+		min-block-size: 2.75rem;
+		align-items: center;
+		border: 1px solid var(--color-ink);
+		border-radius: var(--radius-sm);
+		padding-inline: var(--spacing-md);
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.guide-next-primary {
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+	}
+
+	.guide-next-secondary {
+		background: transparent;
+		color: var(--color-ink-link);
 	}
 
 	.guide-table-wrap {
@@ -1178,21 +1196,25 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		text-decoration: none;
 	}
 
-	.guide-path-note {
+	.guide-path-action {
+		display: flex;
+		min-block-size: 2.75rem;
+		align-items: center;
 		border: 0;
 		padding: 0;
 		background: none;
-		color: var(--color-on-surface);
+		color: var(--color-primary);
 		font: inherit;
+		font-weight: 600;
 		text-align: start;
 		cursor: pointer;
 	}
 
-	.guide-path-note:hover {
+	.guide-path-action:hover {
 		color: var(--color-primary-hover);
 	}
 
-	.guide-path-note:focus-visible {
+	.guide-path-action:focus-visible {
 		outline-offset: 4px;
 	}
 
@@ -1300,6 +1322,16 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		color: var(--color-ink-link-hover);
 	}
 
+	.guide-article .guide-next-primary,
+	.guide-article .guide-next-primary:hover {
+		color: var(--color-on-primary);
+	}
+
+	.guide-article .guide-next-secondary,
+	.guide-article .guide-next-secondary:hover {
+		color: var(--color-ink-link);
+	}
+
 	.guide-article a:focus-visible {
 		outline-color: var(--color-ink-link);
 		outline-width: 3px;
@@ -1316,10 +1348,35 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		padding-block-start: clamp(var(--spacing-xl), 5vw, 4rem);
 	}
 
-	.guide-reference-heading {
-		margin-block: clamp(var(--spacing-xxl), 8vw, 7rem) var(--spacing-xxl);
+	.guide-reference {
+		margin-block: clamp(var(--spacing-xxl), 8vw, 7rem) 0;
 		border-block: 3px double var(--color-paper-border);
-		padding-block: var(--spacing-xl);
+	}
+
+	.guide-reference:not([open]) > :not(summary) {
+		display: none;
+	}
+
+	.guide-reference > summary {
+		display: flex;
+		align-items: center;
+		padding-block: var(--spacing-lg);
+		color: var(--color-ink);
+		font-family: var(--font-display);
+		font-size: var(--text-headline-lg);
+		font-size-adjust: 0.5;
+		font-weight: 400;
+		line-height: 1.05;
+		letter-spacing: 0.02em;
+	}
+
+	.guide-reference[open] > summary {
+		border-block-end: 1px solid var(--color-paper-border);
+	}
+
+	.guide-reference-heading {
+		margin-block: var(--spacing-xxl);
+		padding-block-start: var(--spacing-xl);
 	}
 
 	.guide-reference-heading p {
@@ -1461,6 +1518,15 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		.guide-article::after {
 			display: none;
 		}
+
+		.guide-next-actions {
+			flex-direction: column;
+		}
+
+		.guide-next-primary,
+		.guide-next-secondary {
+			justify-content: center;
+		}
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -1470,17 +1536,18 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		}
 	}
 
+	.guide-path li:has(.guide-path-action),
 	.guide-path li:has(a[aria-current="location"]) {
 		border-color: var(--color-tertiary);
 		background: var(--color-surface-raised);
 	}
 
-	.guide-path li:has(a:focus-visible) {
+	.guide-path li:has(:is(a, button):focus-visible) {
 		border-color: var(--color-primary);
 		background: var(--color-surface-raised);
 	}
 
-	.guide-path li:has(a:active) {
+	.guide-path li:has(:is(a, button):active) {
 		transform: scale(0.97);
 	}
 
@@ -1506,7 +1573,7 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		}
 
 		.guide-copy:active,
-		.guide-path li:has(a:active) {
+		.guide-path li:has(:is(a, button):active) {
 			transform: none;
 		}
 	}
@@ -1523,6 +1590,8 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 <script>
 	const guideToc = document.querySelector("[data-guide-toc]");
 	const guideReference = document.querySelector("[data-guide-reference]");
+	const guideReferenceContent = document.querySelector("[data-guide-reference-content]");
+	const guideReferenceOpener = document.querySelector("[data-open-reference]");
 	const tocLinks = guideToc?.querySelectorAll<HTMLAnchorElement>("[data-toc-link]") ?? [];
 	const pathLinks = document.querySelectorAll<HTMLAnchorElement>(".guide-path a");
 	let activeSectionId = "";
@@ -1553,11 +1622,32 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 		if (activeLink && guideReference instanceof HTMLDetailsElement && guideReference.contains(activeLink)) {
 			guideReference.open = true;
 		}
+		const activeTarget = document.getElementById(id);
+		if (activeTarget && guideReferenceContent instanceof HTMLDetailsElement
+			&& guideReferenceContent.contains(activeTarget)) {
+			guideReferenceContent.open = true;
+		}
 	}
 
 	const tocTargets = Array.from(tocLinks)
 		.map((link) => document.getElementById(link.hash.slice(1)))
 		.filter((target): target is HTMLElement => target instanceof HTMLElement);
+
+	tocLinks.forEach((link) => {
+		link.addEventListener("click", () => {
+			const target = document.getElementById(link.hash.slice(1));
+			if (target && guideReferenceContent instanceof HTMLDetailsElement
+				&& guideReferenceContent.contains(target)) {
+				guideReferenceContent.open = true;
+			}
+		});
+	});
+
+	guideReferenceOpener?.addEventListener("click", () => {
+		if (guideReferenceContent instanceof HTMLDetailsElement) {
+			guideReferenceContent.open = true;
+		}
+	});
 
 	function setActiveFromViewport(): void {
 		if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {

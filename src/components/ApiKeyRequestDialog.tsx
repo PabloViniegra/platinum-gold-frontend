@@ -3,6 +3,7 @@ import type { SubmitEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { afterNextPaint } from "../lib/after-next-paint";
+import { FALLBACK_COUNTRY_NAMES } from "../lib/api-key-requests/countries";
 import { OCCUPATIONS } from "../lib/api-key-requests/occupations";
 import "./api-key-request-dialog.css";
 
@@ -92,8 +93,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	const successToastRef = useRef<HTMLOutputElement>(null);
 	const [toast, setToast] = useState<ToastState | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [countries, setCountries] = useState<string[]>([]);
-	const [countriesUnavailable, setCountriesUnavailable] = useState(false);
+	const [countries, setCountries] = useState<string[]>([...FALLBACK_COUNTRY_NAMES]);
 	const generationRef = useRef(0);
 	const submittingRef = useRef(false);
 	const cancelPaintRef = useRef<(() => void) | null>(null);
@@ -132,29 +132,23 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	}, []);
 
 	useEffect(() => {
-		if (!dialogOpen || countries.length > 0 || countriesUnavailable) return;
+		if (!dialogOpen) return;
 		const controller = new AbortController();
 		async function loadCountries(): Promise<void> {
 			try {
 				const response = await fetch("/api/countries", { signal: controller.signal });
-				if (!response.ok) {
-					setCountriesUnavailable(true);
-					return;
-				}
+				if (!response.ok) return;
 				const payload: { countries: string[] } = await response.json();
-				if (!Array.isArray(payload.countries)) {
-					setCountriesUnavailable(true);
-					return;
-				}
-				setCountries(payload.countries.filter((name) => name?.constructor === String));
+				if (!Array.isArray(payload.countries)) return;
+				const names = payload.countries.filter((name) => name?.constructor === String);
+				if (names.length > 0) setCountries(names);
 			} catch (error) {
 				if (error instanceof DOMException && error.name === "AbortError") return;
-				setCountriesUnavailable(true);
 			}
 		}
 		void loadCountries();
 		return () => controller.abort();
-	}, [dialogOpen, countries.length, countriesUnavailable]);
+	}, [dialogOpen]);
 
 	useEffect(() => {
 		const errorElement = errorToastRef.current;
@@ -297,7 +291,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 					<button className="request-dialog-close" type="button" onClick={closeDialog} disabled={isSubmitting}>Close</button>
 				</header>
 				<p id="request-dialog-description" className="request-dialog-description">
-					Tell us what you are building. Every request is reviewed manually. All fields are required.
+					Every request is reviewed manually. Complete every field and we will email approved access.
 				</p>
 				<output
 					ref={errorToastRef}
@@ -365,13 +359,12 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								id="request-country"
 								autoComplete="country-name"
 								defaultValue=""
-								disabled={countries.length === 0}
 								aria-invalid={errors.country ? "true" : "false"}
 								aria-describedby={errors.country ? "request-country-error" : undefined}
 								{...register("country", { required: "Choose your country." })}
 								required
 							>
-								<option value="" disabled>{countries.length === 0 ? (countriesUnavailable ? "Could not load countries. Refresh to try again." : "Loading countries…") : "Select one"}</option>
+								<option value="" disabled>Select one</option>
 								{countries.map((name) => (
 									<option key={name} value={name}>{name}</option>
 								))}

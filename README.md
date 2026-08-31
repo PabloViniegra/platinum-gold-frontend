@@ -26,7 +26,7 @@ The development server runs at `http://localhost:4321`.
 
 ## Server configuration
 
-`PLATINUM_BACKEND_API_KEY` enables the `/items` example. The API-key request queue also needs Turso, Resend, and administrator session variables declared in `astro.config.mjs`.
+`PLATINUM_BACKEND_API_KEY` enables the `/items` example. The API-key request queue also needs Turso, Resend, `RESEND_WEBHOOK_SECRET`, and administrator session variables declared in `astro.config.mjs`.
 
 All credentials are server-only. Never prefix them with `PUBLIC_` or `VITE_`.
 

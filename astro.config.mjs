@@ -21,6 +21,11 @@ export default defineConfig({
 					access: 'secret',
 					optional: true
 				}),
+				RESEND_WEBHOOK_SECRET: envField.string({
+					context: 'server',
+					access: 'secret',
+					optional: true
+				}),
 				REQUESTS_TURSO_DB: envField.string({
 					context: 'server',
 					access: 'secret',

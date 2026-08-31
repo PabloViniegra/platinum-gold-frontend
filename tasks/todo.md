@@ -14,5 +14,5 @@
 - [x] Checkpoint: protected approval flow works without persisting the key.
 - [x] Task 10: Run complete quality, browser, dependency, security, and code-review gates.
 - [x] Task 11: Validate mailbox configuration and preserve safe Resend diagnostics.
-- [ ] Task 12: Verify and persist Resend delivery lifecycle events.
+- [x] Task 12: Verify and persist Resend delivery lifecycle events.
 - [ ] Task 13: Expose and recover missing intake deliveries, then reconcile production.

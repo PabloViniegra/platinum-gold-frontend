@@ -42,6 +42,20 @@ export type StoredApiKeyRequest = {
 	request: ApiKeyRequest;
 };
 
+export const EMAIL_DELIVERY_STATUS = {
+	SENT: "sent",
+	DELIVERED: "delivered",
+	DELAYED: "delivery_delayed",
+	COMPLAINED: "complained",
+	BOUNCED: "bounced",
+	FAILED: "failed",
+	SUPPRESSED: "suppressed",
+} as const;
+
+export type EmailDeliveryStatus = (
+	typeof EMAIL_DELIVERY_STATUS
+)[keyof typeof EMAIL_DELIVERY_STATUS];
+
 function databaseString(value: Value, field: string): string {
 	if (value?.constructor !== String) throw new Error(`Invalid ${field} in API key request row.`);
 	return value.toString();
@@ -115,6 +129,15 @@ export async function initializeRequestsSchema(client: Client): Promise<void> {
 		)`,
 		`CREATE INDEX IF NOT EXISTS request_rate_limits_action_window
 			ON request_rate_limits (action, window_start)`,
+		`CREATE TABLE IF NOT EXISTS request_email_delivery_statuses (
+			email_id TEXT PRIMARY KEY,
+			status TEXT NOT NULL CHECK (status IN (
+				'sent', 'delivered', 'delivery_delayed', 'complained',
+				'bounced', 'failed', 'suppressed'
+			)),
+			event_created_at INTEGER NOT NULL,
+			recorded_at TEXT NOT NULL
+		)`,
 	], "write");
 	await migrateRequestsTable(client, "'denied'");
 	await migrateRequestsTable(client, "'approving'");
@@ -209,6 +232,44 @@ export async function recordAdminDelivery(
 		args: [adminEmailId, id],
 	});
 	return result.rowsAffected === 1;
+}
+
+export async function recordEmailDeliveryEvent(
+	client: Client,
+	emailId: string,
+	status: EmailDeliveryStatus,
+	eventCreatedAtMilliseconds: number,
+	recordedAt: string,
+): Promise<boolean> {
+	const result = await client.execute({
+		sql: `INSERT INTO request_email_delivery_statuses (
+			email_id, status, event_created_at, recorded_at
+		) VALUES (?, ?, ?, ?)
+		ON CONFLICT(email_id) DO UPDATE SET
+			status = excluded.status,
+			event_created_at = excluded.event_created_at,
+			recorded_at = excluded.recorded_at
+		WHERE excluded.event_created_at > request_email_delivery_statuses.event_created_at`,
+		args: [emailId, status, eventCreatedAtMilliseconds, recordedAt],
+	});
+	return result.rowsAffected === 1;
+}
+
+export async function findEmailDeliveryStatus(
+	client: Client,
+	emailId: string,
+): Promise<EmailDeliveryStatus | null> {
+	const result = await client.execute({
+		sql: "SELECT status FROM request_email_delivery_statuses WHERE email_id = ?",
+		args: [emailId],
+	});
+	const value = result.rows[0]?.status;
+	if (value === undefined) return null;
+	const status = databaseString(value, "email_delivery_status");
+	for (const knownStatus of Object.values(EMAIL_DELIVERY_STATUS)) {
+		if (status === knownStatus) return knownStatus;
+	}
+	throw new Error("Invalid email delivery status row.");
 }
 
 export async function findStoredRequest(

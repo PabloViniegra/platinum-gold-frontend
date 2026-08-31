@@ -7,13 +7,16 @@ import {
 	consumeRateLimit,
 	createPendingRequest,
 	DECISION_LEASE_MILLISECONDS,
+	EMAIL_DELIVERY_STATUS,
 	findStoredRequest,
+	findEmailDeliveryStatus,
 	initializeRequestsSchema,
 	listPendingRequests,
 	markRequestApproved,
 	markRequestDenied,
 	recordAdminDelivery,
 	recordApplicantDelivery,
+	recordEmailDeliveryEvent,
 	releaseRequestDecision,
 	REQUEST_STATUS,
 } from "./repository";
@@ -104,6 +107,41 @@ describe("API key request repository", () => {
 			"2026-08-30T13:01:00.000Z",
 		)).toBe(false);
 		expect(await listPendingRequests(client)).toEqual([]);
+	});
+
+	it("keeps the newest delivery event and ignores duplicates or older events", async () => {
+		expect(await recordEmailDeliveryEvent(
+			client,
+			"email-1",
+			EMAIL_DELIVERY_STATUS.DELIVERED,
+			Date.parse("2026-08-30T12:01:00.000Z"),
+			"2026-08-30T12:01:01.000Z",
+		)).toBe(true);
+		expect(await recordEmailDeliveryEvent(
+			client,
+			"email-1",
+			EMAIL_DELIVERY_STATUS.DELIVERED,
+			Date.parse("2026-08-30T12:01:00.000Z"),
+			"2026-08-30T12:01:02.000Z",
+		)).toBe(false);
+		expect(await recordEmailDeliveryEvent(
+			client,
+			"email-1",
+			EMAIL_DELIVERY_STATUS.DELAYED,
+			Date.parse("2026-08-30T12:00:00.000Z"),
+			"2026-08-30T12:01:03.000Z",
+		)).toBe(false);
+		expect(await findEmailDeliveryStatus(client, "email-1"))
+			.toBe(EMAIL_DELIVERY_STATUS.DELIVERED);
+		expect(await recordEmailDeliveryEvent(
+			client,
+			"email-1",
+			EMAIL_DELIVERY_STATUS.BOUNCED,
+			Date.parse("2026-08-30T12:02:00.000Z"),
+			"2026-08-30T12:02:01.000Z",
+		)).toBe(true);
+		expect(await findEmailDeliveryStatus(client, "email-1"))
+			.toBe(EMAIL_DELIVERY_STATUS.BOUNCED);
 	});
 
 	it("denies a pending request only once", async () => {

@@ -101,6 +101,10 @@ describe("sendIntakeEmails", () => {
 		expect(parseMailboxConfig('"Platinum Gold <api@send.example.com>"', "ops@example.com"))
 			.toBeNull();
 		expect(parseMailboxConfig("api@send.example.com", "not-an-email")).toBeNull();
+		expect(parseMailboxConfig("a..b@send.example.com", "ops@example.com")).toBeNull();
+		expect(parseMailboxConfig(".api@send.example.com", "ops@example.com")).toBeNull();
+		expect(parseMailboxConfig(`${"a".repeat(65)}@send.example.com`, "ops@example.com"))
+			.toBeNull();
 	});
 
 	it("sends applicant and administrator emails with stable idempotency keys", async () => {
@@ -124,10 +128,12 @@ describe("sendIntakeEmails", () => {
 			[
 				{ name: "application", value: "platinum-gold" },
 				{ name: "event", value: "waiting-list" },
+				{ name: "request_id", value: "request-1" },
 			],
 			[
 				{ name: "application", value: "platinum-gold" },
 				{ name: "event", value: "admin-notification" },
+				{ name: "request_id", value: "request-1" },
 			],
 		]);
 	});

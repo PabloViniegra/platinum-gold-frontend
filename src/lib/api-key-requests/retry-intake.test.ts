@@ -5,6 +5,7 @@ import { ADMIN_SESSION_COOKIE, createAdminSession } from "./auth";
 import { API_KEY_USE_CASE, type ApiKeyRequest } from "./contracts";
 import type { EmailMessage, EmailTransport, MailboxConfig } from "./email";
 import {
+	claimIntakeDelivery,
 	createPendingRequest,
 	initializeRequestsSchema,
 	recordApplicantDelivery,
@@ -100,6 +101,15 @@ describe("handleIntakeRetry", () => {
 
 		expect(response.status).toBe(200);
 		expect(transport.messages.map((message) => message.to)).toEqual([MAILBOX.adminAddress]);
+	});
+
+	it("rejects retries while another intake delivery holds the request", async () => {
+		expect(await claimIntakeDelivery(client, "request-1", "other-owner", NOW)).toBe(true);
+
+		expect((await handleIntakeRetry(
+			retryRequest(), client, transport, USERNAME, SESSION_SECRET, "request-1", NOW, MAILBOX,
+		)).status).toBe(409);
+		expect(transport.messages).toEqual([]);
 	});
 
 	it("rejects retries when no intake email is missing", async () => {

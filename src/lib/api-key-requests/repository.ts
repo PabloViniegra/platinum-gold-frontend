@@ -284,6 +284,19 @@ export async function findEmailDeliveryStatus(
 	return databaseEmailDeliveryStatus(value, "email_delivery_status");
 }
 
+export async function reconcileIntakeDelivery(
+	client: Client,
+	requestId: string,
+	event: "waiting-list" | "admin-notification",
+	emailId: string,
+): Promise<boolean> {
+	const sql = event === "waiting-list"
+		? "UPDATE api_key_requests SET applicant_email_id = ? WHERE id = ? AND applicant_email_id IS NULL"
+		: "UPDATE api_key_requests SET admin_email_id = ? WHERE id = ? AND admin_email_id IS NULL";
+	const result = await client.execute({ sql, args: [emailId, requestId] });
+	return result.rowsAffected === 1;
+}
+
 export async function findStoredRequest(
 	client: Client,
 	email: string,
@@ -390,7 +403,7 @@ export async function beginRequestDecision(
 		sql: `UPDATE api_key_requests
 			SET status = ?, decision_fingerprint = ?, decision_owner = ?, decision_claimed_at = ?
 			WHERE id = ? AND (
-				status = 'pending'
+				(status = 'pending' AND (decision_owner IS NULL OR decision_claimed_at <= ?))
 				OR (status = ? AND decision_fingerprint IS ?
 					AND (decision_owner IS NULL OR decision_claimed_at <= ?))
 			)
@@ -402,6 +415,7 @@ export async function beginRequestDecision(
 			owner,
 			nowMilliseconds,
 			id,
+			nowMilliseconds - DECISION_LEASE_MILLISECONDS,
 			decision,
 			fingerprint,
 			nowMilliseconds - DECISION_LEASE_MILLISECONDS,
@@ -409,6 +423,31 @@ export async function beginRequestDecision(
 	});
 	const row = claimed.rows[0];
 	return row ? pendingRequestFromRow(row) : null;
+}
+
+export async function claimIntakeDelivery(
+	client: Client,
+	id: string,
+	owner: string,
+	nowMilliseconds: number,
+): Promise<boolean> {
+	const result = await client.execute({
+		sql: `UPDATE api_key_requests
+			SET decision_owner = ?, decision_claimed_at = ?
+			WHERE id = ? AND status = 'pending'
+				AND (decision_owner IS NULL OR decision_claimed_at <= ?)`,
+		args: [owner, nowMilliseconds, id, nowMilliseconds - DECISION_LEASE_MILLISECONDS],
+	});
+	return result.rowsAffected === 1;
+}
+
+export async function releaseIntakeDelivery(client: Client, id: string, owner: string): Promise<void> {
+	await client.execute({
+		sql: `UPDATE api_key_requests
+			SET decision_owner = NULL, decision_claimed_at = 0
+			WHERE id = ? AND status = 'pending' AND decision_owner = ?`,
+		args: [id, owner],
+	});
 }
 
 export async function releaseRequestDecision(

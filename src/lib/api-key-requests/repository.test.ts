@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { API_KEY_USE_CASE, type ApiKeyRequest } from "./contracts";
 import {
 	beginRequestDecision,
+	claimIntakeDelivery,
 	consumeRateLimit,
 	createPendingRequest,
 	DECISION_LEASE_MILLISECONDS,
@@ -17,6 +18,7 @@ import {
 	recordAdminDelivery,
 	recordApplicantDelivery,
 	recordEmailDeliveryEvent,
+	releaseIntakeDelivery,
 	releaseRequestDecision,
 	REQUEST_STATUS,
 } from "./repository";
@@ -206,6 +208,19 @@ describe("API key request repository", () => {
 		expect(await markRequestApproved(
 			client, "request-1", "approval-email", "2026-08-30T13:00:00.000Z",
 		)).toBe(true);
+	});
+
+	it("prevents decisions while intake delivery holds the request lease", async () => {
+		await createPendingRequest(client, REQUEST, "request-1", "2026-08-30T12:00:00.000Z");
+
+		expect(await claimIntakeDelivery(client, "request-1", "intake-owner", 120_000)).toBe(true);
+		expect(await beginRequestDecision(
+			client, "request-1", REQUEST_STATUS.APPROVING, "fp", "decision-owner", 120_001,
+		)).toBeNull();
+		await releaseIntakeDelivery(client, "request-1", "intake-owner");
+		expect(await beginRequestDecision(
+			client, "request-1", REQUEST_STATUS.APPROVING, "fp", "decision-owner", 120_002,
+		)).not.toBeNull();
 	});
 
 	it("resumes a claimed decision once the lease lapses", async () => {

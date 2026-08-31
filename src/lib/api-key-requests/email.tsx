@@ -44,7 +44,14 @@ export type MailboxConfig = {
 const EMAIL_ADDRESS_PATTERN = /^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i;
 
 function validAddress(value: string): boolean {
-	return EMAIL_ADDRESS_PATTERN.test(value);
+	const separator = value.indexOf("@");
+	const localPart = value.slice(0, separator);
+	return value.length <= 254
+		&& localPart.length <= 64
+		&& !localPart.startsWith(".")
+		&& !localPart.endsWith(".")
+		&& !localPart.includes("..")
+		&& EMAIL_ADDRESS_PATTERN.test(value);
 }
 
 export function parseMailboxConfig(fromAddress: string, adminAddress: string): MailboxConfig | null {
@@ -56,10 +63,11 @@ export function parseMailboxConfig(fromAddress: string, adminAddress: string): M
 	return { fromAddress, adminAddress };
 }
 
-function emailTags(event: string): EmailTag[] {
+function emailTags(event: string, requestId: string): EmailTag[] {
 	return [
 		{ name: "application", value: "platinum-gold" },
 		{ name: "event", value: event },
+		{ name: "request_id", value: requestId },
 	];
 }
 
@@ -129,7 +137,7 @@ export function sendWaitingListEmail(
 		to: request.email,
 		subject: "Your Platinum Gold API request",
 		react: <WaitingListEmail firstName={request.firstName} />,
-		tags: emailTags("waiting-list"),
+		tags: emailTags("waiting-list", requestId),
 	}, `waiting-list/${requestId}`);
 }
 
@@ -144,7 +152,7 @@ export function sendAdminNotificationEmail(
 		to: mailbox.adminAddress,
 		subject: `API access request from ${request.firstName} ${request.lastName}`,
 		react: <AdminRequestEmail request={request} requestId={requestId} />,
-		tags: emailTags("admin-notification"),
+		tags: emailTags("admin-notification", requestId),
 	}, `admin-notification/${requestId}`);
 }
 
@@ -161,7 +169,7 @@ export function sendApprovalEmail(
 		to: email,
 		subject: "Your Platinum Gold API access",
 		react: <ApiKeyApprovedEmail firstName={firstName} apiKey={apiKey} />,
-		tags: emailTags("api-key-approved"),
+		tags: emailTags("api-key-approved", requestId),
 	}, `api-key-approved/${requestId}`);
 }
 
@@ -177,6 +185,6 @@ export function sendDenialEmail(
 		to: email,
 		subject: "Your Platinum Gold API request",
 		react: <ApiKeyDeniedEmail firstName={firstName} />,
-		tags: emailTags("api-key-denied"),
+		tags: emailTags("api-key-denied", requestId),
 	}, `api-key-denied/${requestId}`);
 }

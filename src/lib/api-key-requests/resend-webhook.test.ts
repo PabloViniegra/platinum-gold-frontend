@@ -2,7 +2,13 @@ import { createClient, type Client } from "@libsql/client";
 import type { WebhookEventPayload } from "resend";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { findEmailDeliveryStatus, initializeRequestsSchema } from "./repository";
+import { API_KEY_USE_CASE, type ApiKeyRequest } from "./contracts";
+import {
+	createPendingRequest,
+	findEmailDeliveryStatus,
+	findStoredRequest,
+	initializeRequestsSchema,
+} from "./repository";
 import { handleResendWebhook, type ResendWebhookVerifier } from "./resend-webhook";
 
 const DELIVERED_EVENT: WebhookEventPayload = {
@@ -15,8 +21,23 @@ const DELIVERED_EVENT: WebhookEventPayload = {
 		from: "Platinum Gold <api@send.example.com>",
 		to: ["isaac@example.com"],
 		subject: "Your Platinum Gold API request",
-		tags: { application: "platinum-gold", event: "waiting-list" },
+		tags: {
+			application: "platinum-gold",
+			event: "waiting-list",
+			request_id: "request-1",
+		},
 	},
+};
+
+const REQUEST: ApiKeyRequest = {
+	firstName: "Isaac",
+	lastName: "Moriah",
+	email: "isaac@example.com",
+	country: "Spain",
+	occupation: "Frontend developer",
+	useCase: API_KEY_USE_CASE.RESEARCH,
+	useCaseDetails: null,
+	honeypotTriggered: false,
 };
 
 function webhookRequest(headers: Record<string, string> = {
@@ -44,6 +65,7 @@ describe("Resend webhook", () => {
 	});
 
 	it("verifies the raw request and records Platinum Gold delivery events", async () => {
+		await createPendingRequest(client, REQUEST, "request-1", "2026-08-31T09:59:00.000Z");
 		const verified: string[][] = [];
 		const verifier: ResendWebhookVerifier = (payload, id, timestamp, signature, secret) => {
 			verified.push([payload, id, timestamp, signature, secret]);
@@ -67,6 +89,9 @@ describe("Resend webhook", () => {
 			"whsec_test",
 		]);
 		expect(await findEmailDeliveryStatus(client, "email-1")).toBe("delivered");
+		expect(await findStoredRequest(client, REQUEST.email)).toMatchObject({
+			applicantEmailId: "email-1",
+		});
 	});
 
 	it("accepts legacy Svix header names during Resend's header transition", async () => {
@@ -106,7 +131,11 @@ describe("Resend webhook", () => {
 			...DELIVERED_EVENT,
 			data: {
 				...DELIVERED_EVENT.data,
-				tags: { application: "another-app", event: "waiting-list" },
+				tags: {
+					application: "another-app",
+					event: "waiting-list",
+					request_id: "request-1",
+				},
 			},
 		};
 		const verifier: ResendWebhookVerifier = () => foreignEvent;

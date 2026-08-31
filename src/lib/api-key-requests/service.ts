@@ -11,10 +11,12 @@ import {
 } from "./email";
 import {
 	consumeRateLimit,
+	claimIntakeDelivery,
 	createPendingRequest,
 	findStoredRequest,
 	recordAdminDelivery,
 	recordApplicantDelivery,
+	releaseIntakeDelivery,
 	REQUEST_STATUS,
 	type StoredApiKeyRequest,
 } from "./repository";
@@ -114,7 +116,20 @@ export async function handleApiKeyRequest(
 			return response(DUPLICATE_MESSAGE, 409, requestId);
 		}
 
-		await deliverMissingIntakeEmails(client, transport, stored, mailbox);
+		const owner = crypto.randomUUID();
+		if (!await claimIntakeDelivery(client, stored.id, owner, nowMilliseconds)) {
+			return response(DUPLICATE_MESSAGE, 409, requestId);
+		}
+		try {
+			const current = await findStoredRequest(client, stored.request.email);
+			if (!current || current.status !== REQUEST_STATUS.PENDING
+				|| current.applicantEmailId && current.adminEmailId) {
+				return response(DUPLICATE_MESSAGE, 409, requestId);
+			}
+			await deliverMissingIntakeEmails(client, transport, current, mailbox);
+		} finally {
+			await releaseIntakeDelivery(client, stored.id, owner);
+		}
 		return response(SUCCESS_MESSAGE, 201, requestId);
 	} catch {
 		return response("Your request could not be submitted. Try again shortly.", 503, requestId);

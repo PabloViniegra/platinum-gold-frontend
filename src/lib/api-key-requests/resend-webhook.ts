@@ -4,6 +4,7 @@ import type { WebhookEventPayload } from "resend";
 import { readBoundedBody } from "./http-body";
 import {
 	EMAIL_DELIVERY_STATUS,
+	reconcileIntakeDelivery,
 	recordEmailDeliveryEvent,
 	type EmailDeliveryStatus,
 } from "./repository";
@@ -93,6 +94,12 @@ export async function handleResendWebhook(
 		await recordEmailDeliveryEvent(
 			client, event.data.email_id, status, eventCreatedAtMilliseconds, recordedAt,
 		);
+		const emailEvent = event.data.tags?.event;
+		const requestId = event.data.tags?.request_id;
+		if (requestId?.constructor === String && requestId.length <= 100
+			&& (emailEvent === "waiting-list" || emailEvent === "admin-notification")) {
+			await reconcileIntakeDelivery(client, requestId, emailEvent, event.data.email_id);
+		}
 		return response(204);
 	} catch {
 		return response(503);

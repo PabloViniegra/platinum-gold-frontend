@@ -103,7 +103,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 		reset,
 		clearErrors,
 		control,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isDirty },
 	} = useForm<RequestForm>({ mode: "onBlur", shouldUnregister: true });
 	const useCase = useWatch({ control, name: "useCase" });
 
@@ -114,6 +114,16 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	useEffect(() => {
 		return () => cancelPaintRef.current?.();
 	}, []);
+
+	useEffect(() => {
+		if (!isDirty && !isSubmitting) return;
+		function onBeforeUnload(event: BeforeUnloadEvent): void {
+			event.preventDefault();
+			event.returnValue = "";
+		}
+		window.addEventListener("beforeunload", onBeforeUnload);
+		return () => window.removeEventListener("beforeunload", onBeforeUnload);
+	}, [isDirty, isSubmitting]);
 
 	useEffect(() => {
 		const dialog = dialogRef.current;
@@ -171,7 +181,11 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 		dialogRef.current?.showModal();
 		cancelPaintRef.current = afterNextPaint(() => {
 			cancelPaintRef.current = null;
-			if (dialogRef.current?.open) setDialogOpen(true);
+			if (!dialogRef.current?.open) return;
+			setDialogOpen(true);
+			if (!window.matchMedia("(pointer: coarse)").matches) {
+				document.getElementById("request-first-name")?.focus();
+			}
 		});
 	}
 
@@ -304,7 +318,6 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 							<span>First name</span>
 							<input
 								id="request-first-name"
-								autoFocus
 								autoComplete="given-name"
 								aria-invalid={errors.firstName ? "true" : "false"}
 								aria-describedby={errors.firstName ? "request-first-name-error" : undefined}
@@ -333,6 +346,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 							type="email"
 							autoComplete="email"
 							inputMode="email"
+							spellCheck={false}
 							aria-invalid={errors.email ? "true" : "false"}
 							aria-describedby={errors.email ? "request-email-error" : undefined}
 							{...register("email", {
@@ -357,7 +371,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								{...register("country", { required: "Choose your country." })}
 								required
 							>
-								<option value="" disabled>{countries.length === 0 ? (countriesUnavailable ? "Could not load countries. Refresh to try again." : "Loading countries...") : "Select one"}</option>
+								<option value="" disabled>{countries.length === 0 ? (countriesUnavailable ? "Could not load countries. Refresh to try again." : "Loading countries…") : "Select one"}</option>
 								{countries.map((name) => (
 									<option key={name} value={name}>{name}</option>
 								))}
@@ -387,6 +401,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 						<span>What will you use the API for?</span>
 						<select
 							id="request-use-case"
+							autoComplete="off"
 							defaultValue=""
 							aria-invalid={errors.useCase ? "true" : "false"}
 							aria-describedby={errors.useCase ? "request-use-case-error" : undefined}
@@ -408,6 +423,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 							<textarea
 								id="request-use-case-details"
 								rows={4}
+								autoComplete="off"
 								aria-invalid={errors.useCaseDetails ? "true" : "false"}
 								aria-describedby={errors.useCaseDetails ? "request-use-case-details-error" : undefined}
 								{...register("useCaseDetails", { required: "Describe how you will use the API.", maxLength: { value: 1_000, message: "Use 1,000 characters or fewer." } })}
@@ -426,7 +442,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 					<div className="request-form-actions">
 						<button className="request-cancel" type="button" onClick={closeDialog} disabled={isSubmitting}>Cancel</button>
 						<button className="request-submit" type="submit" disabled={isSubmitting}>
-							{isSubmitting ? "Sending request..." : "Join the waiting list"}
+							{isSubmitting ? "Sending request…" : "Join the waiting list"}
 						</button>
 					</div>
 				</form>

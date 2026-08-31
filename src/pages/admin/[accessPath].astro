@@ -21,5 +21,10 @@ Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
 	description="Protected Platinum Gold API request administration."
 	noindex={true}
 >
-	<main><AdminRequests client:load /></main>
+	<a
+		slot="skip"
+		href="#admin-content"
+		class="bg-primary text-on-primary font-sans font-semibold absolute start-2 top-0 z-50 min-h-11 rounded-sm px-3 py-3 -translate-y-full focus-visible:translate-y-12"
+	>Skip to content</a>
+	<main id="admin-content" tabindex="-1"><AdminRequests client:load /></main>
 </Root>

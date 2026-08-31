@@ -21,6 +21,22 @@ export function buildExplorerSearchParams(filters: Filters, page: number): URLSe
 	return buildItemsSearchParams(input);
 }
 
+export function explorerHref(filters: Filters, page: number, itemGameId: number | null): string {
+	const params = buildExplorerSearchParams(filters, page);
+	if (itemGameId !== null) {
+		params.set("item", String(itemGameId));
+	}
+	return `?${params}`;
+}
+
+export function readExplorerItemId(input: URLSearchParams): number | null {
+	const value = input.get("item");
+	if (value === null || !/^\d+$/.test(value)) {
+		return null;
+	}
+	return Number(value);
+}
+
 export function requestPath(filters: Filters, page: number): string {
 	return `/api/items?${buildExplorerSearchParams(filters, page)}`;
 }

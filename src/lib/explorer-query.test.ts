@@ -6,6 +6,8 @@ import {
 	contractRequestLine,
 	explorerPage,
 	readExplorerSearch,
+	explorerHref,
+	readExplorerItemId,
 	requestPath,
 	shouldKeepExplorerPlaceholder,
 	type Filters,
@@ -55,6 +57,30 @@ describe("buildExplorerSearchParams", () => {
 		expect(contractRequestLine(DEFAULT_FILTERS, 0)).toBe(
 			"GET /v1/items?sort=name&order=asc&limit=12&offset=0",
 		);
+	});
+});
+
+describe("explorerHref", () => {
+	it("builds a page-local search string", () => {
+		expect(explorerHref(DEFAULT_FILTERS, 1, null)).toBe(
+			"?sort=name&order=asc&limit=12&offset=12",
+		);
+	});
+
+	it("appends a selected item id", () => {
+		expect(explorerHref(DEFAULT_FILTERS, 0, 1)).toBe(
+			"?sort=name&order=asc&limit=12&offset=0&item=1",
+		);
+	});
+});
+
+describe("readExplorerItemId", () => {
+	it("reads a numeric item id", () => {
+		expect(readExplorerItemId(new URLSearchParams("item=12"))).toBe(12);
+	});
+
+	it("rejects a non-numeric item id", () => {
+		expect(readExplorerItemId(new URLSearchParams("item=sad-onion"))).toBeNull();
 	});
 });
 

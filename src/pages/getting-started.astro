@@ -14,7 +14,7 @@ import Root from "../layouts/Root.astro";
 	</div>
 	<main id="guide-content" class="guide-shell px-margin py-xxl" tabindex="-1">
 		<nav class="guide-breadcrumb text-body-sm" aria-label="Breadcrumb">
-			<a href="/">Platinum Gold</a>
+			<a href="/" translate="no">Platinum Gold</a>
 			<span aria-hidden="true">/</span>
 			<span aria-current="page">Getting started</span>
 		</nav>
@@ -30,7 +30,7 @@ import Root from "../layouts/Root.astro";
 		<section class="guide-start" aria-labelledby="guide-start-title">
 			<div class="guide-start-copy">
 				<h2 id="guide-start-title">Start with one request</h2>
-				<p>Follow these three steps before using the full API reference.</p>
+				<p>Follow these 3 steps before using the full API reference.</p>
 			</div>
 			<ol class="guide-path">
 				<li>
@@ -609,17 +609,17 @@ export async function getPassiveItems(): Promise&lt;ItemPage&gt; &#123;
 							<tbody>
 								<tr>
 									<td><code>/v1/items</code></td>
-									<td>15 min</td>
+									<td>15&nbsp;min</td>
 									<td>Cache by the complete query string</td>
 								</tr>
 								<tr>
 									<td><code>/v1/items/&#123;gameId&#125;</code></td>
-									<td>24 h</td>
+									<td>24&nbsp;h</td>
 									<td>Cache by stable <code>gameId</code></td>
 								</tr>
 								<tr>
 									<td><code>/v1/meta</code></td>
-									<td>24 h</td>
+									<td>24&nbsp;h</td>
 									<td>Cache for the session; refresh on user action</td>
 								</tr>
 								<tr>

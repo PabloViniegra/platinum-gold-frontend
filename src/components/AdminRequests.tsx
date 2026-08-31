@@ -93,12 +93,13 @@ async function loginErrorMessage(response: Response): Promise<string> {
 	try {
 		const payload: MessageBody = await response.json();
 		if (payload.message?.constructor === String && payload.message.trim().length > 0) {
+			if (response.status === 401) return "Invalid credentials. Check the username and password.";
 			return payload.message;
 		}
 	} catch {
 	}
 	if (response.status === 429) return "Too many attempts. Try again later.";
-	return "Invalid credentials.";
+	return "Invalid credentials. Check the username and password.";
 }
 
 export function AdminRequests() {
@@ -125,6 +126,16 @@ export function AdminRequests() {
 	useEffect(() => {
 		submittingRef.current = submitting;
 	}, [submitting]);
+
+	useEffect(() => {
+		if (!apiKey && !confirmation) return;
+		function onBeforeUnload(event: BeforeUnloadEvent): void {
+			event.preventDefault();
+			event.returnValue = "";
+		}
+		window.addEventListener("beforeunload", onBeforeUnload);
+		return () => window.removeEventListener("beforeunload", onBeforeUnload);
+	}, [apiKey, confirmation]);
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -160,6 +171,7 @@ export function AdminRequests() {
 			});
 			if (!response.ok) {
 				setMessage(await loginErrorMessage(response));
+				document.getElementById("admin-username")?.focus();
 				return;
 			}
 			setPassword("");
@@ -167,6 +179,7 @@ export function AdminRequests() {
 			setView(ADMIN_VIEW.QUEUE);
 		} catch {
 			setMessage("Administration is unavailable. Try again.");
+			document.getElementById("admin-username")?.focus();
 		} finally {
 			setSubmitting(false);
 		}
@@ -323,19 +336,19 @@ export function AdminRequests() {
 		}
 	}
 
-	if (view === ADMIN_VIEW.LOADING) return <output className="admin-state">Loading requests...</output>;
-	if (view === ADMIN_VIEW.ERROR) return <p className="admin-state">Administration is unavailable.</p>;
+	if (view === ADMIN_VIEW.LOADING) return <output className="admin-state">Loading requests…</output>;
+	if (view === ADMIN_VIEW.ERROR) return <p className="admin-state">Administration is unavailable. Refresh the page and try again.</p>;
 	if (view === ADMIN_VIEW.LOGIN) {
 		return (
 			<form className="admin-login" onSubmit={(event) => void login(event)}>
 				<h1>Request administration</h1>
 				<p>Sign in to review pending API access requests.</p>
 				<label htmlFor="admin-username">Username</label>
-				<input id="admin-username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} required />
+				<input id="admin-username" name="username" autoComplete="username" spellCheck={false} value={username} onChange={(event) => setUsername(event.target.value)} required />
 				<label htmlFor="admin-password">Password</label>
-				<input id="admin-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+				<input id="admin-password" name="password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
 				{message && <p className="admin-error" role="alert">{message}</p>}
-				<button type="submit" disabled={submitting}>{submitting ? "Signing in..." : "Sign in"}</button>
+				<button type="submit" disabled={submitting}>{submitting ? "Signing in…" : "Sign in"}</button>
 			</form>
 		);
 	}
@@ -381,7 +394,7 @@ export function AdminRequests() {
 										aria-label={`Retry missing intake emails for ${request.firstName} ${request.lastName}`}
 										onClick={() => void retryIntake(request)}
 									>
-										{retryingId === request.id ? "Retrying..." : "Retry missing intake emails"}
+										{retryingId === request.id ? "Retrying…" : "Retry missing intake emails"}
 									</button>
 								)}
 								{request.status !== ADMIN_REQUEST_STATUS.DENYING && (
@@ -414,6 +427,7 @@ export function AdminRequests() {
 					<input
 						id="approval-key"
 						ref={keyInputRef}
+						name="apiKey"
 						type="password"
 						autoComplete="off"
 						value={apiKey}
@@ -425,6 +439,7 @@ export function AdminRequests() {
 					<label htmlFor="approval-confirmation">Confirm API key</label>
 					<input
 						id="approval-confirmation"
+						name="confirmation"
 						type="password"
 						autoComplete="off"
 						value={confirmation}
@@ -436,7 +451,7 @@ export function AdminRequests() {
 					{message && <p id="approval-key-error" className="admin-error" role="alert">{message}</p>}
 					<div className="admin-actions">
 						<button type="button" onClick={closeApproval} disabled={submitting}>Cancel</button>
-						<button type="submit" disabled={submitting}>{submitting ? "Sending..." : "Approve and send"}</button>
+						<button type="submit" disabled={submitting}>{submitting ? "Sending…" : "Approve and send"}</button>
 					</div>
 				</form>
 			</dialog>
@@ -454,7 +469,7 @@ export function AdminRequests() {
 				<div className="admin-actions">
 					<button type="button" onClick={closeDenial} disabled={submitting}>Cancel</button>
 					<button className="admin-deny" type="button" onClick={() => void deny()} disabled={submitting}>
-						{submitting ? "Sending..." : "Deny and email"}
+						{submitting ? "Sending…" : "Deny and email"}
 					</button>
 				</div>
 			</dialog>

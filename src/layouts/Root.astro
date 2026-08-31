@@ -1,4 +1,7 @@
 ---
+import sourceSans400 from "@fontsource/source-sans-3/files/source-sans-3-latin-400-normal.woff2?url";
+import sourceSans600 from "@fontsource/source-sans-3/files/source-sans-3-latin-600-normal.woff2?url";
+
 import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
 import { HERO_WALL_AVIF_SRC, HERO_WALL_AVIF_SRCSET, HERO_WALL_WEBP_LG_SRC } from "../lib/hero-wall";
 import { canonicalPageUrl, pageJsonLd } from "../lib/seo";
@@ -29,6 +32,9 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
 		<link rel="icon" href="/favicon.ico" sizes="32x32" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="oklch(0.145 0.025 52)" />
+		<link rel="preload" href={sourceSans400} as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href={sourceSans600} as="font" type="font/woff2" crossorigin />
 		{!isAdminPage && (
 			<link
 				rel="preload"
@@ -80,7 +86,7 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 		<header class="site-header">
 			<a href="/" class="site-brand" aria-label="Platinum Gold home">
 				<span class="site-brand-mark" aria-hidden="true"></span>
-				<span>Platinum Gold</span>
+				<span translate="no">Platinum Gold</span>
 			</a>
 			<nav class="site-nav" aria-label="Primary">
 				<a href="/getting-started" aria-current={isGettingStartedPage ? "page" : undefined}>

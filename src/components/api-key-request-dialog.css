@@ -282,6 +282,13 @@
 	}
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.request-dialog .request-submit:active:not(:disabled) {
+		box-shadow: 0.3rem 0.35rem 0 var(--pg-paper-shadow);
+		transform: none;
+	}
+}
+
 @media (max-width: 40rem) {
 	.request-toast {
 		inset: max(var(--spacing-md), env(safe-area-inset-top, 0px)) var(--spacing-md) auto auto;

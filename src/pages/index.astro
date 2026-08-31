@@ -34,7 +34,7 @@ import Root from "../layouts/Root.astro";
 					class="relative flex min-h-[calc(100dvh-var(--pg-header-height))] flex-col justify-end px-margin pt-xl pb-[max(var(--spacing-xxl),env(safe-area-inset-bottom,0px))]"
 				>
 					<div data-hero-plane>
-						<h1>Platinum Gold</h1>
+						<h1 translate="no">Platinum Gold</h1>
 						<p class="text-body-lg mt-md max-w-[65ch] tracking-[0.01em] text-pretty">
 							Every Binding of Isaac item. One read-only catalog. Built for frontend developers who need
 							the data without dragging a secret into the browser.
@@ -60,7 +60,7 @@ import Root from "../layouts/Root.astro";
 
 		<section
 			id="first-call"
-			class="first-call scroll-mt-12 px-margin py-xxl"
+			class="first-call px-margin py-xxl"
 			tabindex="-1"
 			style={`--heroWall: url("${HERO_WALL_AVIF_SRC}")`}
 		>
@@ -268,6 +268,7 @@ Accept: application/json</code></pre>
 
 	.first-call {
 		position: relative;
+		scroll-margin-block-start: calc(var(--pg-header-height) + var(--spacing-lg));
 		background:
 			linear-gradient(oklch(0.09 0.02 50 / 0.76), oklch(0.09 0.02 50 / 0.92)),
 			var(--heroWall) center 38% / cover;

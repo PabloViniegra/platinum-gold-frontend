@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { type SubmitEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import {
-	buildExplorerSearchParams,
 	clampExplorerPage,
 	contractRequestLine,
+	explorerHref,
 	explorerPage,
+	readExplorerItemId,
 	readExplorerSearch,
 	requestPath,
 	shouldKeepExplorerPlaceholder,
@@ -171,7 +172,9 @@ function ItemExplorerContent() {
 	const [page, setPage] = useState(() => explorerPage(startup));
 	const [copyStatus, setCopyStatus] = useState("");
 	const [pageInput, setPageInput] = useState(() => String(explorerPage(startup) + 1));
-	const [selected, setSelected] = useState<Item | null>(null);
+	const [selectedId, setSelectedId] = useState<number | null>(() =>
+		readExplorerItemId(new URLSearchParams(window.location.search)),
+	);
 	const [jsonOpen, setJsonOpen] = useState(false);
 	const dialogRef = useRef<HTMLDialogElement>(null);
 	const path = requestPath(filters, page);
@@ -182,7 +185,7 @@ function ItemExplorerContent() {
 		setPage(nextPage);
 		setPageInput(String(nextPage + 1));
 		setCopyStatus("");
-		setSelected(null);
+		setSelectedId(null);
 	}, []);
 
 	const commitSearch = useCallback((raw: string): void => {
@@ -211,6 +214,8 @@ function ItemExplorerContent() {
 		},
 	});
 
+	const selected = query.data?.items.find((item) => item.gameId === selectedId) ?? null;
+
 	useEffect(() => {
 		if (searchInput.trim() === filters.search) {
 			return;
@@ -222,11 +227,11 @@ function ItemExplorerContent() {
 	}, [searchInput, filters, commitSearch]);
 
 	useEffect(() => {
-		const next = `?${buildExplorerSearchParams(filters, page)}`;
+		const next = explorerHref(filters, page, selectedId);
 		if (`${window.location.search}` !== next) {
 			window.history.replaceState(null, "", next);
 		}
-	}, [filters, page]);
+	}, [filters, page, selectedId]);
 
 	useEffect(() => {
 		if (!copyStatus) {
@@ -262,7 +267,7 @@ function ItemExplorerContent() {
 	function goToPage(next: number): void {
 		setPage(next);
 		setPageInput(String(next + 1));
-		setSelected(null);
+		setSelectedId(null);
 	}
 
 	function applyFromControls(next: Filters): void {
@@ -284,7 +289,7 @@ function ItemExplorerContent() {
 			await navigator.clipboard.writeText(contractLine);
 			setCopyStatus("Copied GET /v1/items");
 		} catch {
-			setCopyStatus("Copy failed");
+			setCopyStatus("Copy failed. Select the request line and copy it manually.");
 		}
 	}
 
@@ -300,14 +305,14 @@ function ItemExplorerContent() {
 	const errorMessage = requestError?.message ?? "The list request failed";
 	const errorRetryable = requestError?.retryable ?? true;
 	const resultSummary = query.isFetching && !query.isPending
-		? "Updating from the network"
+		? "Updating from the network…"
 		: query.isError
 			? errorMessage
 			: query.data && query.data.total === 0
 				? `No items for ${activeQuery}`
 				: query.data
 					? `${firstResult}–${lastResult} of ${query.data.total}`
-					: "Loading GET /v1/items";
+					: "Loading GET /v1/items…";
 
 	function commitPageInput(raw: string): void {
 		const next = clampExplorerPage(raw, pageCount);
@@ -334,7 +339,7 @@ function ItemExplorerContent() {
 					Copy /v1/items
 				</button>
 				<span
-					className={copyStatus === "Copy failed" ? "item-copy-status is-visible" : "item-copy-status"}
+					className={copyStatus.startsWith("Copy failed") ? "item-copy-status is-visible" : "item-copy-status"}
 					aria-live="polite"
 				>
 					{copyStatus}
@@ -350,7 +355,8 @@ function ItemExplorerContent() {
 							id="item-search"
 							name="search"
 							type="search"
-							placeholder="Brimstone"
+							placeholder="Brimstone…"
+							autoComplete="off"
 							maxLength={100}
 							value={searchInput}
 							onChange={(event) => setSearchInput(event.target.value)}
@@ -488,8 +494,8 @@ function ItemExplorerContent() {
 								className="item-card"
 								aria-haspopup="dialog"
 								aria-controls="item-detail"
-								aria-expanded={selected !== null && selected.gameId === item.gameId}
-								onClick={() => setSelected(item)}
+								aria-expanded={selectedId === item.gameId}
+								onClick={() => setSelectedId(item.gameId)}
 							>
 								<ItemCard {...item} />
 							</button>
@@ -514,21 +520,30 @@ function ItemExplorerContent() {
 				className="item-detail"
 				closedby="any"
 				aria-labelledby={selected === null ? undefined : "item-detail-title"}
-				onClose={() => setSelected(null)}
+				onClose={() => setSelectedId(null)}
 			>
 				{selected !== null && <ItemDetail {...selected} />}
 			</dialog>
 
 			{query.data && query.data.total > 0 && pageCount > 1 && (
 				<nav className="item-pagination" aria-label="Item results pages">
-					<button
-						className="item-pagination-step"
-						type="button"
-						disabled={page === 0 || query.isPlaceholderData}
-						onClick={() => goToPage(Math.max(0, page - 1))}
-					>
-						Previous
-					</button>
+					{page === 0 || query.isPlaceholderData ? (
+						<span className="item-pagination-step" aria-disabled="true">Previous</span>
+					) : (
+						<a
+							className="item-pagination-step"
+							href={explorerHref(filters, page - 1, null)}
+							onClick={(event) => {
+								if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+									return;
+								}
+								event.preventDefault();
+								goToPage(page - 1);
+							}}
+						>
+							Previous
+						</a>
+					)}
 					<label className="item-page-jump">
 						<span>Page</span>
 						<input
@@ -536,6 +551,7 @@ function ItemExplorerContent() {
 							name="page"
 							type="number"
 							inputMode="numeric"
+							autoComplete="off"
 							min={1}
 							max={pageCount}
 							value={pageInput}
@@ -551,14 +567,23 @@ function ItemExplorerContent() {
 						/>
 						<span>of {pageCount}</span>
 					</label>
-					<button
-						className="item-pagination-step"
-						type="button"
-						disabled={page + 1 >= pageCount || query.isPlaceholderData}
-						onClick={() => goToPage(page + 1)}
-					>
-						Next
-					</button>
+					{page + 1 >= pageCount || query.isPlaceholderData ? (
+						<span className="item-pagination-step" aria-disabled="true">Next</span>
+					) : (
+						<a
+							className="item-pagination-step"
+							href={explorerHref(filters, page + 1, null)}
+							onClick={(event) => {
+								if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+									return;
+								}
+								event.preventDefault();
+								goToPage(page + 1);
+							}}
+						>
+							Next
+						</a>
+					)}
 				</nav>
 			)}
 		</section>

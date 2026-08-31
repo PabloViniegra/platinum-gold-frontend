@@ -134,7 +134,10 @@
 
 .admin-approval {
 	inline-size: min(32rem, calc(100% - 2rem));
+	max-block-size: calc(100dvh - 2rem);
 	margin: auto;
+	overflow: auto;
+	overscroll-behavior: contain;
 	border: 1px solid var(--color-paper-border);
 	padding: var(--spacing-xl);
 	background: var(--color-paper);
@@ -161,6 +164,26 @@
 	justify-content: flex-end;
 	gap: var(--spacing-sm);
 	margin-block-start: var(--spacing-md);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.admin-login button:hover:not(:disabled),
+	.admin-queue button:hover:not(:disabled),
+	.admin-approval button:hover:not(:disabled) {
+		background: var(--color-primary-hover);
+		color: var(--color-on-primary);
+	}
+
+	.admin-queue .admin-deny:hover:not(:disabled),
+	.admin-approval .admin-deny:hover:not(:disabled) {
+		background: var(--color-error);
+		color: var(--color-on-error);
+	}
+
+	.admin-queue .admin-retry:hover:not(:disabled) {
+		background: var(--color-paper);
+		color: var(--color-ink-link);
+	}
 }
 
 @media (max-width: 40rem) {

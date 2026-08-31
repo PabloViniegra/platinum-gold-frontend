@@ -27,7 +27,7 @@ Safe frontend integration: auth, status codes, caching, and `X-Request-ID` in la
 ## Operating Context
 
 - Contract: `docs/api-frontend-guide.md` (local, gitignored). OpenAPI at `/openapi.json`; Swagger at `/docs`.
-- Current base URL: `https://platinum-gold-backend.vercel.app/` — data routes under `/v1`. Production URL may come from a backend contact.
+- Current base URL: `https://tboi-api.pabloviniegra.dev/` — data routes under `/v1`. Production URL may come from a backend contact.
 - Every `/v1/...` call sends `X-API-Key`. Missing or invalid → 401; key lacks `api:access` → 403.
 - Keys are issued outside this application. Developers request access through the site, and an administrator emails a manually supplied key after approval.
 - Local app: `pnpm dev` at `localhost:4321`.
@@ -50,7 +50,7 @@ Product name: Platinum Gold. Do not rename it or present this site as Platinum G
 ## Evidence on Hand
 
 - `docs/api-frontend-guide.md` — integration contract.
-- Live API at `https://platinum-gold-backend.vercel.app/` with `/openapi.json` and `/docs`.
+- Live API at `https://tboi-api.pabloviniegra.dev/` with `/openapi.json` and `/docs`.
 - No testimonials, case studies, or shipped-client screenshots. Do not fabricate them.
 
 ## Product Principles

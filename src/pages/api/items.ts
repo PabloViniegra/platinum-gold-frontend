@@ -7,7 +7,7 @@ import { proxyErrorMessage, proxyStatusForUpstream } from "../../lib/proxy-error
 
 export const prerender = false;
 
-const API_ITEMS_URL = "https://platinum-gold-backend.vercel.app/v1/items";
+const API_ITEMS_URL = "https://tboi-api.pabloviniegra.dev/v1/items";
 
 function errorResponse(message: string, status: number, requestId: string): Response {
 	return Response.json(

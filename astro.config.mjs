@@ -1,5 +1,6 @@
 // @ts-check
 import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { defineConfig, envField } from 'astro/config';
 
@@ -8,7 +9,17 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
   adapter: vercel(),
-  integrations: [react()],
+  site: 'https://platinum-gold-frontend.vercel.app',
+  trailingSlash: 'never',
+  integrations: [
+    react(),
+    sitemap({
+      filter: (page) => {
+        const path = new URL(page).pathname;
+        return path !== '/admin' && !path.startsWith('/admin/') && path !== '/api' && !path.startsWith('/api/');
+      },
+    }),
+  ],
   env: {
 			schema: {
 				PLATINUM_BACKEND_API_KEY: envField.string({

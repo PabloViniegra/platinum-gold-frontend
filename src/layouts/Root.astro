@@ -1,6 +1,7 @@
 ---
 import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
-import { HERO_WALL_AVIF_SRC, HERO_WALL_AVIF_SRCSET } from "../lib/hero-wall";
+import { HERO_WALL_AVIF_SRC, HERO_WALL_AVIF_SRCSET, HERO_WALL_WEBP_LG_SRC } from "../lib/hero-wall";
+import { canonicalPageUrl, pageJsonLd } from "../lib/seo";
 import "../styles/global.css";
 
 type Props = {
@@ -15,6 +16,10 @@ const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const isGettingStartedPage = pathname === "/getting-started";
 const isItemsPage = pathname === "/items";
 const isAdminPage = pathname.startsWith("/admin");
+const site = Astro.site;
+const canonicalHref = site ? canonicalPageUrl(site.href, pathname) : undefined;
+const ogImageHref = site ? new URL(HERO_WALL_WEBP_LG_SRC, site).href : undefined;
+const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live example" : title;
 ---
 
 <!doctype html>
@@ -49,6 +54,25 @@ const isAdminPage = pathname.startsWith("/admin");
 		{noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		{!noindex && site && canonicalHref && ogImageHref && (
+			<>
+				<link rel="canonical" href={canonicalHref} />
+				<link rel="sitemap" href="/sitemap-index.xml" />
+				<meta property="og:site_name" content="Platinum Gold" />
+				<meta property="og:locale" content="en_US" />
+				<meta property="og:type" content="website" />
+				<meta property="og:title" content={title} />
+				<meta property="og:description" content={description} />
+				<meta property="og:url" content={canonicalHref} />
+				<meta property="og:image" content={ogImageHref} />
+				<meta property="og:image:alt" content="Basement wall from The Binding of Isaac" />
+				<meta name="twitter:card" content="summary_large_image" />
+				<meta name="twitter:title" content={title} />
+				<meta name="twitter:description" content={description} />
+				<meta name="twitter:image" content={ogImageHref} />
+				<script is:inline type="application/ld+json" set:html={pageJsonLd(site.href, canonicalHref, title, description, crumbName)} />
+			</>
+		)}
 		<slot name="head" />
 	</head>
 	<body>

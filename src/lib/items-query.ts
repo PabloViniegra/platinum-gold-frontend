@@ -1,5 +1,5 @@
 const ITEM_TYPES = new Set(["active", "passive", "familiar"]);
-const SORT_FIELDS = new Set(["name", "quality", "gameId"]);
+const SORT_FIELDS = new Set(["name", "quality", "game_id"]);
 const SORT_ORDERS = new Set(["asc", "desc"]);
 
 export class ItemsQueryError extends Error {}

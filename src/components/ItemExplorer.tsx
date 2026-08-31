@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { type SubmitEvent, useEffect, useRef, useState } from "react";
+import { type SubmitEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import {
 	buildExplorerSearchParams,
@@ -23,6 +23,9 @@ const EMPTY_FILTERS: Filters = {
 	order: "asc",
 	limit: 12,
 };
+
+const LIMIT_CHOICES = [12, 24];
+const SEARCH_DEBOUNCE_MS = 300;
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -163,21 +166,29 @@ function ItemDetail(item: Item) {
 
 function ItemExplorerContent() {
 	const startup = initialParams();
-	const [draft, setDraft] = useState<Filters>(() => filtersFromParams(startup));
 	const [filters, setFilters] = useState<Filters>(() => filtersFromParams(startup));
+	const [searchInput, setSearchInput] = useState(() => filtersFromParams(startup).search);
 	const [page, setPage] = useState(() => explorerPage(startup));
 	const [copyStatus, setCopyStatus] = useState("");
 	const [pageInput, setPageInput] = useState(() => String(explorerPage(startup) + 1));
 	const [selected, setSelected] = useState<Item | null>(null);
+	const [jsonOpen, setJsonOpen] = useState(false);
 	const dialogRef = useRef<HTMLDialogElement>(null);
 	const path = requestPath(filters, page);
 	const contractLine = contractRequestLine(filters, page);
-	const isDirty = draft.search.trim() !== filters.search
-		|| draft.quality !== filters.quality
-		|| draft.type !== filters.type
-		|| draft.sort !== filters.sort
-		|| draft.order !== filters.order
-		|| draft.limit !== filters.limit;
+
+	const applyFilters = useCallback((next: Filters, nextPage: number): void => {
+		setFilters(next);
+		setPage(nextPage);
+		setPageInput(String(nextPage + 1));
+		setCopyStatus("");
+		setSelected(null);
+	}, []);
+
+	const commitSearch = useCallback((raw: string): void => {
+		applyFilters({ ...filters, search: raw.trim() }, 0);
+	}, [applyFilters, filters]);
+
 	const query = useQuery({
 		queryKey: ["items", filters.search, filters.quality, filters.type, filters.sort, filters.order, filters.limit, page],
 		queryFn: (context) => fetchItems(filters, page, context.signal),
@@ -199,6 +210,16 @@ function ItemExplorerContent() {
 				: undefined;
 		},
 	});
+
+	useEffect(() => {
+		if (searchInput.trim() === filters.search) {
+			return;
+		}
+		const timer = window.setTimeout(() => {
+			commitSearch(searchInput);
+		}, SEARCH_DEBOUNCE_MS);
+		return () => window.clearTimeout(timer);
+	}, [searchInput, filters, commitSearch]);
 
 	useEffect(() => {
 		const next = `?${buildExplorerSearchParams(filters, page)}`;
@@ -244,21 +265,17 @@ function ItemExplorerContent() {
 		setSelected(null);
 	}
 
-	function applyFilters(next: Filters, nextPage: number): void {
-		setDraft(next);
-		setFilters(next);
-		setPage(nextPage);
-		setPageInput(String(nextPage + 1));
-		setCopyStatus("");
-		setSelected(null);
+	function applyFromControls(next: Filters): void {
+		applyFilters({ ...next, search: searchInput.trim() }, 0);
 	}
 
 	function submitFilters(event: SubmitEvent<HTMLFormElement>): void {
 		event.preventDefault();
-		applyFilters({ ...draft, search: draft.search.trim() }, 0);
+		commitSearch(searchInput);
 	}
 
 	function resetFilters(): void {
+		setSearchInput(EMPTY_FILTERS.search);
 		applyFilters(EMPTY_FILTERS, 0);
 	}
 
@@ -275,6 +292,10 @@ function ItemExplorerContent() {
 	const firstResult = query.data && query.data.total > 0 ? query.data.offset + 1 : 0;
 	const lastResult = query.data ? Math.min(query.data.offset + query.data.items.length, query.data.total) : 0;
 	const activeQuery = path.replace("/api/items?", "");
+	const advancedCount = (filters.quality ? 1 : 0)
+		+ (filters.type ? 1 : 0)
+		+ (filters.sort !== "name" ? 1 : 0)
+		+ (filters.order !== "asc" ? 1 : 0);
 	const requestError = query.error instanceof ItemsRequestError ? query.error : null;
 	const errorMessage = requestError?.message ?? "The list request failed";
 	const errorRetryable = requestError?.retryable ?? true;
@@ -324,87 +345,98 @@ function ItemExplorerContent() {
 			<form className="item-filters" onSubmit={submitFilters}>
 				<div className="item-filter-search">
 					<label htmlFor="item-search">search</label>
-					<input
-						id="item-search"
-						name="search"
-						type="search"
-						placeholder="Brimstone"
-						maxLength={100}
-						value={draft.search}
-						onChange={(event) => setDraft({ ...draft, search: event.target.value })}
-					/>
-				</div>
-				<div className="item-filter-actions">
-					<button className="item-button-primary" type="submit">Apply query</button>
-					<button className="item-button-secondary" type="button" onClick={resetFilters}>Reset</button>
-					{isDirty && <p className="item-filter-dirty">Query changed. Apply to run it.</p>}
+					<div className="item-search-row">
+						<input
+							id="item-search"
+							name="search"
+							type="search"
+							placeholder="Brimstone"
+							maxLength={100}
+							value={searchInput}
+							onChange={(event) => setSearchInput(event.target.value)}
+						/>
+						<button className="item-button-secondary" type="button" onClick={resetFilters}>Reset</button>
+					</div>
 				</div>
 				<details className="item-filter-more">
-					<summary>type, quality, sort, order, limit</summary>
-					<div>
-						<label htmlFor="item-type">type</label>
-						<select
-							id="item-type"
-							name="type"
-							value={draft.type}
-							onChange={(event) => setDraft({ ...draft, type: event.target.value })}
-						>
-							<option value="">Any</option>
-							<option value="active">active</option>
-							<option value="passive">passive</option>
-							<option value="familiar">familiar</option>
-						</select>
+					<summary>
+						More filters{advancedCount > 0 ? ` · ${advancedCount} set` : ""}
+					</summary>
+					<div className="item-filter-fields">
+					<div className="item-filter-group">
+						<div>
+							<label htmlFor="item-type">type</label>
+							<select
+								id="item-type"
+								name="type"
+								value={filters.type}
+								onChange={(event) => applyFromControls({ ...filters, type: event.target.value })}
+							>
+								<option value="">Any</option>
+								<option value="active">active</option>
+								<option value="passive">passive</option>
+								<option value="familiar">familiar</option>
+							</select>
+						</div>
+						<div>
+							<label htmlFor="item-quality">quality</label>
+							<select
+								id="item-quality"
+								name="quality"
+								value={filters.quality}
+								onChange={(event) => applyFromControls({ ...filters, quality: event.target.value })}
+							>
+								<option value="">Any</option>
+								{[0, 1, 2, 3, 4].map((quality) => (
+									<option key={quality} value={quality}>{quality}</option>
+								))}
+							</select>
+						</div>
 					</div>
-					<div>
-						<label htmlFor="item-quality">quality</label>
-						<select
-							id="item-quality"
-							name="quality"
-							value={draft.quality}
-							onChange={(event) => setDraft({ ...draft, quality: event.target.value })}
-						>
-							<option value="">Any</option>
-							{[0, 1, 2, 3, 4].map((quality) => (
-								<option key={quality} value={quality}>{quality}</option>
-							))}
-						</select>
+					<div className="item-filter-group">
+						<div>
+							<label htmlFor="item-sort">sort</label>
+							<select
+								id="item-sort"
+								name="sort"
+								value={filters.sort}
+								onChange={(event) => applyFromControls({ ...filters, sort: event.target.value })}
+							>
+								<option value="name">name</option>
+								<option value="quality">quality</option>
+								<option value="game_id">game_id</option>
+							</select>
+						</div>
+						<div>
+							<label htmlFor="item-order">order</label>
+							<select
+								id="item-order"
+								name="order"
+								value={filters.order}
+								onChange={(event) => applyFromControls({ ...filters, order: event.target.value })}
+							>
+								<option value="asc">asc</option>
+								<option value="desc">desc</option>
+							</select>
+						</div>
 					</div>
-					<div>
-						<label htmlFor="item-sort">sort</label>
-						<select
-							id="item-sort"
-							name="sort"
-							value={draft.sort}
-							onChange={(event) => setDraft({ ...draft, sort: event.target.value })}
-						>
-							<option value="name">name</option>
-							<option value="quality">quality</option>
-							<option value="gameId">gameId</option>
-						</select>
+					<div className="item-filter-group">
+						<div>
+							<label htmlFor="item-limit">limit</label>
+							<select
+								id="item-limit"
+								name="limit"
+								value={filters.limit}
+								onChange={(event) => applyFromControls({ ...filters, limit: Number(event.target.value) })}
+							>
+								{(LIMIT_CHOICES.includes(filters.limit) ? LIMIT_CHOICES : [filters.limit, ...LIMIT_CHOICES]).map(
+									(choice) => (
+										<option key={choice} value={choice}>{choice}</option>
+									),
+								)}
+							</select>
+						</div>
 					</div>
-					<div>
-						<label htmlFor="item-order">order</label>
-						<select
-							id="item-order"
-							name="order"
-							value={draft.order}
-							onChange={(event) => setDraft({ ...draft, order: event.target.value })}
-						>
-							<option value="asc">asc</option>
-							<option value="desc">desc</option>
-						</select>
-					</div>
-					<div>
-						<label htmlFor="item-limit">limit</label>
-						<select
-							id="item-limit"
-							name="limit"
-							value={draft.limit}
-							onChange={(event) => setDraft({ ...draft, limit: Number(event.target.value) })}
-						>
-							<option value={12}>12</option>
-							<option value={24}>24</option>
-						</select>
 					</div>
 				</details>
 			</form>
@@ -467,9 +499,12 @@ function ItemExplorerContent() {
 			)}
 
 			{query.data && query.data.items.length > 0 && (
-				<details className="item-json">
+				<details
+					className="item-json"
+					onToggle={(event) => setJsonOpen(event.currentTarget.open)}
+				>
 					<summary>Response JSON</summary>
-					<pre><code>{JSON.stringify(query.data, null, 2)}</code></pre>
+					{jsonOpen && <pre><code>{JSON.stringify(query.data, null, 2)}</code></pre>}
 				</details>
 			)}
 
@@ -487,23 +522,24 @@ function ItemExplorerContent() {
 			{query.data && query.data.total > 0 && pageCount > 1 && (
 				<nav className="item-pagination" aria-label="Item results pages">
 					<button
-						className="item-button-secondary"
+						className="item-pagination-step"
 						type="button"
-						disabled={page === 0 || query.isPlaceholderData || isDirty}
+						disabled={page === 0 || query.isPlaceholderData}
 						onClick={() => goToPage(Math.max(0, page - 1))}
 					>
 						Previous
 					</button>
 					<label className="item-page-jump">
-						Page
+						<span>Page</span>
 						<input
 							id="item-page"
 							name="page"
 							type="number"
+							inputMode="numeric"
 							min={1}
 							max={pageCount}
 							value={pageInput}
-							disabled={query.isPlaceholderData || isDirty}
+							disabled={query.isPlaceholderData}
 							onChange={(event) => setPageInput(event.target.value)}
 							onBlur={(event) => commitPageInput(event.target.value)}
 							onKeyDown={(event) => {
@@ -513,12 +549,12 @@ function ItemExplorerContent() {
 								}
 							}}
 						/>
-						of {pageCount}
+						<span>of {pageCount}</span>
 					</label>
 					<button
-						className="item-button-secondary"
+						className="item-pagination-step"
 						type="button"
-						disabled={page + 1 >= pageCount || query.isPlaceholderData || isDirty}
+						disabled={page + 1 >= pageCount || query.isPlaceholderData}
 						onClick={() => goToPage(page + 1)}
 					>
 						Next

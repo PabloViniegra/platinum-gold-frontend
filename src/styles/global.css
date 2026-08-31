@@ -190,6 +190,36 @@
     line-height: var(--text-body-md--line-height);
   }
 
+  select {
+    --pg-picker-bg: var(--color-surface-raised);
+    --pg-picker-fg: var(--color-on-surface);
+    --pg-picker-border: var(--color-border);
+    --pg-picker-hover: color-mix(in oklch, var(--color-on-surface) 12%, var(--color-surface-raised));
+    --pg-picker-checked: color-mix(in oklch, var(--color-primary) 22%, var(--color-surface-raised));
+    appearance: none;
+    padding-inline-end: 2.25rem;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.2rem) calc(50% - 0.1rem),
+      calc(100% - 0.85rem) calc(50% - 0.1rem);
+    background-size: 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
+
+  [dir="rtl"] select {
+    background-position:
+      0.85rem calc(50% - 0.1rem),
+      1.2rem calc(50% - 0.1rem);
+  }
+
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: var(--color-on-surface-muted);
@@ -231,6 +261,107 @@
 }
 
 @layer components {
+  @supports (appearance: base-select) {
+    select,
+    select::picker(select) {
+      appearance: base-select;
+    }
+
+    select {
+      display: flex;
+      align-items: center;
+      background-image: none;
+      padding-inline-end: 0.75rem;
+    }
+
+    select::picker-icon {
+      color: currentColor;
+      margin-inline-start: auto;
+    }
+
+    select::picker(select) {
+      margin-block-start: var(--spacing-xs);
+      border: 1px solid var(--pg-picker-border);
+      border-radius: var(--radius-sm);
+      background: var(--pg-picker-bg);
+      color: var(--pg-picker-fg);
+      font: inherit;
+      box-shadow: 0.2rem 0.25rem 0 color-mix(in oklch, var(--pg-picker-border) 58%, transparent);
+      max-block-size: min(20rem, 70dvh);
+      overflow: auto;
+    }
+
+    option {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: 0;
+      color: var(--pg-picker-fg);
+      font-weight: 400;
+    }
+
+    option:disabled {
+      color: color-mix(in oklch, var(--pg-picker-fg) 45%, var(--pg-picker-bg));
+    }
+
+    option:is(:hover, :focus) {
+      background: var(--pg-picker-hover);
+    }
+
+    option:checked {
+      background: var(--pg-picker-checked);
+      font-weight: 600;
+    }
+
+    option::checkmark {
+      color: currentColor;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (appearance: base-select) {
+      select::picker-icon {
+        transition: rotate 160ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      select:open::picker-icon {
+        rotate: 180deg;
+      }
+    }
+
+    summary::before {
+      transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    list-style: none;
+    cursor: pointer;
+  }
+
+  summary::marker {
+    content: "";
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::before {
+    content: "";
+    flex: none;
+    inline-size: 0.4rem;
+    block-size: 0.4rem;
+    border-block-end: 2px solid currentColor;
+    border-inline-end: 2px solid currentColor;
+    transform: rotate(-45deg);
+  }
+
+  details[open] > summary::before {
+    transform: rotate(45deg);
+  }
+
   .site-header {
     position: sticky;
     inset-block-start: 0;

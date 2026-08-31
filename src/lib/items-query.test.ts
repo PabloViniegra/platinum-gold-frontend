@@ -44,6 +44,18 @@ describe("buildItemsSearchParams", () => {
 		expect(() => buildItemsSearchParams(input)).toThrow(ItemsQueryError);
 	});
 
+	it("accepts the backend sort enum with snake_case game_id", () => {
+		const output = buildItemsSearchParams(new URLSearchParams({ sort: "game_id" }));
+
+		expect(output.get("sort")).toBe("game_id");
+	});
+
+	it("rejects camelCase gameId, which the live backend answers with 422", () => {
+		expect(() => buildItemsSearchParams(new URLSearchParams({ sort: "gameId" }))).toThrow(
+			ItemsQueryError,
+		);
+	});
+
 	it("uses bounded pagination defaults", () => {
 		expect(buildItemsSearchParams(new URLSearchParams()).toString()).toBe(
 			"sort=name&order=asc&limit=12&offset=0",

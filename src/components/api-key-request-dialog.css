@@ -115,8 +115,17 @@
 .request-dialog :is(input, textarea, select) {
 	inline-size: 100%;
 	border-color: var(--color-paper-border);
-	background: var(--color-paper-raised);
+	background-color: var(--color-paper-raised);
 	color: var(--color-ink);
+}
+
+.request-dialog select {
+	--pg-picker-bg: var(--color-paper-raised);
+	--pg-picker-fg: var(--color-ink);
+	--pg-picker-border: var(--color-paper-border);
+	--pg-picker-hover: color-mix(in oklch, var(--color-ink) 8%, var(--color-paper-raised));
+	--pg-picker-checked: color-mix(in oklch, var(--color-ink) 14%, var(--color-paper-raised));
+	color-scheme: light;
 }
 
 .request-dialog :is(input, textarea, select)[aria-invalid="true"] {

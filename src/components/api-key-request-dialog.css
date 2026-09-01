@@ -17,12 +17,6 @@
 	white-space: nowrap;
 }
 
-.request-access-trigger:hover,
-.request-dialog button:hover {
-	background: var(--color-primary-hover);
-	color: var(--color-on-primary);
-}
-
 .request-access-trigger[data-placement="nav"] {
 	min-block-size: 2.75rem;
 	border: 0;
@@ -32,9 +26,17 @@
 	font-size: var(--text-body-sm);
 }
 
-.request-access-trigger[data-placement="nav"]:hover {
-	background: transparent;
-	color: var(--color-primary-hover);
+@media (hover: hover) and (pointer: fine) {
+	.request-access-trigger:hover,
+	.request-dialog button:hover {
+		background: var(--color-primary-hover);
+		color: var(--color-on-primary);
+	}
+
+	.request-access-trigger[data-placement="nav"]:hover {
+		background: transparent;
+		color: var(--color-primary-hover);
+	}
 }
 
 .request-dialog {
@@ -175,8 +177,7 @@
 }
 
 .request-dialog .request-submit:active:not(:disabled) {
-	box-shadow: 0.1rem 0.12rem 0 var(--pg-paper-shadow);
-	transform: translate(0.18rem, 0.2rem);
+	transform: scale(0.97);
 }
 
 .request-dialog button:disabled {
@@ -196,10 +197,6 @@
 	box-shadow: 0.35rem 0.4rem 0 var(--pg-paper-shadow);
 }
 
-.request-toast:not([data-visible="true"]) {
-	display: none;
-}
-
 .request-toast[data-kind="success"] {
 	border-color: var(--color-paper-border);
 	background:
@@ -212,8 +209,10 @@
 	color: var(--color-ink-link);
 }
 
-.request-toast[data-kind="success"] button:hover {
-	color: var(--color-ink-link-hover);
+@media (hover: hover) and (pointer: fine) {
+	.request-toast[data-kind="success"] button:hover {
+		color: var(--color-ink-link-hover);
+	}
 }
 
 .request-toast[data-kind="error"] {
@@ -230,62 +229,145 @@
 	font-weight: 600;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-	.request-access-trigger,
-	.request-dialog button,
-	.request-toast button {
-		transition: color 120ms cubic-bezier(0.16, 1, 0.3, 1), background-color 120ms cubic-bezier(0.16, 1, 0.3, 1);
-	}
+.request-access-trigger,
+.request-dialog button,
+.request-toast button {
+	transition: color 120ms ease, background-color 120ms ease;
+}
 
+.request-dialog {
+	transition:
+		overlay 150ms ease allow-discrete,
+		display 150ms ease allow-discrete,
+		opacity 150ms ease;
+}
+
+.request-dialog[open] {
+	opacity: 1;
+}
+
+.request-dialog:not([open]) {
+	opacity: 0;
+}
+
+.request-dialog::backdrop {
+	opacity: 1;
+	transition:
+		overlay 150ms ease allow-discrete,
+		display 150ms ease allow-discrete,
+		opacity 150ms ease;
+}
+
+.request-dialog:not([open])::backdrop {
+	opacity: 0;
+}
+
+.request-toast {
+	transition:
+		overlay 150ms ease allow-discrete,
+		display 150ms ease allow-discrete,
+		opacity 150ms ease;
+}
+
+.request-toast[data-visible="true"] {
+	opacity: 1;
+}
+
+.request-toast:not([data-visible="true"]) {
+	display: none;
+	opacity: 0;
+}
+
+@starting-style {
+	.request-dialog[open],
+	.request-dialog[open]::backdrop,
+	.request-toast[data-visible="true"] {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
 	.request-dialog .request-submit {
 		transition:
-			color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-			background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-			box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1),
-			transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+			color 120ms ease,
+			background-color 120ms ease,
+			transform 100ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	@keyframes request-sheet-in {
-		from {
-			opacity: 0;
-			transform: translateY(-0.75rem) rotate(-0.5deg);
-		}
+	.request-dialog .request-submit:active:not(:disabled) {
+		transition:
+			color 120ms ease,
+			background-color 120ms ease,
+			transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.request-dialog {
+		transition:
+			overlay 220ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+			display 220ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+			opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+			transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.request-dialog[open] {
-		animation: request-sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+		transform: none;
 	}
 
-	@keyframes request-room-in {
-		from {
-			opacity: 0;
-		}
+	.request-dialog:not([open]) {
+		transform: translateY(-0.75rem) rotate(-0.5deg);
 	}
 
 	.request-dialog::backdrop {
-		animation: request-room-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+		transition:
+			overlay 220ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+			display 220ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+			opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	@keyframes request-toast-in {
-		from {
-			opacity: 0;
-			transform: translateY(0.4rem);
-		}
+	.request-toast {
+		transition:
+			overlay 160ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+			display 160ms cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+			opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+			transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.request-toast[data-visible="true"] {
-		animation: request-toast-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+		transform: translateY(0);
 	}
 
-	.request-access-trigger[data-placement="nav"] {
-		transition: color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+	.request-toast:not([data-visible="true"]) {
+		transform: translateY(0.4rem);
+	}
+
+	@starting-style {
+		.request-dialog[open] {
+			opacity: 0;
+			transform: translateY(-0.75rem) rotate(-0.5deg);
+		}
+
+		.request-toast[data-visible="true"] {
+			opacity: 0;
+			transform: translateY(0.4rem);
+		}
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.request-dialog .request-submit:active:not(:disabled) {
-		box-shadow: 0.3rem 0.35rem 0 var(--pg-paper-shadow);
 		transform: none;
+	}
+
+	.request-dialog:not([open]),
+	.request-toast:not([data-visible="true"]) {
+		transform: none;
+	}
+
+	@starting-style {
+		.request-dialog[open],
+		.request-toast[data-visible="true"] {
+			transform: none;
+		}
 	}
 }
 

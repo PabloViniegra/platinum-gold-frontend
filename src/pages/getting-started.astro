@@ -32,18 +32,21 @@ import Root from "../layouts/Root.astro";
 				<h2 id="guide-start-title">Start with one request</h2>
 				<p>Follow these 3 steps before using the full API reference.</p>
 			</div>
-			<ol class="guide-path">
-				<li>
+			<ol class="guide-path" role="list">
+				<li role="listitem">
+					<span class="guide-path-room" aria-hidden="true">01</span>
 					<button class="guide-path-action" type="button" data-open-request-access>Request API access</button>
-					<span>We review every request manually and email approved keys with <code>api:access</code>.</span>
+					<span class="guide-path-copy">We review every request manually and email approved keys with <code>api:access</code>.</span>
 				</li>
-				<li>
+				<li role="listitem">
+					<span class="guide-path-room" aria-hidden="true">02</span>
 					<a href="#first-request">Make one request</a>
-					<span>Keep the key in a server-side runtime and call <code>/v1/items</code>.</span>
+					<span class="guide-path-copy">Keep the key in a server-side runtime and call <code>/v1/items</code>.</span>
 				</li>
-				<li>
+				<li role="listitem">
+					<span class="guide-path-room" aria-hidden="true">03</span>
 					<a href="#verify">Verify the result</a>
-					<span>Confirm that the response contains the item data you requested.</span>
+					<span class="guide-path-copy">Confirm that the response contains the item data you requested.</span>
 				</li>
 			</ol>
 		</section>
@@ -721,7 +724,7 @@ export async function getItems() &#123;
 		font-weight: 600;
 	}
 
-	.guide-path span {
+	.guide-path-copy {
 		color: var(--color-on-surface-muted);
 		font-size: var(--text-body-sm);
 		line-height: var(--text-body-sm--line-height);
@@ -1142,10 +1145,9 @@ export async function getItems() &#123;
 		gap: clamp(var(--spacing-lg), 5vw, var(--spacing-xxl));
 		margin-block-end: clamp(var(--spacing-xxl), 7vw, 6rem);
 		border: 1px solid var(--color-border);
-		background: color-mix(in oklch, var(--color-surface-raised) 92%, transparent);
+		background: color-mix(in oklch, var(--color-surface-raised) 96%, transparent);
 		padding: clamp(var(--spacing-lg), 4vw, var(--spacing-xl));
 		box-shadow: 0.5rem 0.6rem 0 oklch(0.06 0.015 48 / 0.62);
-		backdrop-filter: blur(8px);
 	}
 
 	.guide-start h2 {
@@ -1153,6 +1155,7 @@ export async function getItems() &#123;
 		font-size: clamp(2.5rem, 5vw, 4rem);
 		font-size-adjust: 0.5;
 		font-weight: 400;
+		font-synthesis: none;
 		line-height: 1.05;
 		letter-spacing: 0.02em;
 	}
@@ -1163,13 +1166,11 @@ export async function getItems() &#123;
 	}
 
 	.guide-path {
-		counter-reset: guide-room;
-		gap: var(--spacing-md);
+		grid-template-columns: 1fr 1fr;
 		margin-block-start: 0;
 	}
 
 	.guide-path li {
-		counter-increment: guide-room;
 		position: relative;
 		min-inline-size: 0;
 		border: 1px solid var(--color-border);
@@ -1178,42 +1179,68 @@ export async function getItems() &#123;
 		box-shadow: 0.2rem 0.25rem 0 oklch(0.07 0.015 48 / 0.72);
 	}
 
-	.guide-path li::before {
-		content: counter(guide-room, decimal-leading-zero);
-		position: absolute;
-		inset-block-start: calc(var(--spacing-sm) * -1);
-		inset-inline-end: var(--spacing-sm);
-		background: var(--color-tertiary);
-		color: var(--color-on-primary);
-		padding-inline: var(--spacing-xs);
-		font-family: var(--font-mono);
-		font-size: var(--text-label-md);
-		font-weight: 600;
+	.guide-path-room,
+	.guide-path-copy {
+		pointer-events: none;
 	}
 
-	.guide-path a {
+	.guide-path .guide-path-room {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 3.5vw, 3rem);
+		font-size-adjust: 0.5;
+		font-weight: 400;
+		font-synthesis: none;
+		line-height: 1;
+		letter-spacing: 0.02em;
+		color: var(--color-tertiary);
+	}
+
+	.guide-path li:has(.guide-path-action) {
+		grid-column: 1 / -1;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: center;
+		column-gap: var(--spacing-lg);
+		padding: var(--spacing-lg);
+		box-shadow: 0.35rem 0.4rem 0 oklch(0.07 0.015 48 / 0.72);
+	}
+
+	.guide-path li:has(.guide-path-action) .guide-path-room {
+		grid-row: 1 / span 2;
+		font-size: clamp(3rem, 6vw, 4rem);
+	}
+
+	.guide-path a,
+	.guide-path-action {
+		display: flex;
+		min-block-size: 2.75rem;
+		align-items: center;
 		color: var(--color-primary);
 		text-decoration: none;
 	}
 
 	.guide-path-action {
-		display: flex;
-		min-block-size: 2.75rem;
-		align-items: center;
 		border: 0;
 		padding: 0;
 		background: none;
-		color: var(--color-primary);
 		font: inherit;
 		font-weight: 600;
 		text-align: start;
 		cursor: pointer;
 	}
 
+	.guide-path-action::before,
+	.guide-path a::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+	}
+
+	.guide-path a:hover,
 	.guide-path-action:hover {
 		color: var(--color-primary-hover);
 	}
 
+	.guide-path a:focus-visible,
 	.guide-path-action:focus-visible {
 		outline-offset: 4px;
 	}
@@ -1476,11 +1503,14 @@ export async function getItems() &#123;
 
 		.guide-start {
 			grid-template-columns: minmax(0, 1fr);
-			backdrop-filter: none;
 		}
 
 		.guide-path {
 			grid-template-columns: 1fr;
+		}
+
+		.guide-path li:has(.guide-path-action) {
+			grid-column: auto;
 		}
 
 		.guide-layout {

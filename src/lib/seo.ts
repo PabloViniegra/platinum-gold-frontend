@@ -19,20 +19,23 @@ export function pageJsonLd(
 	crumbName: string,
 ): string {
 	const homeUrl = new URL("/", siteHref).href;
+	const websiteId = `${homeUrl}#website`;
 	const website = {
 		"@type": "WebSite",
-		"@id": homeUrl,
+		"@id": websiteId,
 		name: "Platinum Gold",
 		url: homeUrl,
 		description: "Read-only Binding of Isaac item API documentation for frontend developers.",
+		inLanguage: "en",
 	};
 	const webPage = {
 		"@type": "WebPage",
-		"@id": pageUrl,
+		"@id": `${pageUrl}#webpage`,
 		url: pageUrl,
 		name: title,
 		description,
-		isPartOf: { "@id": homeUrl },
+		inLanguage: "en",
+		isPartOf: { "@id": websiteId },
 	};
 	if (pageUrl === homeUrl) {
 		return JSON.stringify({

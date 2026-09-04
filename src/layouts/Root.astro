@@ -3,7 +3,13 @@ import sourceSans400 from "@fontsource/source-sans-3/files/source-sans-3-latin-4
 import sourceSans600 from "@fontsource/source-sans-3/files/source-sans-3-latin-600-normal.woff2?url";
 
 import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
-import { HERO_WALL_AVIF_SRC, HERO_WALL_AVIF_SRCSET, HERO_WALL_WEBP_LG_SRC } from "../lib/hero-wall";
+import {
+	HERO_WALL_AVIF_SRC,
+	HERO_WALL_AVIF_SRCSET,
+	HERO_WALL_WEBP_LG_HEIGHT,
+	HERO_WALL_WEBP_LG_SRC,
+	HERO_WALL_WEBP_LG_WIDTH,
+} from "../lib/hero-wall";
 import { canonicalPageUrl, pageJsonLd } from "../lib/seo";
 import "../styles/global.css";
 
@@ -72,10 +78,14 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 				<meta property="og:url" content={canonicalHref} />
 				<meta property="og:image" content={ogImageHref} />
 				<meta property="og:image:alt" content="Basement wall from The Binding of Isaac" />
+				<meta property="og:image:type" content="image/webp" />
+				<meta property="og:image:width" content={String(HERO_WALL_WEBP_LG_WIDTH)} />
+				<meta property="og:image:height" content={String(HERO_WALL_WEBP_LG_HEIGHT)} />
 				<meta name="twitter:card" content="summary_large_image" />
 				<meta name="twitter:title" content={title} />
 				<meta name="twitter:description" content={description} />
 				<meta name="twitter:image" content={ogImageHref} />
+				<meta name="twitter:image:alt" content="Basement wall from The Binding of Isaac" />
 				<script is:inline type="application/ld+json" set:html={pageJsonLd(site.href, canonicalHref, title, description, crumbName)} />
 			</>
 		)}

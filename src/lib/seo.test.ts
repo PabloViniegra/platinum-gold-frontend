@@ -54,7 +54,20 @@ describe("pageJsonLd", () => {
 			),
 		).toMatchObject({
 			"@context": "https://schema.org",
-			"@graph": [{ "@type": "WebSite", url: "https://example.com/" }, { "@type": "WebPage" }],
+			"@graph": [
+				{
+					"@type": "WebSite",
+					"@id": "https://example.com/#website",
+					url: "https://example.com/",
+					inLanguage: "en",
+				},
+				{
+					"@type": "WebPage",
+					"@id": "https://example.com/#webpage",
+					isPartOf: { "@id": "https://example.com/#website" },
+					inLanguage: "en",
+				},
+			],
 		});
 	});
 
@@ -71,8 +84,12 @@ describe("pageJsonLd", () => {
 			),
 		).toMatchObject({
 			"@graph": [
-				{ "@type": "WebSite" },
-				{ "@type": "WebPage" },
+				{ "@type": "WebSite", "@id": "https://example.com/#website" },
+				{
+					"@type": "WebPage",
+					"@id": "https://example.com/getting-started#webpage",
+					isPartOf: { "@id": "https://example.com/#website" },
+				},
 				{
 					"@type": "BreadcrumbList",
 					itemListElement: [

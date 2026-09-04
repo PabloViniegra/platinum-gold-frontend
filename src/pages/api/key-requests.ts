@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import {
 	REQUESTS_ADMIN_EMAIL,
 	REQUESTS_FROM_ADDRESS,
+	REQUESTS_PUBLIC_ENABLED,
 	REQUESTS_SESSION_SECRET,
 	REQUESTS_TURSO_DB,
 	REQUESTS_TURSO_TOKEN,
@@ -30,6 +31,7 @@ function unavailableResponse(requestId: string): Response {
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
 	const requestId = crypto.randomUUID();
+	if (!REQUESTS_PUBLIC_ENABLED) return unavailableResponse(requestId);
 	const mailbox = REQUESTS_FROM_ADDRESS && REQUESTS_ADMIN_EMAIL
 		? parseMailboxConfig(REQUESTS_FROM_ADDRESS, REQUESTS_ADMIN_EMAIL)
 		: null;

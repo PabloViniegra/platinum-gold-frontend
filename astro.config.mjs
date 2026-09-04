@@ -6,6 +6,8 @@ import { defineConfig, envField } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
 
+const nonIndexablePaths = new Set(['/privacy', '/terms', '/legal', '/cookies', '/licenses']);
+
 // https://astro.build/config
 export default defineConfig({
   adapter: vercel(),
@@ -16,7 +18,12 @@ export default defineConfig({
     sitemap({
       filter: (page) => {
         const path = new URL(page).pathname;
-        return path !== '/admin' && !path.startsWith('/admin/') && path !== '/api' && !path.startsWith('/api/');
+        const documentPath = path.startsWith('/es/') ? path.slice(3) : path;
+        return !nonIndexablePaths.has(documentPath)
+          && path !== '/admin'
+          && !path.startsWith('/admin/')
+          && path !== '/api'
+          && !path.startsWith('/api/');
       },
     }),
   ],
@@ -41,6 +48,11 @@ export default defineConfig({
 					context: 'server',
 					access: 'secret',
 					optional: true
+				}),
+				REQUESTS_PUBLIC_ENABLED: envField.boolean({
+					context: 'server',
+					access: 'secret',
+					default: false
 				}),
 				REQUESTS_TURSO_TOKEN: envField.string({
 					context: 'server',

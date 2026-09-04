@@ -1,0 +1,262 @@
+---
+import Root from "./Root.astro";
+
+type Props = {
+	title: string;
+	summary: string;
+	current: string;
+	draft?: boolean;
+	noindex?: boolean;
+	language?: "en" | "es";
+	alternateHref: string;
+	alternateLabel: string;
+};
+
+const {
+	title,
+	summary,
+	current,
+	draft = true,
+	noindex = draft,
+	language = "en",
+	alternateHref,
+	alternateLabel
+} = Astro.props;
+const isSpanish = language === "es";
+const pageTitle = draft
+	? `${title} — ${isSpanish ? "borrador" : "draft"} | Platinum Gold`
+	: `${title} | Platinum Gold`;
+---
+
+	<Root title={pageTitle} description={summary} noindex={noindex} language={language}>
+	<a slot="skip" class="legal-skip" href="#legal-content">{isSpanish ? "Saltar al contenido legal" : "Skip to legal content"}</a>
+	<main id="legal-content" class="legal-shell px-margin py-xxl" tabindex="-1" lang={language}>
+		<nav class="legal-breadcrumb text-body-sm" aria-label={isSpanish ? "Migas de pan" : "Breadcrumb"}>
+			<a href="/" translate="no">Platinum Gold</a>
+			<span aria-hidden="true">/</span>
+			<span aria-current="page">{current}</span>
+		</nav>
+
+		<header class="legal-header">
+			<p class="legal-kicker">{isSpanish ? "Información legal" : "Legal information"}</p>
+			<h1>{title}</h1>
+			<p class="legal-summary text-body-lg text-pretty">{summary}</p>
+			<p class="legal-language-switch">
+				<span>{isSpanish ? "Idioma" : "Language"}:</span>
+				<strong>{isSpanish ? "Español" : "English"}</strong>
+				<span aria-hidden="true">·</span>
+				<a href={alternateHref} hreflang={isSpanish ? "en" : "es"} lang={isSpanish ? "en" : "es"}>{alternateLabel}</a>
+			</p>
+		</header>
+
+		{draft && (
+			<aside class="legal-draft-notice" aria-labelledby="legal-draft-title">
+				<p id="legal-draft-title" class="legal-draft-label">{isSpanish ? "Borrador — no publicar" : "Draft — do not publish"}</p>
+				<p>{isSpanish
+					? "Este documento está pendiente de completar con la identidad, el contacto y las decisiones jurídicas del responsable. No es el texto definitivo ni constituye asesoramiento jurídico."
+					: "This document still needs the controller's identity, contact details and legal decisions. It is not final and does not constitute legal advice."}</p>
+			</aside>
+		)}
+
+		<article class="legal-document">
+			<slot />
+		</article>
+	</main>
+</Root>
+
+<style is:global>
+	.legal-shell {
+		max-inline-size: 76rem;
+		margin-inline: auto;
+	}
+
+	.legal-skip {
+		position: absolute;
+		inset-block-start: var(--spacing-sm);
+		inset-inline-start: var(--spacing-sm);
+		z-index: 50;
+		transform: translateY(calc(-100% - var(--spacing-sm)));
+		border-radius: var(--radius-sm);
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		padding: var(--spacing-sm) var(--spacing-md);
+		font-weight: 600;
+	}
+
+	.legal-skip:focus-visible {
+		transform: translateY(0);
+	}
+
+	.legal-breadcrumb {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-sm);
+		color: var(--color-on-surface-muted);
+	}
+
+	.legal-breadcrumb a {
+		color: var(--color-primary);
+	}
+
+	.legal-header {
+		max-inline-size: 65ch;
+		padding-block: var(--spacing-lg) var(--spacing-xl);
+	}
+
+	.legal-summary {
+		margin-block-start: var(--spacing-md);
+	}
+
+	.legal-language-switch {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-xs) var(--spacing-sm);
+		margin-block-start: var(--spacing-lg);
+		color: var(--color-on-surface-muted);
+		font-size: var(--text-body-sm);
+	}
+
+	.legal-language-switch a {
+		color: var(--color-primary);
+		text-decoration: underline;
+		text-underline-offset: 0.18em;
+	}
+
+	.legal-kicker,
+	.legal-draft-label {
+		color: var(--color-tertiary);
+		font-size: var(--text-label-md);
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	.legal-draft-notice {
+		max-inline-size: 65ch;
+		margin-block-end: var(--spacing-xxl);
+		border: 2px solid var(--color-tertiary);
+		padding: var(--spacing-md) var(--spacing-lg);
+		background: color-mix(in oklch, var(--color-tertiary) 9%, var(--color-surface));
+	}
+
+	.legal-draft-notice p + p {
+		margin-block-start: var(--spacing-sm);
+	}
+
+	.legal-document {
+		max-inline-size: 70ch;
+	}
+
+	.legal-document section + section {
+		margin-block-start: var(--spacing-xxl);
+	}
+
+	.legal-document h2 {
+		margin-block-end: var(--spacing-md);
+	}
+
+	.legal-document h3 {
+		margin-block: var(--spacing-lg) var(--spacing-sm);
+	}
+
+	.legal-document p + p,
+	.legal-document p + ul,
+	.legal-document p + ol,
+	.legal-document p + dl,
+	.legal-document p + table,
+	.legal-document ul + p,
+	.legal-document ol + p,
+	.legal-document dl + p,
+	.legal-document table + p {
+		margin-block-start: var(--spacing-md);
+	}
+
+	.legal-document ul,
+	.legal-document ol {
+		display: grid;
+		gap: var(--spacing-sm);
+		padding-inline-start: var(--spacing-lg);
+	}
+
+	.legal-document ul {
+		list-style: disc;
+	}
+
+	.legal-document ol {
+		list-style: decimal;
+	}
+
+	.legal-document a {
+		text-decoration: underline;
+		text-decoration-thickness: from-font;
+		text-underline-offset: 0.18em;
+	}
+
+	.legal-document code {
+		white-space: normal;
+	}
+
+	.legal-facts {
+		display: grid;
+		gap: var(--spacing-sm);
+	}
+
+	.legal-facts > div {
+		display: grid;
+		grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+		gap: var(--spacing-md);
+		border-block-end: 1px solid var(--color-border);
+		padding-block: var(--spacing-sm);
+	}
+
+	.legal-facts dt {
+		font-weight: 600;
+	}
+
+	.legal-pending {
+		color: var(--color-tertiary);
+		font-weight: 600;
+	}
+
+	.legal-callout {
+		border-inline-start: 3px solid var(--color-primary);
+		padding-inline-start: var(--spacing-md);
+	}
+
+	.legal-table-wrap {
+		max-inline-size: 100%;
+		overflow-x: auto;
+	}
+
+	.legal-document table {
+		inline-size: 100%;
+		border-collapse: collapse;
+		font-size: var(--text-body-sm);
+	}
+
+	.legal-document th,
+	.legal-document td {
+		border: 1px solid var(--color-border);
+		padding: var(--spacing-sm);
+		text-align: start;
+		vertical-align: top;
+	}
+
+	.legal-document th {
+		background: var(--color-surface-raised);
+		font-weight: 600;
+	}
+
+	@media (max-width: 48rem) {
+		.legal-header h1 {
+			font-size: clamp(2.75rem, 15vw, 5rem);
+		}
+
+		.legal-facts > div {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-xs);
+		}
+	}
+</style>

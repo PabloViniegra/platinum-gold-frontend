@@ -2,6 +2,7 @@
 import sourceSans400 from "@fontsource/source-sans-3/files/source-sans-3-latin-400-normal.woff2?url";
 import sourceSans600 from "@fontsource/source-sans-3/files/source-sans-3-latin-600-normal.woff2?url";
 
+import { REQUESTS_PUBLIC_ENABLED } from "astro:env/server";
 import { ApiKeyRequestDialog } from "../components/ApiKeyRequestDialog";
 import {
 	HERO_WALL_AVIF_SRC,
@@ -18,21 +19,25 @@ type Props = {
 	description: string;
 	preloadDisplayFont?: boolean;
 	noindex?: boolean;
+	language?: "en" | "es";
 };
 
-const { title, description, preloadDisplayFont = false, noindex = false } = Astro.props;
+const { title, description, preloadDisplayFont = false, noindex = false, language = "en" } = Astro.props;
 const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const isGettingStartedPage = pathname === "/getting-started";
 const isItemsPage = pathname === "/items";
+const legalPath = pathname.startsWith("/es/") ? pathname.slice(3) : pathname;
+const isLegalPage = ["/privacy", "/terms", "/legal", "/cookies", "/licenses"].includes(legalPath);
 const isAdminPage = pathname.startsWith("/admin");
 const site = Astro.site;
 const canonicalHref = site ? canonicalPageUrl(site.href, pathname) : undefined;
 const ogImageHref = site ? new URL(HERO_WALL_WEBP_LG_SRC, site).href : undefined;
 const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live example" : title;
+const isSpanish = language === "es";
 ---
 
 <!doctype html>
-<html lang="en" class="scheme-dark" data-page={pathname === "/" ? "home" : isItemsPage ? "items" : "guide"}>
+<html lang={language} class="scheme-dark" data-page={pathname === "/" ? "home" : isItemsPage ? "items" : isLegalPage ? "legal" : "guide"}>
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
@@ -41,7 +46,7 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 		<meta name="theme-color" content="oklch(0.145 0.025 52)" />
 		<link rel="preload" href={sourceSans400} as="font" type="font/woff2" crossorigin />
 		<link rel="preload" href={sourceSans600} as="font" type="font/woff2" crossorigin />
-		{!isAdminPage && (
+		{!isAdminPage && !isLegalPage && (
 			<link
 				rel="preload"
 				as="image"
@@ -94,27 +99,28 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 	<body>
 		<slot name="skip" />
 		<header class="site-header">
-			<a href="/" class="site-brand" aria-label="Platinum Gold home">
+			<a href="/" class="site-brand" aria-label={isSpanish ? "Inicio de Platinum Gold" : "Platinum Gold home"}>
 				<span class="site-brand-mark" aria-hidden="true"></span>
 				<span translate="no">Platinum Gold</span>
 			</a>
-			<nav class="site-nav" aria-label="Primary">
+			<nav class="site-nav" aria-label={isSpanish ? "Principal" : "Primary"}>
 				<a href="/getting-started" aria-current={isGettingStartedPage ? "page" : undefined}>
-					Getting started
+					{isSpanish ? "Guía de integración" : "Getting started"}
 				</a>
-				<a href="/items" aria-current={isItemsPage ? "page" : undefined}>Live example</a>
+				<a href="/items" aria-current={isItemsPage ? "page" : undefined}>{isSpanish ? "Ejemplo en vivo" : "Live example"}</a>
 				<details class="site-nav-reference">
-					<summary>Reference</summary>
+					<summary>{isSpanish ? "Referencia" : "Reference"}</summary>
 					<div class="site-nav-reference-menu">
-						<a href="https://tboi-api.pabloviniegra.dev/docs">API reference</a>
+						<a href="https://tboi-api.pabloviniegra.dev/docs">{isSpanish ? "Referencia del API" : "API reference"}</a>
 						<a href="https://tboi-api.pabloviniegra.dev/openapi.json">OpenAPI</a>
 					</div>
 				</details>
-				{!isAdminPage && <ApiKeyRequestDialog client:idle placement="nav" />}
+				{!isAdminPage && REQUESTS_PUBLIC_ENABLED && <ApiKeyRequestDialog client:idle placement="nav" legalLanguage={language} />}
+				{!isAdminPage && !REQUESTS_PUBLIC_ENABLED && <span class="site-nav-paused">{isSpanish ? "Solicitudes de acceso al API pausadas" : "API access paused"}</span>}
 			</nav>
 		</header>
 		<slot />
-		{!isAdminPage && (
+		{!isAdminPage && REQUESTS_PUBLIC_ENABLED && (
 			<script>
 				document.addEventListener("click", (event) => {
 					if (!(event.target instanceof Element)) {
@@ -132,5 +138,80 @@ const crumbName = isGettingStartedPage ? "Getting started" : isItemsPage ? "Live
 				});
 			</script>
 		)}
+		{!isAdminPage && (
+			<footer class="site-footer px-margin" aria-label={isSpanish ? "Pie de página" : "Site footer"}>
+				<div class="site-footer-inner">
+					<nav class="site-footer-links" aria-label={isSpanish ? "Enlaces del sitio" : "Site links"}>
+						<a href="/">Platinum Gold</a>
+						<a href="/getting-started">{isSpanish ? "Guía de integración" : "Integration guide"}</a>
+						<a href="/items">{isSpanish ? "Ejemplo en vivo" : "Live example"}</a>
+						<a href="https://tboi-api.pabloviniegra.dev/docs">{isSpanish ? "Referencia del API" : "API reference"}</a>
+					</nav>
+					<nav class="site-footer-links" aria-label={isSpanish ? "Información legal" : "Legal information"}>
+						<a href={isSpanish ? "/es/privacy" : "/privacy"}>{isSpanish ? "Aviso de privacidad (borrador)" : "Privacy notice (draft)"}</a>
+						<a href={isSpanish ? "/es/terms" : "/terms"}>{isSpanish ? "Términos del API (borrador)" : "API terms (draft)"}</a>
+						<a href={isSpanish ? "/es/legal" : "/legal"}>{isSpanish ? "Aviso legal (borrador)" : "Legal notice (draft)"}</a>
+						<a href={isSpanish ? "/es/cookies" : "/cookies"}>{isSpanish ? "Cookies (borrador)" : "Cookies (draft)"}</a>
+						<a href={isSpanish ? "/es/licenses" : "/licenses"}>{isSpanish ? "Licencias y atribuciones (borrador)" : "Licences and attributions (draft)"}</a>
+					</nav>
+					<p class="site-footer-draft">
+						{isSpanish
+							? "Los documentos legales marcados como borradores no están listos para publicarse."
+							: "Legal documents marked as drafts are not ready for publication."}
+					</p>
+				</div>
+			</footer>
+		)}
 	</body>
 </html>
+
+<style is:global>
+	.site-footer {
+		position: relative;
+		z-index: 1;
+		max-inline-size: 92rem;
+		margin-inline: auto;
+		padding-block: var(--spacing-xxl) max(var(--spacing-xxl), env(safe-area-inset-bottom, 0px));
+	}
+
+	.site-footer-inner {
+		display: grid;
+		gap: var(--spacing-lg);
+		border-block-start: 1px solid var(--color-border);
+		padding-block-start: var(--spacing-lg);
+		color: var(--color-on-surface-muted);
+		font-size: var(--text-body-sm);
+	}
+
+	.site-footer-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm) var(--spacing-lg);
+	}
+
+	.site-footer-links a {
+		text-underline-offset: 0.18em;
+	}
+
+	.site-footer-draft {
+		max-inline-size: 65ch;
+		color: var(--color-tertiary);
+	}
+
+	.site-nav-paused {
+		display: inline-flex;
+		min-block-size: 2.75rem;
+		align-items: center;
+		color: var(--color-on-surface-muted);
+		font-size: var(--text-body-sm);
+		font-weight: 600;
+		white-space: normal;
+	}
+
+	@media (max-width: 40rem) {
+		.site-nav-paused {
+			grid-column: 1 / -1;
+			justify-self: start;
+		}
+	}
+</style>

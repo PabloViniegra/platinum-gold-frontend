@@ -1,0 +1,133 @@
+---
+type Props = {
+	language: "en" | "es";
+};
+
+const { language } = Astro.props;
+---
+
+{language === "en" ? (
+	<>
+		<section aria-labelledby="terms-status">
+			<h2 id="terms-status">1. Status of this document</h2>
+			<p>
+				This text keeps the API terms separate from the privacy notice. It is a working proposal: it is not a contract, it does not record acceptance and it must not be used as a final access condition until it has been completed, reviewed and published.
+			</p>
+			<p class="legal-pending">[PENDING: provider identity, contact channel, contractual version, acceptance procedure and governing law.]</p>
+		</section>
+
+		<section aria-labelledby="terms-service">
+			<h2 id="terms-service">2. Service</h2>
+			<p>
+				Platinum Gold documents a read-only REST API with item data from The Binding of Isaac. The guide and live example show how to make requests from a server-side environment without exposing a key in the browser.
+			</p>
+			<p>
+				The catalogue, fields, dataset versions, limits and routes may change in line with the published API contract. The current reference is the official documentation linked from this site.
+			</p>
+		</section>
+
+		<section aria-labelledby="terms-access">
+			<h2 id="terms-access">3. Access requests and credentials</h2>
+			<ul>
+				<li>Access requests may be reviewed manually and do not guarantee that a key will be issued.</li>
+				<li>A person or entity that receives a key must keep it confidential and must not include it in public bundles, repositories, logs or code sent to the browser.</li>
+				<li>The key must be used only for the project and purpose stated in the request, subject to the API's limits and controls.</li>
+				<li>If a key is exposed, it must be reported through the support channel that remains to be defined and must no longer be used.</li>
+			</ul>
+			<p class="legal-pending">[PENDING: decide revocation, rotation, quantitative limits, support and consequences of non-compliance.]</p>
+		</section>
+
+		<section aria-labelledby="terms-use">
+			<h2 id="terms-use">4. Proposed acceptable use</h2>
+			<p>The final version should prohibit, at a minimum, unlawful use, attempts to bypass access controls or limits, abuse that degrades the service and deliberate exposure of credentials.</p>
+			<p>
+				The list above is a contractual design recommendation, not a current condition. It must be adapted to the actual activity, applicable obligations and the service's monitoring capacity.
+			</p>
+		</section>
+
+		<section aria-labelledby="terms-content">
+			<h2 id="terms-content">5. Data, content and intellectual property</h2>
+			<p>
+				The MIT licence for the source code does not automatically grant rights to catalogue data, names, trademarks, images, fonts or other third-party resources. The <a href="/licenses">licences and attributions</a> page keeps the known inventory and permissions that still need verification.
+			</p>
+			<p>
+				Anyone integrating the API must check that their use of responses, images and marks respects the applicable rights and the conditions of the original sources.
+			</p>
+		</section>
+
+		<section aria-labelledby="terms-availability">
+			<h2 id="terms-availability">6. Availability and changes</h2>
+			<p>
+				The API and its documentation may undergo maintenance, data changes, errors or interruptions. The contractual version should describe the service levels actually offered, notice of changes and the process for suspension or termination.
+			</p>
+			<p class="legal-pending">[PENDING LEGAL REVIEW: warranties, liability, limitations, termination and treatment of consumer users.]</p>
+		</section>
+
+		<section aria-labelledby="terms-law">
+			<h2 id="terms-law">7. Contact and governing law</h2>
+			<p class="legal-pending">[PENDING: legal name, address, contact email, governing law, jurisdiction and complaint or alternative dispute-resolution mechanisms.]</p>
+		</section>
+	</>
+) : (
+	<>
+		<section aria-labelledby="terms-status">
+			<h2 id="terms-status">1. Estado de este documento</h2>
+			<p>
+				Este texto separa las condiciones del API del aviso de privacidad. Es una propuesta de trabajo: no constituye un contrato, no registra aceptación y no debe utilizarse como condición definitiva de acceso hasta que se complete, revise y publique.
+			</p>
+			<p class="legal-pending">[PENDIENTE: identidad del prestador, canal de contacto, versión contractual, procedimiento de aceptación y ley aplicable.]</p>
+		</section>
+
+		<section aria-labelledby="terms-service">
+			<h2 id="terms-service">2. Servicio</h2>
+			<p>
+				Platinum Gold documenta un API REST de solo lectura con datos de objetos de The Binding of Isaac. La guía y el ejemplo en vivo muestran cómo realizar peticiones desde un entorno server-side sin exponer una clave en el navegador.
+			</p>
+			<p>
+				El catálogo, los campos, las versiones del dataset, los límites y las rutas pueden cambiar conforme al contrato del API publicado. La referencia vigente será la documentación oficial enlazada desde este sitio.
+			</p>
+		</section>
+
+		<section aria-labelledby="terms-access">
+			<h2 id="terms-access">3. Solicitud y credenciales</h2>
+			<ul>
+				<li>Las solicitudes de acceso pueden revisarse manualmente y no garantizan que se emita una clave.</li>
+				<li>La persona o entidad que reciba una clave debe mantenerla confidencial y no incluirla en bundles públicos, repositorios, logs o código enviado al navegador.</li>
+				<li>La clave debe utilizarse únicamente para el proyecto y el uso declarados, sujeto a los límites y controles del API.</li>
+				<li>Si una clave queda expuesta, debe comunicarse por el canal de soporte pendiente de definir y dejar de utilizarse.</li>
+			</ul>
+			<p class="legal-pending">[PENDIENTE DE DECIDIR: revocación, rotación, límites cuantitativos, soporte y consecuencias de incumplimiento.]</p>
+		</section>
+
+		<section aria-labelledby="terms-use">
+			<h2 id="terms-use">4. Uso aceptable propuesto</h2>
+			<p>La versión definitiva deberá prohibir, como mínimo, los usos contrarios a la ley, los intentos de eludir controles de acceso o límites, el abuso que degrade el servicio y la exposición deliberada de credenciales.</p>
+			<p>
+				La lista anterior es una recomendación de diseño contractual, no una condición vigente. Debe ajustarse a la actividad real, a las obligaciones aplicables y a la capacidad de supervisión del servicio.
+			</p>
+		</section>
+
+		<section aria-labelledby="terms-content">
+			<h2 id="terms-content">5. Datos, contenido y propiedad intelectual</h2>
+			<p>
+				La licencia MIT del código fuente no concede automáticamente derechos sobre los datos del catálogo, nombres, marcas, imágenes, fuentes tipográficas u otros recursos de terceros. La página de <a href="/es/licenses">licencias y atribuciones</a> mantiene el inventario conocido y los permisos que aún deben verificarse.
+			</p>
+			<p>
+				Quien integre el API debe comprobar que el uso que haga de las respuestas, imágenes y marcas respeta los derechos que correspondan y las condiciones de las fuentes originales.
+			</p>
+		</section>
+
+		<section aria-labelledby="terms-availability">
+			<h2 id="terms-availability">6. Disponibilidad y cambios</h2>
+			<p>
+				El API y su documentación pueden sufrir mantenimiento, errores, cambios de datos o interrupciones. La versión contractual deberá describir los niveles de servicio que realmente se ofrezcan, el aviso de cambios y el procedimiento de suspensión o terminación.
+			</p>
+			<p class="legal-pending">[PENDIENTE DE REVISIÓN JURÍDICA: garantías, responsabilidad, limitaciones, resolución y tratamiento de usuarios consumidores.]</p>
+		</section>
+
+		<section aria-labelledby="terms-law">
+			<h2 id="terms-law">7. Contacto y ley aplicable</h2>
+			<p class="legal-pending">[PENDIENTE: nombre legal, domicilio, correo de contacto, ley aplicable, jurisdicción y mecanismos de reclamación o resolución alternativa.]</p>
+		</section>
+	</>
+)}

@@ -1,0 +1,135 @@
+---
+type Props = {
+	language: "en" | "es";
+};
+
+const { language } = Astro.props;
+---
+
+{language === "en" ? (
+	<>
+		<section aria-labelledby="legal-provider">
+			<h2 id="legal-provider">1. Service provider identification</h2>
+			<dl class="legal-facts">
+				<div>
+					<dt>Name or business name</dt>
+					<dd class="legal-pending">[PENDING: provider's legal identity]</dd>
+				</div>
+				<div>
+					<dt>Address</dt>
+					<dd class="legal-pending">[PENDING: address or establishment]</dd>
+				</div>
+				<div>
+					<dt>NIF/CIF/VAT</dt>
+					<dd class="legal-pending">[PENDING: tax identifier]</dd>
+				</div>
+				<div>
+					<dt>Direct contact</dt>
+					<dd class="legal-pending">[PENDING: email and, if applicable, other contact methods]</dd>
+				</div>
+				<div>
+					<dt>Registration or authorisation</dt>
+					<dd class="legal-pending">[PENDING: registration details or confirmation that they do not apply]</dd>
+				</div>
+				<div>
+					<dt>Reviewed domain</dt>
+					<dd>platinum-gold-frontend.vercel.app <span class="legal-pending">[confirm final domain]</span></dd>
+				</div>
+			</dl>
+		</section>
+
+		<section aria-labelledby="legal-purpose">
+			<h2 id="legal-purpose">2. Purpose of the site</h2>
+			<p>
+				This site provides documentation for developers integrating the Platinum Gold API. It includes a getting-started guide and an example of read requests through a server-side proxy. It is not an SDK or a player-facing catalogue application.
+			</p>
+			<p>
+				API access requests are handled through a separate form. Their data processing is described in the <a href="/privacy">privacy notice</a>, and their access conditions are kept separate in the <a href="/terms">API terms</a>.
+			</p>
+		</section>
+
+		<section aria-labelledby="legal-ip">
+			<h2 id="legal-ip">3. Intellectual property</h2>
+			<p>
+				The source code for this project includes an MIT licence. That licence does not automatically cover catalogue content, images, trademarks, fonts or other third-party resources. See the <a href="/licenses">licences and attributions</a> inventory, and do not read this page as granting rights not listed there.
+			</p>
+			<p class="legal-pending">[PENDING: confirm ownership of and permissions for all assets, data, marks and content distributed by the site.]</p>
+		</section>
+
+		<section aria-labelledby="legal-links">
+			<h2 id="legal-links">4. Links and external services</h2>
+			<p>
+				The site links to the OpenAPI reference and may load images from hosts specified by API responses. External services have their own terms and policies; the provider must review their use, transfers and the information they receive from visitors.
+			</p>
+			<p class="legal-pending">[PENDING: complete the hosting provider, subprocessors, linking policy and channel for reporting intellectual-property concerns.]</p>
+		</section>
+
+		<section aria-labelledby="legal-updates">
+			<h2 id="legal-updates">5. Updates</h2>
+			<p class="legal-pending">[PENDING: version, effective date and procedure for updating the final legal notice.]</p>
+		</section>
+	</>
+) : (
+	<>
+		<section aria-labelledby="legal-provider">
+			<h2 id="legal-provider">1. Identificación del prestador</h2>
+			<dl class="legal-facts">
+				<div>
+					<dt>Nombre o denominación</dt>
+					<dd class="legal-pending">[PENDIENTE: identidad legal del prestador]</dd>
+				</div>
+				<div>
+					<dt>Domicilio</dt>
+					<dd class="legal-pending">[PENDIENTE: domicilio o establecimiento]</dd>
+				</div>
+				<div>
+					<dt>NIF/CIF/VAT</dt>
+					<dd class="legal-pending">[PENDIENTE: identificador fiscal]</dd>
+				</div>
+				<div>
+					<dt>Contacto directo</dt>
+					<dd class="legal-pending">[PENDIENTE: correo y, si procede, otros medios]</dd>
+				</div>
+				<div>
+					<dt>Registro o autorización</dt>
+					<dd class="legal-pending">[PENDIENTE: datos registrales o indicación de que no proceden]</dd>
+				</div>
+				<div>
+					<dt>Dominio revisado</dt>
+					<dd>platinum-gold-frontend.vercel.app <span class="legal-pending">[confirmar dominio definitivo]</span></dd>
+				</div>
+			</dl>
+		</section>
+
+		<section aria-labelledby="legal-purpose">
+			<h2 id="legal-purpose">2. Objeto del sitio</h2>
+			<p>
+				Este sitio ofrece documentación para desarrolladores que integran el API de Platinum Gold. Incluye una guía de inicio y un ejemplo de peticiones de lectura a través de un proxy server-side. No es un SDK ni una aplicación de catálogo dirigida a jugadores.
+			</p>
+			<p>
+				Las solicitudes de acceso al API se tramitan mediante un formulario independiente. Su tratamiento de datos se describe en el <a href="/es/privacy">aviso de privacidad</a> y sus condiciones de acceso se mantienen separadas en los <a href="/es/terms">términos del API</a>.
+			</p>
+		</section>
+
+		<section aria-labelledby="legal-ip">
+			<h2 id="legal-ip">3. Propiedad intelectual</h2>
+			<p>
+				El código fuente de este proyecto incluye una licencia MIT. Esa licencia no cubre automáticamente el contenido del catálogo, las imágenes, las marcas, las tipografías ni otros recursos de terceros. Consulta el inventario de <a href="/es/licenses">licencias y atribuciones</a> y no interpretes esta página como una concesión de derechos que no figure allí.
+			</p>
+			<p class="legal-pending">[PENDIENTE: confirmar la titularidad y los permisos de todos los assets, datos, marcas y contenidos distribuidos por el sitio.]</p>
+		</section>
+
+		<section aria-labelledby="legal-links">
+			<h2 id="legal-links">4. Enlaces y servicios externos</h2>
+			<p>
+				El sitio enlaza con la referencia OpenAPI y puede cargar imágenes desde los hosts indicados por las respuestas del API. Los servicios externos tienen sus propias condiciones y políticas; el responsable debe revisar su uso, sus transferencias y la información que reciben de los visitantes.
+			</p>
+			<p class="legal-pending">[PENDIENTE: completar proveedor de hosting, subencargados, política de enlaces y canal para notificar incidencias de propiedad intelectual.]</p>
+		</section>
+
+		<section aria-labelledby="legal-updates">
+			<h2 id="legal-updates">5. Actualizaciones</h2>
+			<p class="legal-pending">[PENDIENTE: versión, fecha de entrada en vigor y procedimiento de actualización del aviso legal definitivo.]</p>
+		</section>
+	</>
+)}

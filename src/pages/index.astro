@@ -1,7 +1,10 @@
 ---
 import HeroWall from "../components/HeroWall.astro";
+import { REQUESTS_PUBLIC_ENABLED } from "astro:env/server";
 import { HERO_WALL_AVIF_SRC } from "../lib/hero-wall";
 import Root from "../layouts/Root.astro";
+
+const requestAccessEnabled = REQUESTS_PUBLIC_ENABLED;
 ---
 
 <Root
@@ -41,9 +44,13 @@ import Root from "../layouts/Root.astro";
 						</p>
 						<div class="hero-actions">
 							<a href="/getting-started" class="hero-primary">Enter the guide</a>
-							<button class="request-access-trigger" type="button" data-placement="hero" data-open-request-access>
-								Request API access
-							</button>
+							{requestAccessEnabled ? (
+								<button class="request-access-trigger" type="button" data-placement="hero" data-open-request-access>
+									Request API access
+								</button>
+							) : (
+								<span class="request-access-paused">API access requests are currently paused.</span>
+							)}
 							<a href="https://tboi-api.pabloviniegra.dev/docs" class="hero-secondary">
 								Open API reference
 							</a>
@@ -232,6 +239,14 @@ Accept: application/json</code></pre>
 	.hero-secondary {
 		background: oklch(0.12 0.02 50 / 0.72);
 		color: var(--color-on-surface);
+	}
+
+	.request-access-paused {
+		display: inline-flex;
+		min-block-size: 3rem;
+		align-items: center;
+		color: var(--color-on-surface-muted);
+		font-weight: 600;
 	}
 
 	.hero-secondary:hover {

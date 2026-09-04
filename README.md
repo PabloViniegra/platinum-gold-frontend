@@ -20,6 +20,7 @@ Documentation site for frontend developers integrating the [Platinum Gold API](h
 - [Project structure](#project-structure)
 - [API](#api)
 - [Server configuration](#server-configuration)
+- [Legal documents](#legal-documents)
 - [Deployment](#deployment)
 - [License](#license)
 
@@ -64,7 +65,8 @@ src/
 ├── lib/          # Server-side logic (API clients, key requests)
 ├── pages/
 │   ├── api/      # Server endpoints (items proxy, admin, key requests)
-│   └── *.astro   # Documentation pages (/ , /items , /getting-started)
+│   ├── es/       # Spanish legal-document translations
+│   └── *.astro   # Documentation and legal pages
 ├── scripts/      # Browser scripts
 └── styles/       # Global styles
 ```
@@ -91,9 +93,15 @@ All playground traffic is proxied server-side; the API key never ships to the cl
 
 `PLATINUM_BACKEND_API_KEY` enables the `/items` example. The API-key request queue also needs Turso, Resend, `RESEND_WEBHOOK_SECRET`, and administrator session variables declared in `astro.config.mjs`.
 
+`REQUESTS_PUBLIC_ENABLED=false` keeps the public API-key request form and endpoint paused. Set it to `true` only after the legal documents, data handling, and operational process have been reviewed and approved. Changing this value requires a new deployment because the public pages are generated at build time; the endpoint remains fail-closed at runtime.
+
 All credentials are server-only. Never prefix them with `PUBLIC_` or `VITE_`.
 
 The public request form stores pending applications in Turso. Administrators use the unlinked environment-configured route to approve or deny requests. Approval emails a manually supplied key without storing it.
+
+## Legal documents
+
+The legal documents are drafts and are excluded from the sitemap while they are incomplete. English is the primary version (`/privacy`, `/terms`, `/legal`, `/cookies`, `/licenses`); Spanish translations are available under `/es/`.
 
 ## Deployment
 

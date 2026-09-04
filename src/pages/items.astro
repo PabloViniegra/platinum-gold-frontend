@@ -46,15 +46,6 @@ import "../components/item-explorer.css";
 			</ItemExplorer>
 		</article>
 	</main>
-	<footer class="items-footer px-margin pb-xxl" aria-label="Example page footer">
-		<div>
-			<span>Platinum Gold API example</span>
-			<div class="items-footer-links">
-				<a href="/getting-started">Read the integration guide</a>
-				<a href="https://tboi-api.pabloviniegra.dev/openapi.json">OpenAPI</a>
-			</div>
-		</div>
-	</footer>
 </Root>
 
 <style is:global>
@@ -106,8 +97,7 @@ import "../components/item-explorer.css";
 		background: linear-gradient(oklch(0.08 0.018 48 / 0.86), oklch(0.08 0.018 48 / 0.96));
 	}
 
-	.items-shell,
-	.items-footer {
+	.items-shell {
 		position: relative;
 		z-index: 1;
 		max-inline-size: 92rem;
@@ -175,27 +165,6 @@ import "../components/item-explorer.css";
 	.items-sheet::after {
 		inset-block-end: 1rem;
 		inset-inline-end: -1.75rem;
-	}
-
-	.items-footer {
-		padding-block-start: var(--spacing-xxl);
-	}
-
-	.items-footer > div {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: var(--spacing-md);
-		border-block-start: 1px solid var(--color-border);
-		padding-block-start: var(--spacing-lg);
-		color: var(--color-on-surface-muted);
-		font-size: var(--text-body-sm);
-	}
-
-	.items-footer-links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-md) var(--spacing-lg);
 	}
 
 	@media (max-width: 48rem) {

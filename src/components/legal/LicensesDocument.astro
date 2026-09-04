@@ -1,0 +1,83 @@
+---
+type Props = {
+	language: "en" | "es";
+};
+
+const { language } = Astro.props;
+---
+
+{language === "en" ? (
+	<>
+		<section aria-labelledby="licenses-code">
+			<h2 id="licenses-code">1. Source code</h2>
+			<p>
+				The code in this repository is distributed under the <a href="https://github.com/PabloViniegra/platinum-gold-frontend/blob/main/LICENSE">MIT licence</a>, unless a file or resource says otherwise. The licence and copyright notice must be retained when the code is redistributed.
+			</p>
+			<p>
+				The MIT software licence does not grant rights to names, trademarks, data, images, fonts or third-party content that appears on the site or in API responses.
+			</p>
+		</section>
+
+		<section aria-labelledby="licenses-fonts">
+			<h2 id="licenses-fonts">2. Fonts</h2>
+			<ul>
+				<li><strong>Source Sans 3:</strong> distributed through Fontsource under the SIL Open Font Licence 1.1. A copy of the licence accompanies the package used by the project.</li>
+				<li><strong>Upheaval:</strong> the file is served from <code>public/fonts</code>. [PENDING: confirm ownership, licence and permission to redistribute.]</li>
+			</ul>
+		</section>
+
+		<section aria-labelledby="licenses-assets">
+			<h2 id="licenses-assets">3. Images, data and trademarks</h2>
+			<ul>
+				<li>The background images and favicon included in the site require a documented source and permission. [PENDING: complete attribution and licence.]</li>
+				<li>The catalogue comes from an offline ingest of Platinum God data; its source, licence scope and redistribution conditions must be documented before the catalogue is presented as authorised.</li>
+				<li>Names, characters, images and other elements related to The Binding of Isaac may be subject to third-party rights. They are not considered covered by the MIT licence for the code.</li>
+				<li>Item images delivered by external hosts must be reviewed together with their terms of use and attribution requirements.</li>
+			</ul>
+		</section>
+
+		<section aria-labelledby="licenses-maintenance">
+			<h2 id="licenses-maintenance">4. Maintaining the inventory</h2>
+			<p>
+				Each new asset, dependency, font, dataset or provider must have its licence, attribution, origin and redistribution scope documented before it enters production. If permission is unconfirmed, it must remain marked as pending and must not be presented as authorised.
+			</p>
+		</section>
+	</>
+) : (
+	<>
+		<section aria-labelledby="licenses-code">
+			<h2 id="licenses-code">1. Código fuente</h2>
+			<p>
+				El código de este repositorio se distribuye bajo la <a href="https://github.com/PabloViniegra/platinum-gold-frontend/blob/main/LICENSE">licencia MIT</a>, salvo que un archivo o recurso indique otra cosa. La licencia y el aviso de copyright deben conservarse al redistribuir el código.
+			</p>
+			<p>
+				La licencia MIT del software no concede derechos sobre nombres, marcas, datos, imágenes, tipografías o contenido de terceros que aparezcan en el sitio o en las respuestas del API.
+			</p>
+		</section>
+
+		<section aria-labelledby="licenses-fonts">
+			<h2 id="licenses-fonts">2. Tipografías</h2>
+			<ul>
+				<li><strong>Source Sans 3:</strong> se distribuye mediante Fontsource bajo la SIL Open Font License 1.1. La copia de la licencia acompaña al paquete utilizado por el proyecto.</li>
+				<li><strong>Upheaval:</strong> el archivo se sirve desde <code>public/fonts</code>. [PENDIENTE: confirmar titularidad, licencia y permiso de redistribución.]</li>
+			</ul>
+		</section>
+
+		<section aria-labelledby="licenses-assets">
+			<h2 id="licenses-assets">3. Imágenes, datos y marcas</h2>
+			<ul>
+				<li>Las imágenes de fondo y el favicon incluidos en el sitio requieren una fuente y permiso documentados. [PENDIENTE: completar atribución y licencia.]</li>
+				<li>El catálogo procede de una ingesta offline de datos de Platinum God; la fuente, alcance de la licencia y condiciones de redistribución deben documentarse antes de presentar el catálogo como autorizado.</li>
+				<li>Los nombres, personajes, imágenes y demás elementos relacionados con The Binding of Isaac pueden estar sujetos a derechos de terceros. No se consideran cubiertos por la licencia MIT del código.</li>
+				<li>Las imágenes de items entregadas por hosts externos deben revisarse junto con sus condiciones de uso y atribución.</li>
+			</ul>
+		</section>
+
+		<section aria-labelledby="licenses-maintenance">
+			<h2 id="licenses-maintenance">4. Mantenimiento del inventario</h2>
+			<p>
+				Cada nuevo asset, dependencia, fuente, dataset o proveedor debe incorporar su licencia, atribución, origen y alcance de redistribución antes de entrar en producción. Si un permiso no está confirmado, debe conservarse como pendiente y no presentarse como autorización.
+			</p>
+		</section>
+	</>
+)}

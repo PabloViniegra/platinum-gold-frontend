@@ -83,9 +83,10 @@ type RequestAccessPlacement = (typeof REQUEST_ACCESS_PLACEMENT)[keyof typeof REQ
 
 type ApiKeyRequestDialogProps = {
 	placement: RequestAccessPlacement;
+	legalLanguage?: "en" | "es";
 };
 
-export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
+export function ApiKeyRequestDialog({ placement, legalLanguage = "en" }: ApiKeyRequestDialogProps) {
 	const dialogRef = useRef<HTMLDialogElement>(null);
 	const triggerRef = useRef<HTMLButtonElement>(null);
 	const openerRef = useRef<HTMLElement | null>(null);
@@ -94,6 +95,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 	const [toast, setToast] = useState<ToastState | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [countries, setCountries] = useState<string[]>([...FALLBACK_COUNTRY_NAMES]);
+	const legalPathPrefix = legalLanguage === "es" ? "/es" : "";
 	const generationRef = useRef(0);
 	const submittingRef = useRef(false);
 	const cancelPaintRef = useRef<(() => void) | null>(null);
@@ -258,6 +260,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 			<button
 				ref={triggerRef}
 				className="request-access-trigger"
+				lang="en"
 				type="button"
 				data-placement={placement}
 				data-open-request-access
@@ -267,6 +270,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 			<dialog
 				ref={dialogRef}
 				className="request-dialog"
+				lang="en"
 				closedby={isSubmitting ? "none" : "any"}
 				aria-labelledby="request-dialog-title"
 				aria-describedby="request-dialog-description"
@@ -294,9 +298,10 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 					Every request is reviewed manually. Complete every field and we will email approved access.
 				</p>
 				<output
-					ref={errorToastRef}
-					className="request-toast"
-					data-visible={toast?.kind === TOAST_KIND.ERROR ? "true" : undefined}
+				ref={errorToastRef}
+				className="request-toast"
+				lang="en"
+				data-visible={toast?.kind === TOAST_KIND.ERROR ? "true" : undefined}
 					data-kind="error"
 					popover="manual"
 					aria-live="polite"
@@ -418,10 +423,13 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 								rows={4}
 								autoComplete="off"
 								aria-invalid={errors.useCaseDetails ? "true" : "false"}
-								aria-describedby={errors.useCaseDetails ? "request-use-case-details-error" : undefined}
+								aria-describedby={errors.useCaseDetails ? "request-use-case-details-help request-use-case-details-error" : "request-use-case-details-help"}
 								{...register("useCaseDetails", { required: "Describe how you will use the API.", maxLength: { value: 1_000, message: "Use 1,000 characters or fewer." } })}
 								required
 							/>
+							<span id="request-use-case-details-help" className="request-field-help">
+								Do not include health, political, religious, biometric, or other sensitive information.
+							</span>
 							<FieldError id="request-use-case-details-error" message={errors.useCaseDetails?.message} />
 						</label>
 					)}
@@ -430,7 +438,13 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 						<input aria-hidden="true" tabIndex={-1} autoComplete="off" {...register("website")} />
 					</label>
 					<p className="request-privacy-note">
-						We only use these details to review and manage your API access request.
+						{legalLanguage === "es" ? (
+							<span lang="es">
+								Usamos estos datos para revisar y gestionar tu solicitud de acceso al API. Lee el <a href={`${legalPathPrefix}/privacy`}>aviso de privacidad (borrador)</a> y los <a href={`${legalPathPrefix}/terms`}>términos del API (borrador)</a> antes de enviar la solicitud.
+							</span>
+						) : (
+							<>We use these details to review and manage your API access request. Read the <a href={`${legalPathPrefix}/privacy`}>draft privacy notice</a> and <a href={`${legalPathPrefix}/terms`}>draft API terms</a> before submitting.</>
+						)}
 					</p>
 					<div className="request-form-actions">
 						<button className="request-cancel" type="button" onClick={closeDialog} disabled={isSubmitting}>Cancel</button>
@@ -443,6 +457,7 @@ export function ApiKeyRequestDialog({ placement }: ApiKeyRequestDialogProps) {
 			<output
 				ref={successToastRef}
 				className="request-toast"
+				lang="en"
 				data-visible={toast?.kind === TOAST_KIND.SUCCESS ? "true" : undefined}
 				data-kind="success"
 				popover="manual"

@@ -1,0 +1,235 @@
+---
+type Props = {
+	language: "en" | "es";
+};
+
+const { language } = Astro.props;
+---
+
+{language === "en" ? (
+	<>
+		<section aria-labelledby="privacy-controller">
+			<h2 id="privacy-controller">1. Data controller</h2>
+			<dl class="legal-facts">
+				<div>
+					<dt>Controller</dt>
+					<dd class="legal-pending">[PENDING: legal name or business name]</dd>
+				</div>
+				<div>
+					<dt>Address</dt>
+					<dd class="legal-pending">[PENDING: country and full address]</dd>
+				</div>
+				<div>
+					<dt>Tax identification</dt>
+					<dd class="legal-pending">[PENDING: NIF, CIF or VAT number, if applicable]</dd>
+				</div>
+				<div>
+					<dt>Privacy contact</dt>
+					<dd class="legal-pending">[PENDING: email address for privacy requests and data rights]</dd>
+				</div>
+			</dl>
+			<p class="legal-callout">
+				The controller's identity, establishment and contact channel must be confirmed before this draft is replaced with a publishable notice.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-data">
+			<h2 id="privacy-data">2. Personal data processed</h2>
+			<p>An API access request may collect the following categories:</p>
+			<ul>
+				<li>first name and last name;</li>
+				<li>email address;</li>
+				<li>country, occupation and stated purpose of use;</li>
+				<li>additional free text when “Other” is selected; and</li>
+				<li>operational request data, such as status, timestamps, email delivery identifiers and technical logs needed for security and diagnostics.</li>
+			</ul>
+			<p>
+				The queue uses keyed hashes to limit abuse. The reviewed queue code does not persist the raw IP address, but a pseudonymous identifier should not automatically be treated as anonymous. Vercel and other provider logs require separate review.
+			</p>
+			<p class="legal-callout">
+				Do not enter health data, political opinions, religious beliefs, biometric data or other special-category data in the free-text field. That field should be minimized and its necessity validated before launch.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-purposes">
+			<h2 id="privacy-purposes">3. Purposes and legal basis</h2>
+			<p>The implemented flow has these separate purposes:</p>
+			<ul>
+				<li>receive and review an API access request;</li>
+				<li>send operational messages about receipt and the decision;</li>
+				<li>prevent abuse, apply limits and protect the service; and</li>
+				<li>administer the queue and check delivery status.</li>
+			</ul>
+			<p class="legal-pending">
+				[PENDING: validate a specific legal basis for each purpose, its necessity and any balancing assessment. A generic consent checkbox has not been assumed to be the appropriate basis.]
+			</p>
+			<p>
+				Receipt, approval and denial messages are operational. They must not be reused for marketing without a separate decision and legal basis.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-recipients">
+			<h2 id="privacy-recipients">4. Providers and disclosures</h2>
+			<p>The audited implementation uses or may use these services:</p>
+			<ul>
+				<li><strong>Vercel:</strong> hosting and server-side route execution; its logs may contain request metadata.</li>
+				<li><strong>Turso:</strong> storage for access requests and delivery status.</li>
+				<li><strong>Resend:</strong> operational email delivery to the applicant and administrator, including the data needed for each message.</li>
+				<li><strong>Nager.Date:</strong> server-side source for the form's country list; its terms and logs require review.</li>
+				<li><strong>Image servers:</strong> the browser may request an HTTPS image URL returned by the API. That request may disclose network metadata to the relevant host.</li>
+			</ul>
+			<p class="legal-pending">
+				[PENDING: verify the legal entities, controller or processor roles, regions, subprocessors, retention periods, contracts and safeguards for transfers outside the EEA for each provider.]
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-retention">
+			<h2 id="privacy-retention">5. Retention and deletion</h2>
+			<p>
+				The application retains pending and decided requests, together with delivery metadata, in the queue. The reviewed code does not yet implement an automatic retention or deletion flow.
+			</p>
+			<p class="legal-pending">
+				[PENDING BEFORE PUBLICATION: define and apply periods or criteria for pending, approved and denied requests; email content and metadata; rate-limiting identifiers; technical logs; backups; and data retained by providers.]
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-rights">
+			<h2 id="privacy-rights">6. Data rights</h2>
+			<p>
+				People must have a channel to request, where applicable, access, rectification, erasure, restriction, objection and portability, as well as to withdraw consent when processing relies on it. The controller must define identity verification, applicable exceptions and the response procedure.
+			</p>
+			<p class="legal-pending">[PENDING: publish the operational channel for exercising data rights and confirm whether a data protection officer or EU representative exists.]</p>
+			<p>
+				A complaint may also be filed with the <a href="https://www.aepd.es/">Spanish Data Protection Agency</a> where it has jurisdiction.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-automated">
+			<h2 id="privacy-automated">7. Automated decisions and security</h2>
+			<p>
+				The request is described as manually reviewed; no automated decision has been identified that determines access approval on its own. This must be checked against actual operation and documented before publication.
+			</p>
+			<p>
+				The application uses protected administrator sessions, cookies with security attributes and keyed hashes to limit abuse. These measures do not replace reviews of access, secrets, logs, backups, providers, incident management and risk analysis.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-changes">
+			<h2 id="privacy-changes">8. Changes</h2>
+			<p class="legal-pending">[PENDING: effective date, version and procedure for communicating changes to the final notice.]</p>
+		</section>
+	</>
+) : (
+	<>
+		<section aria-labelledby="privacy-controller">
+			<h2 id="privacy-controller">1. Responsable del tratamiento</h2>
+			<dl class="legal-facts">
+				<div>
+					<dt>Responsable</dt>
+					<dd class="legal-pending">[PENDIENTE: nombre o denominación legal]</dd>
+				</div>
+				<div>
+					<dt>Domicilio</dt>
+					<dd class="legal-pending">[PENDIENTE: país y domicilio completo]</dd>
+				</div>
+				<div>
+					<dt>Identificación fiscal</dt>
+					<dd class="legal-pending">[PENDIENTE: NIF, CIF o VAT, si procede]</dd>
+				</div>
+				<div>
+					<dt>Contacto de privacidad</dt>
+					<dd class="legal-pending">[PENDIENTE: dirección de correo para privacidad y derechos]</dd>
+				</div>
+			</dl>
+			<p class="legal-callout">
+				La identidad, el establecimiento y el canal de contacto deben confirmarse antes de sustituir este borrador por un aviso publicable.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-data">
+			<h2 id="privacy-data">2. Datos tratados</h2>
+			<p>La solicitud de acceso al API puede recoger las siguientes categorías:</p>
+			<ul>
+				<li>nombre y apellidos;</li>
+				<li>dirección de correo electrónico;</li>
+				<li>país, ocupación y finalidad declarada de uso;</li>
+				<li>texto libre adicional cuando se selecciona «Otra»; y</li>
+				<li>datos operativos de la solicitud, como estado, fechas, identificadores de entrega de correo y registros técnicos necesarios para seguridad y diagnóstico.</li>
+			</ul>
+			<p>
+				La cola usa identificadores hash con clave para limitar abusos. El código de la cola no persiste la dirección IP en crudo, pero un identificador seudonimizado no debe tratarse automáticamente como anónimo. Los registros de Vercel y de otros proveedores requieren una revisión independiente.
+			</p>
+			<p class="legal-callout">
+				No introduzcas en el campo de texto libre datos de salud, opiniones políticas, creencias religiosas, datos biométricos u otras categorías especiales. Ese campo debe minimizarse y su necesidad debe validarse antes del lanzamiento.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-purposes">
+			<h2 id="privacy-purposes">3. Finalidades y base jurídica</h2>
+			<p>El flujo implementado tiene estas finalidades separadas:</p>
+			<ul>
+				<li>recibir y revisar una solicitud de acceso al API;</li>
+				<li>enviar mensajes operativos sobre la recepción y la decisión;</li>
+				<li>prevenir abusos, aplicar límites y proteger el servicio; y</li>
+				<li>administrar la cola y comprobar el estado de entrega.</li>
+			</ul>
+			<p class="legal-pending">
+				[PENDIENTE DE VALIDAR: una base jurídica concreta para cada finalidad, su necesidad y cualquier prueba de ponderación. No se ha supuesto que una casilla genérica de consentimiento sea la base adecuada.]
+			</p>
+			<p>
+				Las comunicaciones de recepción, aprobación o denegación son operativas. No deben reutilizarse para marketing sin una decisión separada y una base jurídica propia.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-recipients">
+			<h2 id="privacy-recipients">4. Proveedores y comunicaciones</h2>
+			<p>La implementación auditada utiliza o puede utilizar estos servicios:</p>
+			<ul>
+				<li><strong>Vercel:</strong> alojamiento y ejecución de rutas server-side; sus registros pueden contener metadatos de las peticiones.</li>
+				<li><strong>Turso:</strong> almacenamiento de las solicitudes de acceso y del estado de entrega.</li>
+				<li><strong>Resend:</strong> envío de correos operativos al solicitante y al administrador, incluidos los datos necesarios para cada mensaje.</li>
+				<li><strong>Nager.Date:</strong> fuente server-side de la lista de países del formulario; sus condiciones y registros deben comprobarse.</li>
+				<li><strong>Servidores de imágenes:</strong> el navegador puede solicitar directamente la URL HTTPS de una imagen devuelta por el API. Esa petición puede revelar metadatos de red al host correspondiente.</li>
+			</ul>
+			<p class="legal-pending">
+				[PENDIENTE DE VERIFICAR: entidades jurídicas, funciones de responsable o encargado, regiones, subencargados, plazos, contratos y garantías para transferencias fuera del EEE de cada proveedor.]
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-retention">
+			<h2 id="privacy-retention">5. Conservación y supresión</h2>
+			<p>
+				La aplicación conserva en la cola las solicitudes pendientes y decididas, junto con metadatos de entrega. El código revisado todavía no implementa un flujo automático de conservación o borrado.
+			</p>
+			<p class="legal-pending">
+				[PENDIENTE ANTES DE PUBLICAR: definir y aplicar plazos o criterios para solicitudes pendientes, aprobadas y denegadas; contenido y metadatos de correo; identificadores de limitación; registros técnicos; copias de seguridad y datos conservados por proveedores.]
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-rights">
+			<h2 id="privacy-rights">6. Derechos</h2>
+			<p>
+				Las personas deben disponer de un canal para solicitar, cuando proceda, acceso, rectificación, supresión, limitación, oposición y portabilidad, además de retirar un consentimiento cuando el tratamiento se base en él. El responsable debe definir la verificación de identidad, las excepciones aplicables y el procedimiento de respuesta.
+			</p>
+			<p class="legal-pending">[PENDIENTE: publicar el canal operativo para ejercer derechos y confirmar si existe delegado de protección de datos o representante en la UE.]</p>
+			<p>
+				También puede presentarse una reclamación ante la <a href="https://www.aepd.es/">Agencia Española de Protección de Datos</a> cuando resulte competente.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-automated">
+			<h2 id="privacy-automated">7. Decisiones automatizadas y seguridad</h2>
+			<p>
+				La solicitud se describe como revisada manualmente; no se ha identificado una decisión automatizada que determine por sí sola la concesión del acceso. Esto debe comprobarse frente a la operación real y documentarse antes de publicar.
+			</p>
+			<p>
+				La aplicación usa sesiones administrativas protegidas, cookies con atributos de seguridad y hashes con clave para limitar abusos. Estas medidas no sustituyen la revisión de accesos, secretos, logs, copias de seguridad, proveedores, gestión de incidentes y análisis de riesgos.
+			</p>
+		</section>
+
+		<section aria-labelledby="privacy-changes">
+			<h2 id="privacy-changes">8. Cambios</h2>
+			<p class="legal-pending">[PENDIENTE: fecha de entrada en vigor, versión y procedimiento para comunicar cambios del aviso definitivo.]</p>
+		</section>
+	</>
+)}

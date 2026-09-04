@@ -1,0 +1,119 @@
+---
+type Props = {
+	language: "en" | "es";
+};
+
+const { language } = Astro.props;
+---
+
+{language === "en" ? (
+	<>
+		<section aria-labelledby="cookies-inventory">
+			<h2 id="cookies-inventory">1. Reviewed inventory</h2>
+			<p>
+				The code review found no public analytics, advertising or personalisation cookies, and no use of <code>localStorage</code> or <code>sessionStorage</code>. No banner was added because the current inventory does not show a non-essential technology requiring prior consent.
+			</p>
+			<p class="legal-callout">
+				This conclusion is a snapshot of the repository. It does not replace a production check, a review of the Vercel dashboard, a review of scripts added outside the repository or checks for future changes.
+			</p>
+		</section>
+
+		<section aria-labelledby="cookies-admin">
+			<h2 id="cookies-admin">2. Administrative cookie</h2>
+			<div class="legal-table-wrap" tabindex="0" role="region" aria-label="Administrative cookie table">
+				<table>
+					<caption class="sr-only">Administrative session cookie</caption>
+					<thead>
+						<tr>
+							<th scope="col">Name</th>
+							<th scope="col">Purpose</th>
+							<th scope="col">Duration</th>
+							<th scope="col">Attributes</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>pg_requests_admin</code></td>
+							<td>Maintain the protected administrator panel session.</td>
+							<td>Maximum 8 hours</td>
+							<td><code>HttpOnly</code>, <code>SameSite=Strict</code>, <code>Path=/</code> and <code>Secure</code> when the request uses HTTPS.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<p>
+				The cookie is not used to track visitors or measure audience. It appears only after administrator authentication and is needed to maintain that session. This classification must be checked against the deployment's actual configuration and use.
+			</p>
+		</section>
+
+		<section aria-labelledby="cookies-third-party">
+			<h2 id="cookies-third-party">3. Third-party requests</h2>
+			<p>
+				An external image request is not itself a cookie, but it may communicate the IP address, user agent, referrer or other network metadata to the destination host. The items API returns HTTPS URLs that the browser may request directly; this surface must be included in the privacy and provider inventory.
+			</p>
+			<p>
+				If analytics, advertising, personalisation, pixels, additional storage or any non-essential technology is added, this inventory must be updated and a prior, granular and revocable consent mechanism must be considered under the applicable law.
+			</p>
+		</section>
+
+		<section aria-labelledby="cookies-contact">
+			<h2 id="cookies-contact">4. Contact and changes</h2>
+			<p class="legal-pending">[PENDING: identify the controller, publish the contact channel, confirm the legal classification of each technology and add a version and review date.]</p>
+		</section>
+	</>
+) : (
+	<>
+		<section aria-labelledby="cookies-inventory">
+			<h2 id="cookies-inventory">1. Inventario revisado</h2>
+			<p>
+				En la revisión del código no se identificaron cookies públicas de analítica, publicidad o personalización, ni uso de <code>localStorage</code> o <code>sessionStorage</code>. Tampoco se añadió un banner porque el inventario actual no muestra una tecnología no esencial que requiera consentimiento previo.
+			</p>
+			<p class="legal-callout">
+				Esta conclusión es una fotografía del repositorio y no sustituye una comprobación de producción, del panel de Vercel, de scripts añadidos fuera del repositorio ni de cambios futuros.
+			</p>
+		</section>
+
+		<section aria-labelledby="cookies-admin">
+			<h2 id="cookies-admin">2. Cookie administrativa</h2>
+			<div class="legal-table-wrap" tabindex="0" role="region" aria-label="Tabla de la cookie administrativa">
+				<table>
+					<caption class="sr-only">Cookie de sesión administrativa</caption>
+					<thead>
+						<tr>
+							<th scope="col">Nombre</th>
+							<th scope="col">Finalidad</th>
+							<th scope="col">Duración</th>
+							<th scope="col">Atributos</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>pg_requests_admin</code></td>
+							<td>Mantener la sesión del panel administrativo protegido.</td>
+							<td>Máximo 8 horas</td>
+							<td><code>HttpOnly</code>, <code>SameSite=Strict</code>, <code>Path=/</code> y <code>Secure</code> cuando la petición usa HTTPS.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<p>
+				La cookie no se utiliza para seguir a visitantes ni para medir la audiencia. Solo aparece después de una autenticación administrativa y es necesaria para mantener esa sesión. Esta clasificación debe comprobarse con la configuración y el uso real del despliegue.
+			</p>
+		</section>
+
+		<section aria-labelledby="cookies-third-party">
+			<h2 id="cookies-third-party">3. Solicitudes de terceros</h2>
+			<p>
+				Una petición de imagen externa no es por sí sola una cookie, pero puede comunicar al host de destino la IP, el agente de usuario, el referer u otros metadatos de red. El API de items devuelve URLs HTTPS que el navegador puede solicitar directamente; esta superficie debe incluirse en el inventario de privacidad y de proveedores.
+			</p>
+			<p>
+				Si se incorporan analítica, publicidad, personalización, píxeles, almacenamiento adicional o cualquier tecnología no estrictamente necesaria, habrá que actualizar este inventario y decidir un mecanismo de consentimiento previo, granular y revocable conforme a la normativa aplicable.
+			</p>
+		</section>
+
+		<section aria-labelledby="cookies-contact">
+			<h2 id="cookies-contact">4. Contacto y cambios</h2>
+			<p class="legal-pending">[PENDIENTE: identificar al responsable, publicar el canal de contacto, confirmar la clasificación jurídica de cada tecnología y añadir versión y fecha de revisión.]</p>
+		</section>
+	</>
+)}

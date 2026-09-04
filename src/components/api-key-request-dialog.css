@@ -148,6 +148,11 @@
 	font-weight: 600;
 }
 
+.request-field-help {
+	color: var(--color-ink-muted);
+	font-size: var(--text-body-sm);
+}
+
 .request-field-error:empty {
 	display: none;
 }
@@ -160,6 +165,12 @@
 .request-privacy-note {
 	color: var(--color-ink-muted);
 	font-size: var(--text-body-sm);
+}
+
+.request-privacy-note a {
+	color: var(--color-ink-link);
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
 }
 
 .request-form-actions {

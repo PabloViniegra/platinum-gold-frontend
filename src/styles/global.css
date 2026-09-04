@@ -513,7 +513,7 @@
 
 @media (max-width: 40rem) {
   :root {
-    --pg-header-height: 6.75rem;
+    --pg-header-height: 9.5rem;
   }
 
   .site-header {
@@ -528,17 +528,14 @@
 
   .site-nav {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto auto;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		align-items: center;
 		gap: 0 var(--spacing-sm);
   }
 
-	.site-nav > a[href="/items"] {
-		display: none;
-	}
-
 	.site-nav-reference-menu {
-		inset-inline-end: 0;
+		inset-inline-start: 0;
+		inset-inline-end: auto;
 	}
 }
 

@@ -119,6 +119,19 @@ const isSpanish = language === "es";
 				{!isAdminPage && !REQUESTS_PUBLIC_ENABLED && <span class="site-nav-paused">{isSpanish ? "Solicitudes de acceso al API pausadas" : "API access paused"}</span>}
 			</nav>
 		</header>
+		<script>
+			const siteHeader = document.querySelector(".site-header");
+			if (siteHeader instanceof HTMLElement) {
+				const syncHeaderHeight = () => {
+					document.documentElement.style.setProperty(
+						"--pg-header-height",
+						`${siteHeader.offsetHeight}px`,
+					);
+				};
+				syncHeaderHeight();
+				new ResizeObserver(syncHeaderHeight).observe(siteHeader);
+			}
+		</script>
 		<slot />
 		{!isAdminPage && REQUESTS_PUBLIC_ENABLED && (
 			<script>

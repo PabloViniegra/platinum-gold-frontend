@@ -41,13 +41,16 @@ const requestAccessEnabled = REQUESTS_PUBLIC_ENABLED;
 					{requestAccessEnabled ? (
 						<button class="guide-path-action guide-access-entry" type="button" data-open-request-access>Request API access</button>
 					) : (
-						<span class="guide-access-paused guide-access-entry">API access requests are currently paused.</span>
+						<a class="guide-access-entry" href="#authentication">Get your key</a>
 					)}
 					<span class="guide-path-copy">
-						{requestAccessEnabled
-							? "We review every request manually and email approved keys with "
-							: "Access requests are paused for now. Check back later for availability."}
-						{requestAccessEnabled && <code>api:access</code>}
+						{requestAccessEnabled ? (
+							<>
+								We review every request manually and email approved keys with <code>api:access</code>.
+							</>
+						) : (
+							"Access requests are paused for now. Already have a key? Continue to step 02."
+						)}
 					</span>
 				</li>
 				<li role="listitem">
@@ -93,14 +96,11 @@ const requestAccessEnabled = REQUESTS_PUBLIC_ENABLED;
 					<h2>Authentication</h2>
 					<p>
 						Every <code>/v1</code> endpoint needs an API key with <code>api:access</code>.{" "}
-						{requestAccessEnabled
-							? "Request access through this form. We review requests manually and email approved keys."
-							: "API access requests are currently paused."} Health checks are public; data routes are not.
+						{requestAccessEnabled &&
+							"Request access through this form. We review requests manually and email approved keys. "}Health checks are public; data routes are not.
 					</p>
-					{requestAccessEnabled ? (
+					{requestAccessEnabled && (
 						<button class="guide-access-action" type="button" data-open-request-access>Request API access</button>
-					) : (
-						<span class="guide-access-paused">API access requests are currently paused.</span>
 					)}
 
 					<div
@@ -856,6 +856,12 @@ export async function getItems() &#123;
 		margin-block-start: var(--spacing-md);
 	}
 
+	.guide-article p,
+	.guide-article ol,
+	.guide-article ul {
+		max-inline-size: 68ch;
+	}
+
 	.guide-callout {
 		margin-block: var(--spacing-lg);
 		border: 1px solid var(--color-border);
@@ -921,6 +927,21 @@ export async function getItems() &#123;
 		margin-block: var(--spacing-lg);
 		overflow-x: auto;
 		scrollbar-gutter: stable;
+	}
+
+	.guide-table-wrap::after {
+		content: "Scroll horizontally if needed";
+		display: none;
+		margin-block-start: var(--spacing-sm);
+		color: var(--color-ink-muted);
+		font-size: var(--text-body-sm);
+		line-height: var(--text-body-sm--line-height);
+	}
+
+	@media (max-width: 48rem) {
+		.guide-table-wrap::after {
+			display: block;
+		}
 	}
 
 	.guide-table {
@@ -1133,10 +1154,8 @@ export async function getItems() &#123;
 		grid-template-columns: minmax(12rem, 0.65fr) minmax(0, 1.6fr);
 		gap: clamp(var(--spacing-lg), 5vw, var(--spacing-xxl));
 		margin-block-end: clamp(var(--spacing-xxl), 7vw, 6rem);
-		border: 1px solid var(--color-border);
-		background: color-mix(in oklch, var(--color-surface-raised) 96%, transparent);
-		padding: clamp(var(--spacing-lg), 4vw, var(--spacing-xl));
-		box-shadow: 0.5rem 0.6rem 0 oklch(0.06 0.015 48 / 0.62);
+		border-block: 1px solid var(--color-border);
+		padding-block: clamp(var(--spacing-lg), 4vw, var(--spacing-xl));
 	}
 
 	.guide-start h2 {
@@ -1199,8 +1218,7 @@ export async function getItems() &#123;
 	}
 
 	.guide-path a,
-	.guide-path-action,
-	.guide-access-paused {
+	.guide-path-action {
 		display: flex;
 		min-block-size: 2.75rem;
 		align-items: center;
@@ -1216,15 +1234,6 @@ export async function getItems() &#123;
 		font-weight: 600;
 		text-align: start;
 		cursor: pointer;
-	}
-
-	.guide-access-paused {
-		color: var(--color-on-surface-muted);
-		font-weight: 600;
-	}
-
-	.guide-article .guide-access-paused {
-		margin-block-start: var(--spacing-lg);
 	}
 
 	.guide-path-action::before,
@@ -1622,7 +1631,6 @@ export async function getItems() &#123;
 	}
 
 	@media (prefers-reduced-transparency: reduce) {
-		.guide-start,
 		.guide-toc {
 			background: var(--color-surface-raised);
 			backdrop-filter: none;
